@@ -222,8 +222,9 @@
           
           <!-- Сезонная плашка и скин -->
           <div class="flex items-center justify-between gap-1">
-            <div class="flex items-center gap-1 bg-amber-500/15 border border-amber-400/30 px-2.5 py-1 rounded-xl text-[10px] text-amber-200 font-extrabold">
-              <span class="animate-pulse">🔥</span> <span>Сезон 1: Всемирные Игры Кочевников</span>
+            <div id="season-banner-btn" onclick="openBattlePassModal()" class="btn-tap flex items-center gap-1 bg-amber-500/15 border border-amber-400/30 px-2.5 py-1 rounded-xl text-[10px] text-amber-200 font-extrabold cursor-pointer active:scale-95 shadow">
+              <span class="animate-pulse">🔥</span> <span id="season-title-banner">Сезон 1: Всемирные Игры Кочевников</span>
+              <span class="text-[8px] bg-amber-500 text-stone-950 px-1 py-0.2 rounded font-black ml-1 uppercase">Pass</span>
             </div>
             <div class="flex gap-1">
               <button onclick="setSeasonTheme('nomad')" id="season-btn-nomad" class="btn-tap text-[9px] font-black px-1.5 py-0.5 rounded-lg bg-amber-500 text-stone-950 border border-white">Кочевники</button>
@@ -349,7 +350,7 @@
               <button onclick="startTrainingMode()" class="btn-tap py-2 px-3 rounded-xl bg-stone-900/90 border border-amber-500/30 text-amber-300 font-extrabold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow cursor-pointer">
                 <span>🎯</span> <span>Офлайн Тренировка</span>
               </button>
-              <button onclick="openFeatureModal('friends')" class="btn-tap py-2 px-3 rounded-xl bg-stone-900/90 border border-emerald-500/30 text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow cursor-pointer">
+              <button onclick="openFriendLobbyModal()" class="btn-tap py-2 px-3 rounded-xl bg-stone-900/90 border border-emerald-500/30 text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow cursor-pointer">
                 <span>👥</span> <span>Игра с другом</span>
               </button>
             </div>
@@ -361,26 +362,8 @@
               <span>СУНДУКИ НАГРАД:</span>
               <span class="text-amber-400 font-black">Слоты 3/4</span>
             </div>
-            <div class="grid grid-cols-4 gap-1.5 w-full">
-              <div onclick="openChestSlot(0)" class="btn-tap hud-card rounded-xl p-1.5 h-16 flex flex-col items-center justify-between border-lime-400/60 bg-lime-950/25 cursor-pointer">
-                <span class="text-[8px] font-black text-lime-400 uppercase">Готов!</span>
-                <span class="text-lg">📦</span>
-                <span class="text-[9px] font-black text-white bg-lime-500 text-stone-950 px-1 rounded">Открыть</span>
-              </div>
-              <div onclick="openChestSlot(1)" class="btn-tap hud-card rounded-xl p-1.5 h-16 flex flex-col items-center justify-between cursor-pointer">
-                <span class="text-[8px] font-bold text-stone-400">Бишкек</span>
-                <span class="text-lg">🧰</span>
-                <span class="text-[9px] font-black text-amber-300">2ч 45м</span>
-              </div>
-              <div onclick="openChestSlot(2)" class="btn-tap hud-card rounded-xl p-1.5 h-16 flex flex-col items-center justify-between cursor-pointer">
-                <span class="text-[8px] font-bold text-stone-400">Жаштык</span>
-                <span class="text-lg">🧰</span>
-                <span class="text-[9px] font-black text-stone-300">8ч 00м</span>
-              </div>
-              <div onclick="openFeatureModal('chests_info')" class="btn-tap hud-card rounded-xl p-1.5 h-16 flex flex-col items-center justify-center border-dashed border-stone-600 opacity-60 cursor-pointer">
-                <span class="text-xs text-stone-400">Пусто</span>
-                <span class="text-[8px] text-stone-500 mt-0.5">Слот 4</span>
-              </div>
+            <div id="lobby-chest-slots-container" class="grid grid-cols-4 gap-1.5 w-full">
+              <!-- Рендерится динамически через renderChestSlots() -->
             </div>
           </div>
 
@@ -390,7 +373,7 @@
         <div id="tab-view-village" class="hidden flex flex-col p-3 gap-2.5 min-h-full">
           
           <!-- Шапка поселения / Региональный прогресс кочевья -->
-          <div id="village-region-card" class="hud-card rounded-2xl p-3 border border-amber-500/40 bg-gradient-to-r from-emerald-950/70 via-stone-900 to-amber-950/40 flex justify-between items-center shadow-lg">
+          <div id="village-region-card" onclick="openRegionRoadmapModal()" class="btn-tap hud-card rounded-2xl p-3 border border-amber-500/40 bg-gradient-to-r from-emerald-950/70 via-stone-900 to-amber-950/40 flex justify-between items-center shadow-lg cursor-pointer active:scale-95" title="Нажмите, чтобы открыть карту регионов">
             <div class="flex-1 pr-2">
               <div class="flex items-center gap-1.5 mb-0.5">
                 <span class="text-[9px] font-black uppercase text-amber-400 tracking-wider">Регион Кочевья</span>
@@ -437,7 +420,7 @@
 
           <!-- Индикатор Щитов и Кнопка НАБЕГА (Чапкын) -->
           <div class="grid grid-cols-2 gap-2">
-            <div class="hud-card rounded-xl p-2.5 flex items-center justify-between border-cyan-500/40 bg-cyan-950/20">
+            <div onclick="openShieldsModal()" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border-cyan-500/40 bg-cyan-950/20 cursor-pointer active:scale-95" title="Управление щитами">
               <div class="text-left">
                 <div class="text-[10px] font-bold text-stone-300">Щиты от набегов:</div>
                 <div id="village-shields-display" class="text-sm font-black text-cyan-300 mt-0.5">🛡️ 🛡️ 🛡️</div>
@@ -567,7 +550,7 @@
 
         <!-- ==================== ТАБ 4: ЛИГА (LEADERBOARD) ==================== -->
         <div id="tab-view-leagues" class="hidden flex flex-col p-3 gap-3 min-h-full">
-          <div class="hud-card rounded-2xl p-3 border border-amber-400/40 flex items-center justify-between bg-gradient-to-r from-stone-900 to-amber-950/40 shadow">
+          <div onclick="openDivisionsModal()" class="btn-tap hud-card rounded-2xl p-3 border border-amber-400/40 flex items-center justify-between bg-gradient-to-r from-stone-900 to-amber-950/40 shadow cursor-pointer active:scale-95" title="Награды и дивизионы лиги">
             <div>
               <span class="text-[9px] font-black uppercase text-amber-300">Ваш Дивизион</span>
               <h3 class="text-base font-black text-white">⭐ Золотое Ханство</h3>
@@ -583,41 +566,8 @@
             </div>
 
             <!-- Игроки таблицы -->
-            <div class="hud-card rounded-xl p-2.5 flex items-center justify-between border-amber-400/60 bg-amber-500/10 shadow">
-              <div class="flex items-center gap-2">
-                <span class="font-black text-amber-300 text-xs w-4">1</span>
-                <span>👑</span>
-                <span class="font-black text-xs text-white">Арстан_Ош</span>
-              </div>
-              <span class="font-black text-amber-400 text-xs">2,840 🏆</span>
-            </div>
-
-            <div class="hud-card rounded-xl p-2.5 flex items-center justify-between shadow">
-              <div class="flex items-center gap-2">
-                <span class="font-black text-stone-300 text-xs w-4">2</span>
-                <span>🥈</span>
-                <span class="font-black text-xs text-stone-200">Беркут_Нарын</span>
-              </div>
-              <span class="font-black text-amber-300 text-xs">2,610 🏆</span>
-            </div>
-
-            <div class="hud-card rounded-xl p-2.5 flex items-center justify-between shadow">
-              <div class="flex items-center gap-2">
-                <span class="font-black text-stone-400 text-xs w-4">3</span>
-                <span>🥉</span>
-                <span class="font-black text-xs text-stone-200">Темир_Бишкек</span>
-              </div>
-              <span class="font-black text-amber-300 text-xs">2,490 🏆</span>
-            </div>
-
-            <!-- Текущий игрок -->
-            <div class="hud-card rounded-xl p-2.5 flex items-center justify-between border-2 border-lime-400 bg-lime-950/30 my-1 shadow">
-              <div class="flex items-center gap-2">
-                <span class="font-black text-lime-400 text-xs w-4">14</span>
-                <span>🥷</span>
-                <span class="font-black text-xs text-white">Вы (Батыр)</span>
-              </div>
-              <span class="font-black text-lime-400 text-xs">1,230 🏆</span>
+            <div id="leagues-leaderboard-list" class="flex flex-col gap-1.5">
+              <!-- Рендерится динамически через renderLeaguesUI() -->
             </div>
           </div>
         </div>
@@ -656,6 +606,60 @@
               <span class="text-xs font-black text-amber-300">Ханский Сундук</span>
               <span class="text-[10px] text-stone-300">Легендарный Сака</span>
               <span class="mt-1 px-3 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 text-xs font-black">50 💵</span>
+            </div>
+          </div>
+          <!-- Пакеты Монет за Баксы -->
+          <div class="flex flex-col gap-1.5 mt-2">
+            <div class="flex items-center justify-between px-1">
+              <span class="text-[10px] font-black uppercase text-amber-400">🪙 Пакеты Монет</span>
+              <span class="text-[9px] text-stone-400">Мгновенное зачисление</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div onclick="buyShopCoins(5000, 20)" class="btn-tap hud-card rounded-xl p-2 flex flex-col items-center gap-1 border-amber-500/40 cursor-pointer shadow active:scale-95 bg-stone-900/90">
+                <span class="text-xl">💰</span>
+                <span class="text-[10px] font-black text-white">+5,000 🪙</span>
+                <span class="px-2 py-0.5 rounded-lg bg-emerald-500 text-stone-950 text-[10px] font-black">20 💵</span>
+              </div>
+              <div onclick="buyShopCoins(25000, 80)" class="btn-tap hud-card rounded-xl p-2 flex flex-col items-center gap-1 border-yellow-500/50 cursor-pointer shadow active:scale-95 bg-amber-500/10">
+                <span class="text-xl">🏺</span>
+                <span class="text-[10px] font-black text-amber-300">+25,000 🪙</span>
+                <span class="px-2 py-0.5 rounded-lg bg-emerald-500 text-stone-950 text-[10px] font-black">80 💵</span>
+              </div>
+              <div onclick="buyShopCoins(100000, 250)" class="btn-tap hud-card rounded-xl p-2 flex flex-col items-center gap-1 border-yellow-400/70 cursor-pointer shadow active:scale-95 bg-yellow-500/15">
+                <span class="text-xl">👑</span>
+                <span class="text-[10px] font-black text-yellow-300">+100,000 🪙</span>
+                <span class="px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 text-[10px] font-black">250 💵</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Пакеты Баксов -->
+          <div class="flex flex-col gap-1.5 mt-1">
+            <div class="flex items-center justify-between px-1">
+              <span class="text-[10px] font-black uppercase text-emerald-400">💵 Запас Баксов</span>
+              <span class="text-[9px] text-stone-400">Элитная валюта</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div onclick="claimFreeDemoBucks()" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border-emerald-500/40 cursor-pointer shadow active:scale-95 bg-emerald-950/20">
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl">🎁</span>
+                  <div class="text-left">
+                    <span class="text-[8px] font-black text-emerald-400 uppercase">Бесплатно</span>
+                    <div class="text-xs font-black text-white">+50 💵 Баксов</div>
+                  </div>
+                </div>
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-500 text-stone-950 text-[10px] font-black uppercase">Забрать</span>
+              </div>
+              <div onclick="claimBigBucksPack()" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border-emerald-400/60 cursor-pointer shadow active:scale-95 bg-emerald-950/30">
+                <div class="flex items-center gap-2">
+                  <span class="text-2xl">💎</span>
+                  <div class="text-left">
+                    <span class="text-[8px] font-black text-amber-300 uppercase">VIP Спонсор</span>
+                    <div class="text-xs font-black text-white">+200 💵 Баксов</div>
+                  </div>
+                </div>
+                <span class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-400 to-lime-400 text-stone-950 text-[10px] font-black uppercase">Получить</span>
+              </div>
             </div>
           </div>
         </div>
@@ -3066,6 +3070,600 @@
         }
       }, 800);
     });
+
+    // =========================================================================
+    // 🌟 ПОЛНОЦЕННЫЙ ДВИЖОК ИНТЕРАКТИВНОСТИ И ВСЕХ ИГРОВЫХ МОДАЛОК
+    // =========================================================================
+
+    // 1. ДИНАМИЧЕСКИЕ СУНДУКИ
+    state.chests = [
+      { id: 0, name: 'Жаштык', tier: 'wood', status: 'ready', coins: 750, bucks: 2, cardName: 'Ханский Свинец', cardCount: 4 },
+      { id: 1, name: 'Бишкек', tier: 'silver', status: 'unlocking', timerSec: 9900, speedCost: 15, coins: 1800, bucks: 5, cardName: 'Костяной Батыр', cardCount: 6 },
+      { id: 2, name: 'Жаштык', tier: 'bronze', status: 'unlocking', timerSec: 28800, speedCost: 25, coins: 3000, bucks: 8, cardName: 'Неоновый Кочевник', cardCount: 8 },
+      { id: 3, name: 'Пусто', tier: 'empty', status: 'empty' }
+    ];
+
+    function formatTimer(sec) {
+      if (sec <= 0) return 'ГОТОВ!';
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      if (h > 0) return `${h}ч ${m}м`;
+      return `${m}м ${s}с`;
+    }
+
+    function renderChestSlots() {
+      const container = document.getElementById('lobby-chest-slots-container');
+      if (!container) return;
+
+      container.innerHTML = state.chests.map((ch, idx) => {
+        if (ch.status === 'ready') {
+          return `
+            <div onclick="openChestSlot(${idx})" class="btn-tap hud-card rounded-xl p-1.5 h-16 flex flex-col items-center justify-between border-2 border-lime-400 bg-lime-950/30 cursor-pointer shadow active:scale-95 transition-all">
+              <span class="text-[8px] font-black text-lime-400 uppercase animate-pulse">Готов!</span>
+              <span class="text-lg">📦</span>
+              <span class="text-[9px] font-black text-stone-950 bg-lime-400 px-1.5 py-0.2 rounded shadow">Открыть</span>
+            </div>
+          `;
+        } else if (ch.status === 'unlocking') {
+          return `
+            <div onclick="openChestSlot(${idx})" class="btn-tap hud-card rounded-xl p-1.5 h-16 flex flex-col items-center justify-between border border-amber-500/40 bg-stone-900/90 cursor-pointer shadow active:scale-95 transition-all">
+              <span class="text-[8px] font-bold text-stone-400 truncate w-full text-center">${ch.name}</span>
+              <span class="text-lg">🧰</span>
+              <span class="text-[9px] font-black text-amber-300 font-mono">${formatTimer(ch.timerSec)}</span>
+            </div>
+          `;
+        } else {
+          return `
+            <div onclick="openChestSlot(${idx})" class="btn-tap hud-card rounded-xl p-1.5 h-16 flex flex-col items-center justify-center border-dashed border-stone-700 opacity-60 cursor-pointer active:scale-95">
+              <span class="text-xs text-stone-400">Пусто</span>
+              <span class="text-[8px] text-stone-500 mt-0.5">Слот ${idx + 1}</span>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    // Запуск таймера сундуков каждую секунду
+    setInterval(() => {
+      let changed = false;
+      state.chests.forEach(ch => {
+        if (ch.status === 'unlocking' && ch.timerSec > 0) {
+          ch.timerSec--;
+          if (ch.timerSec <= 0) {
+            ch.status = 'ready';
+          }
+          changed = true;
+        }
+      });
+      if (changed && currentLobbyTab === 'play') {
+        renderChestSlots();
+      }
+    }, 1000);
+
+    function openChestSlot(idx) {
+      const ch = state.chests[idx];
+      if (!ch) return;
+
+      if (ch.status === 'ready') {
+        // Забрать награду
+        state.coins += ch.coins;
+        state.bucks += ch.bucks;
+        const rewardCoins = ch.coins;
+        const rewardBucks = ch.bucks;
+        const rewardCard = `${ch.cardName} +${ch.cardCount}`;
+
+        ch.status = 'empty';
+        ch.tier = 'empty';
+        ch.name = 'Пусто';
+
+        updateHUD();
+        renderChestSlots();
+
+        if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
+          window.EthnoAudio.playTemirKomuz('jackpot');
+        } else {
+          playBoneSound('out', 1.6);
+        }
+
+        showModal('📦', 'Сундук открыт!', `
+          <div class="flex flex-col gap-2.5 py-2 text-center">
+            <div class="text-xs text-stone-300">Вы получили ценную добычу кочевника:</div>
+            <div class="grid grid-cols-2 gap-2 text-xs font-black">
+              <div class="p-2.5 rounded-xl bg-amber-500/20 border border-amber-400/50 text-amber-300 flex items-center justify-center gap-1 shadow">
+                <span>🪙</span> +${rewardCoins.toLocaleString('ru-RU')}
+              </div>
+              <div class="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 flex items-center justify-center gap-1 shadow">
+                <span>💵</span> +${rewardBucks} Баксов
+              </div>
+            </div>
+            <div class="p-2 rounded-xl bg-purple-500/20 border border-purple-400/40 text-purple-200 text-xs font-black flex items-center justify-center gap-1">
+              <span>🦴</span> Карточки: <b>${rewardCard}</b>
+            </div>
+          </div>
+        `, `
+          <button onclick="closeGenericModal()" class="btn-tap w-full py-2.5 rounded-xl bg-gradient-to-r from-lime-400 to-yellow-400 text-stone-950 font-black uppercase text-xs shadow">Забрать в казну!</button>
+        `);
+      } else if (ch.status === 'unlocking') {
+        showModal('🧰', `Сундук: ${ch.name}`, `
+          <div class="flex flex-col gap-2.5 py-1 text-center">
+            <div class="text-xs text-stone-300">Сундук находится в процессе взлома замка.</div>
+            <div class="p-3 rounded-2xl bg-stone-900 border border-amber-500/30 flex flex-col items-center gap-1">
+              <span class="text-[10px] text-stone-400 font-bold uppercase">Осталось времени:</span>
+              <span class="text-xl font-black text-amber-400 font-mono">${formatTimer(ch.timerSec)}</span>
+            </div>
+            <div class="text-[11px] text-stone-400">
+              Внутри: <b>+${ch.coins.toLocaleString('ru-RU')} 🪙</b> и карточки <b>${ch.cardName}</b>.
+            </div>
+          </div>
+        `, `
+          <button onclick="speedUpChest(${idx})" class="btn-tap flex-1 py-2.5 rounded-xl bg-gradient-to-r from-lime-400 via-yellow-400 to-lime-500 text-stone-950 font-black uppercase text-xs shadow">
+            ⚡ Ускорить (${ch.speedCost} 💵)
+          </button>
+          <button onclick="closeGenericModal()" class="btn-tap px-3 py-2.5 rounded-xl bg-stone-800 text-stone-300 font-bold text-xs">
+            Подождать
+          </button>
+        `);
+      } else {
+        showModal('📦', 'Слот свободен', `
+          <div class="text-xs text-stone-300 text-center py-2">
+            Этот слот свободен!<br><br>
+            Побеждайте соперников на <b>Арене 1v1</b>, чтобы заполнить слот новым сундуком с монетами и карточками прокачки битков.
+          </div>
+        `, `
+          <button onclick="closeGenericModal(); switchLobbyTab('play');" class="btn-tap w-full py-2.5 rounded-xl bg-amber-400 text-stone-950 font-black uppercase text-xs">В бой!</button>
+        `);
+      }
+    }
+
+    function speedUpChest(idx) {
+      const ch = state.chests[idx];
+      if (!ch) return;
+
+      if (state.bucks < ch.speedCost) {
+        showMatchToast('💵 Не хватает баксов! Пополните в Лавке.');
+        closeGenericModal();
+        switchLobbyTab('shop');
+        return;
+      }
+
+      state.bucks -= ch.speedCost;
+      ch.timerSec = 0;
+      ch.status = 'ready';
+      updateHUD();
+      renderChestSlots();
+      closeGenericModal();
+      openChestSlot(idx);
+    }
+
+    // 2. СЕЗОННЫЙ PASS МОДАЛКА
+    function openBattlePassModal() {
+      showModal('🎫', 'Сезонный Pass: Игры Кочевников', `
+        <div class="flex flex-col gap-2.5 text-left text-xs max-h-[60vh] overflow-y-auto no-scrollbar py-1">
+          <div class="p-3 rounded-2xl bg-gradient-to-r from-amber-950/70 via-stone-900 to-amber-950/50 border border-amber-400/40 flex items-center justify-between">
+            <div>
+              <span class="text-[9px] font-black uppercase text-amber-300">Уровень пропуска</span>
+              <div class="text-lg font-black text-white">Уровень 4 / 20</div>
+              <div class="text-[10px] text-lime-400 font-bold">Очков сезона: 450 / 1000</div>
+            </div>
+            <span class="text-3xl animate-bounce">🏆</span>
+          </div>
+
+          <!-- Список этапов пропуска -->
+          <div class="flex flex-col gap-1.5">
+            <div class="flex items-center justify-between p-2 rounded-xl bg-stone-900 border border-lime-500/40">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🪙</span>
+                <div>
+                  <div class="font-black text-white text-[11px]">Этап 1 • 2,000 Монет</div>
+                  <div class="text-[9px] text-lime-400">Награда кочевника</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-black text-lime-400 bg-lime-400/20 px-2 py-0.5 rounded">✓ Получено</span>
+            </div>
+
+            <div class="flex items-center justify-between p-2 rounded-xl bg-stone-900 border border-lime-500/40">
+              <div class="flex items-center gap-2">
+                <span class="text-base">💵</span>
+                <div>
+                  <div class="font-black text-white text-[11px]">Этап 2 • 15 Баксов</div>
+                  <div class="text-[9px] text-lime-400">Казна батыра</div>
+                </div>
+              </div>
+              <span class="text-[10px] font-black text-lime-400 bg-lime-400/20 px-2 py-0.5 rounded">✓ Получено</span>
+            </div>
+
+            <div class="flex items-center justify-between p-2 rounded-xl bg-stone-900 border border-amber-400/60 bg-amber-500/10">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🎁</span>
+                <div>
+                  <div class="font-black text-amber-300 text-[11px]">Этап 3 • Ханский Дар</div>
+                  <div class="text-[9px] text-stone-300">+5,000 🪙 и +10 💵</div>
+                </div>
+              </div>
+              <button onclick="claimPassReward(3)" class="btn-tap px-3 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-[10px] uppercase shadow">Забрать</button>
+            </div>
+
+            <div class="flex items-center justify-between p-2 rounded-xl bg-stone-950 border border-stone-800 opacity-60">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🦴</span>
+                <div>
+                  <div class="font-bold text-stone-400 text-[11px]">Этап 4 • Скин «Манас Неон»</div>
+                  <div class="text-[9px] text-stone-500">Откроется на 800 XP</div>
+                </div>
+              </div>
+              <span class="text-[10px] text-stone-500 font-bold">🔒 Замок</span>
+            </div>
+          </div>
+        </div>
+      `, `
+        <button onclick="closeGenericModal()" class="btn-tap w-full py-2.5 rounded-xl bg-amber-400 text-stone-950 font-black uppercase text-xs">Закрыть</button>
+      `);
+    }
+
+    function claimPassReward(tier) {
+      state.coins += 5000;
+      state.bucks += 10;
+      updateHUD();
+      if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
+        window.EthnoAudio.playTemirKomuz('jackpot');
+      }
+      showMatchToast('🎉 Награда Сезонного Пасса зачислена!');
+      closeGenericModal();
+    }
+
+    // 3. ИГРА С ДРУГОМ (FRIENDLY LOBBY)
+    function openFriendLobbyModal() {
+      const roomCode = 'CHUKO-' + Math.floor(1000 + Math.random() * 9000);
+      showModal('👥', 'Игра с Другом (1v1)', `
+        <div class="flex flex-col gap-3 py-1 text-left text-xs">
+          <!-- Режим 1: Pass and Play на одном экране -->
+          <div class="p-3 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-stone-900 border border-emerald-500/40 flex flex-col gap-1.5 shadow">
+            <div class="flex items-center justify-between">
+              <h4 class="font-black text-emerald-300 text-xs uppercase">⚔️ Локальный матч (Pass & Play)</h4>
+              <span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-1.5 py-0.2 rounded font-bold">1 Телефон</span>
+            </div>
+            <p class="text-[11px] text-stone-300">Играйте вдвоем с другом на одном телефоне, передавая устройство по очереди!</p>
+            <button onclick="startFriendMatchLocal()" class="btn-tap mt-1 py-2 px-3 rounded-xl bg-emerald-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95">
+              Играть на одном телефоне ▶
+            </button>
+          </div>
+
+          <!-- Режим 2: Приглашение по коду/ссылке -->
+          <div class="p-3 rounded-2xl bg-stone-900 border border-amber-500/30 flex flex-col gap-2 shadow">
+            <div class="flex items-center justify-between">
+              <h4 class="font-black text-amber-300 text-xs uppercase">📱 Онлайн-приглашение</h4>
+              <span class="text-[9px] text-amber-400 font-mono font-bold">${roomCode}</span>
+            </div>
+            <p class="text-[11px] text-stone-300">Отправьте персональную ссылку другу в Telegram или WhatsApp:</p>
+            <button onclick="copyFriendInvite('${roomCode}')" class="btn-tap py-2 px-3 rounded-xl bg-amber-400 text-stone-950 font-black text-xs uppercase flex items-center justify-center gap-1.5 shadow active:scale-95">
+              <span>📋</span> Скопировать ссылку для друга
+            </button>
+          </div>
+        </div>
+      `, `
+        <button onclick="closeGenericModal()" class="btn-tap w-full py-2.5 rounded-xl bg-stone-800 text-stone-300 font-bold text-xs">Закрыть</button>
+      `);
+    }
+
+    function startFriendMatchLocal() {
+      closeGenericModal();
+      setMatchBoneCount(5);
+      match.arenaName = 'Дружеский Ордо (1v1)';
+      match.prizePool = 0;
+      match.isFriendlyLocal = true;
+      showScreen('screen-game');
+      initMatchCanvas();
+      initMatchEngine();
+      showMatchToast('👥 Дружеский матч запущен! Ходит Игрок 1');
+    }
+
+    function copyFriendInvite(code) {
+      const url = `https://chuko.uyoom.app/?room=${code}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showMatchToast('✓ Ссылка скопирована в буфер обмена!');
+        }).catch(() => {
+          showMatchToast(`Ссылка: ${url}`);
+        });
+      } else {
+        showMatchToast(`Ссылка: ${url}`);
+      }
+    }
+
+    // 4. КАРТА РЕГИОНОВ (ROADMAP)
+    function openRegionRoadmapModal() {
+      const currentReg = (window.MonopolyGoMeta && window.MonopolyGoMeta.state) ? window.MonopolyGoMeta.state.currentRegion : 1;
+      showModal('🗺️', 'Карта Кочевий Ордо', `
+        <div class="flex flex-col gap-2.5 text-left text-xs max-h-[60vh] overflow-y-auto no-scrollbar py-1">
+          <div class="p-3 rounded-2xl ${currentReg === 1 ? 'border-2 border-emerald-400 bg-emerald-950/30' : 'border border-stone-800 bg-stone-900'}">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[9px] font-black uppercase text-emerald-400">Регион #1</span>
+                <h4 class="text-sm font-black text-white">Жайлоо Суусамыр</h4>
+                <p class="text-[10px] text-stone-300">Зеленые высокогорные пастбища и стартовый аил батыров.</p>
+              </div>
+              <span class="text-2xl">${currentReg === 1 ? '📍' : '✓'}</span>
+            </div>
+            <div class="mt-2 text-[10px] font-bold text-amber-300">Награда за закрытие: +10,000 🪙 + скин «Суусамыр Көк-Бөрү»</div>
+          </div>
+
+          <div class="p-3 rounded-2xl ${currentReg === 2 ? 'border-2 border-cyan-400 bg-cyan-950/30' : 'border border-stone-800 bg-stone-900'}">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[9px] font-black uppercase text-cyan-400">Регион #2</span>
+                <h4 class="text-sm font-black text-white">Озеро Иссык-Куль</h4>
+                <p class="text-[10px] text-stone-300">Лазурная жемчужина Тянь-Шаня, призовой банк арен х3.</p>
+              </div>
+              <span class="text-2xl">${currentReg === 2 ? '📍' : (currentReg > 2 ? '✓' : '🔒')}</span>
+            </div>
+            <div class="mt-2 text-[10px] font-bold text-cyan-300">Награда: +25,000 🪙 + скин «Иссык-Кульский Лазурит»</div>
+          </div>
+
+          <div class="p-3 rounded-2xl ${currentReg === 3 ? 'border-2 border-amber-400 bg-amber-950/30' : 'border border-stone-800 bg-stone-900'}">
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="text-[9px] font-black uppercase text-amber-400">Регион #3</span>
+                <h4 class="text-sm font-black text-white">Пик Хан-Теңири</h4>
+                <p class="text-[10px] text-stone-300">Цитадель Небесного Владыки, золотые юрты и элитная лига.</p>
+              </div>
+              <span class="text-2xl">${currentReg === 3 ? '📍' : '🔒'}</span>
+            </div>
+            <div class="mt-2 text-[10px] font-bold text-amber-400">Награда: +60,000 🪙 + Титул «Владыка Семиречья»</div>
+          </div>
+        </div>
+      `, `
+        <button onclick="closeGenericModal()" class="btn-tap w-full py-2.5 rounded-xl bg-amber-400 text-stone-950 font-black uppercase text-xs">Закрыть</button>
+      `);
+    }
+
+    // 5. УПРАВЛЕНИЕ ЩИТАМИ
+    function openShieldsModal() {
+      const v = (window.MonopolyGoMeta && window.MonopolyGoMeta.gameState && window.MonopolyGoMeta.gameState.village) || state.village || {};
+      const shields = (v.shields !== undefined) ? v.shields : 3;
+      const maxShields = (v.maxShields !== undefined) ? v.maxShields : 3;
+
+      showModal('🛡️', 'Щиты Обороны Аула', `
+        <div class="flex flex-col gap-3 py-1 text-center text-xs">
+          <div class="p-3 rounded-2xl bg-cyan-950/40 border border-cyan-400/50 flex flex-col items-center gap-1 shadow">
+            <span class="text-[10px] uppercase font-bold text-stone-400">Запас щитов:</span>
+            <div class="text-2xl font-black text-cyan-300 font-mono tracking-widest">${'🛡️ '.repeat(shields)} ${'⚪ '.repeat(Math.max(0, maxShields - shields))}</div>
+            <div class="text-[10px] text-cyan-400 mt-1">Активно: <b>${shields} из ${maxShields}</b> щитов</div>
+          </div>
+          <p class="text-[11px] text-stone-300">
+            Щиты автоматически отражают набеги других батыров на ваши юрты. Дозорная башня восстанавливает +1 щит каждые 8 часов.
+          </p>
+        </div>
+      `, `
+        ${shields < maxShields ? `
+          <button onclick="buyShieldItem(1, 5)" class="btn-tap flex-1 py-2.5 rounded-xl bg-cyan-400 text-stone-950 font-black uppercase text-xs shadow">
+            +1 Щит (5 💵)
+          </button>
+          <button onclick="buyShieldItem(maxShields - shields, 12)" class="btn-tap flex-1 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-stone-950 font-black uppercase text-xs shadow">
+            Максимум (12 💵)
+          </button>
+        ` : `
+          <button onclick="closeGenericModal()" class="btn-tap w-full py-2.5 rounded-xl bg-cyan-400 text-stone-950 font-black uppercase text-xs">Запас полон!</button>
+        `}
+      `);
+    }
+
+    function buyShieldItem(count, cost) {
+      if (state.bucks < cost) {
+        showMatchToast('💵 Не хватает баксов! Пополните в Лавке.');
+        closeGenericModal();
+        switchLobbyTab('shop');
+        return;
+      }
+
+      state.bucks -= cost;
+      const v = (window.MonopolyGoMeta && window.MonopolyGoMeta.gameState && window.MonopolyGoMeta.gameState.village) || state.village;
+      if (v) {
+        v.shields = Math.min(v.maxShields || 3, (v.shields || 0) + count);
+        if (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.saveState === "function") {
+          window.MonopolyGoMeta.saveState();
+        }
+        if (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.renderVillageUI === "function") {
+          window.MonopolyGoMeta.renderVillageUI();
+        }
+        updateHUD();
+      }
+      updateHUD();
+      showMatchToast(`🛡️ Щиты пополнены (+${count})!`);
+      closeGenericModal();
+    }
+
+    // 6. ИНСПЕКЦИЯ СОПЕРНИКА В ЛИДЕРБОРДЕ
+    const LEADERBOARD_DATA = [
+      { rank: 1, name: 'Арстан_Ош', trophies: 2840, avatar: '👑', medal: '🥇', saka: 'Обсидиан Манаса (Ур. 4)', power: 92, aim: 78 },
+      { rank: 2, name: 'Беркут_Нарын', trophies: 2610, avatar: '🥈', medal: '🥈', saka: 'Ханский Свинец (Ур. 3)', power: 85, aim: 70 },
+      { rank: 3, name: 'Темир_Бишкек', trophies: 2490, avatar: '🥉', medal: '🥉', saka: 'Костяной Батыр (Ур. 3)', power: 88, aim: 65 },
+      { rank: 4, name: 'Кайрат_Джалал-Абад', trophies: 2310, avatar: '🐺', medal: '4.', saka: 'Неоновый Кочевник (Ур. 2)', power: 75, aim: 82 },
+      { rank: 5, name: 'Чингиз_Талас', trophies: 2190, avatar: '🏹', medal: '5.', saka: 'Ханский Свинец (Ур. 2)', power: 72, aim: 64 },
+      { rank: 6, name: 'Улан_Каракол', trophies: 1980, avatar: '🐎', medal: '6.', saka: 'Костяной Батыр (Ур. 2)', power: 78, aim: 58 },
+      { rank: 7, name: 'Батыр_Баткен', trophies: 1850, avatar: '🥷', medal: '7.', saka: 'Ханский Свинец (Ур. 2)', power: 68, aim: 60 }
+    ];
+
+    function renderLeaguesUI() {
+      const container = document.getElementById('leagues-leaderboard-list');
+      if (!container) return;
+
+      let html = LEADERBOARD_DATA.map(p => `
+        <div onclick="inspectLeaderboardRival('${p.name}', ${p.trophies}, '${p.avatar}', '${p.saka}', ${p.power}, ${p.aim})" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border border-stone-800 bg-stone-900/90 shadow cursor-pointer active:scale-95 transition-all hover:border-amber-400/60">
+          <div class="flex items-center gap-2">
+            <span class="font-black text-amber-300 text-xs w-5 text-center">${p.medal}</span>
+            <span class="text-base">${p.avatar}</span>
+            <div class="text-left">
+              <span class="font-black text-xs text-white">${p.name}</span>
+              <div class="text-[9px] text-stone-400 font-normal">${p.saka}</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="font-black text-amber-400 text-xs">${p.trophies.toLocaleString('ru-RU')} 🏆</div>
+            <span class="text-[8px] text-stone-500 uppercase font-bold">Осмотр ➔</span>
+          </div>
+        </div>
+      `).join('');
+
+      // Карточка самого игрока
+      html += `
+        <div onclick="openProfileModal()" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border-2 border-lime-400 bg-lime-950/30 my-1 shadow cursor-pointer active:scale-95">
+          <div class="flex items-center gap-2">
+            <span class="font-black text-lime-400 text-xs w-5 text-center">14.</span>
+            <span class="text-base">🥷</span>
+            <div class="text-left">
+              <span class="font-black text-xs text-white">Вы (${state.username})</span>
+              <div class="text-[9px] text-lime-300 font-normal">Ваш дивизион: Золотое Ханство</div>
+            </div>
+          </div>
+          <span class="font-black text-lime-400 text-xs">${state.trophies.toLocaleString('ru-RU')} 🏆</span>
+        </div>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function inspectLeaderboardRival(name, trophies, avatar, saka, power, aim) {
+      showModal(avatar || '🐺', `Батыр: ${name}`, `
+        <div class="flex flex-col gap-2.5 text-left text-xs py-1">
+          <div class="p-3 rounded-2xl bg-stone-900 border border-amber-400/30 flex items-center justify-between shadow">
+            <div>
+              <span class="text-[9px] font-black uppercase text-amber-300">Рейтинг Лиги</span>
+              <div class="text-base font-black text-white">${trophies.toLocaleString('ru-RU')} 🏆 Кубков</div>
+              <div class="text-[10px] text-stone-300">Дивизион: ⭐ Золотое Ханство</div>
+            </div>
+            <span class="text-3xl">${avatar}</span>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-stone-950 border border-white/10 flex flex-col gap-1">
+            <span class="text-[9px] font-black text-stone-400 uppercase">Боевой Биток (Сака):</span>
+            <div class="font-bold text-amber-300 text-xs">${saka}</div>
+            <div class="grid grid-cols-2 gap-2 mt-1 text-[10px]">
+              <div>Сила удара: <b class="text-white">${power || 80}/100</b></div>
+              <div>Точность прицела: <b class="text-white">${aim || 70}/100</b></div>
+            </div>
+          </div>
+        </div>
+      `, `
+        <button onclick="closeGenericModal(); launchVillageRaid('${name}');" class="btn-tap flex-1 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-black uppercase text-xs shadow flex items-center justify-center gap-1">
+          <span>⚔️</span> Совершить набег!
+        </button>
+        <button onclick="closeGenericModal()" class="btn-tap px-4 py-2.5 rounded-xl bg-stone-800 text-stone-300 font-bold text-xs">
+          Закрыть
+        </button>
+      `);
+    }
+
+    function openDivisionsModal() {
+      showModal('🏆', 'Дивизионы и Награды Сезона', `
+        <div class="flex flex-col gap-2 text-left text-xs py-1 max-h-[60vh] overflow-y-auto no-scrollbar">
+          <div class="p-2.5 rounded-xl bg-amber-500/20 border-2 border-amber-400 shadow">
+            <div class="flex justify-between items-center">
+              <span class="font-black text-amber-300">⭐ Золотое Ханство</span>
+              <span class="text-[9px] font-black bg-amber-400 text-stone-950 px-1.5 py-0.2 rounded">Ваша Лига</span>
+            </div>
+            <div class="text-[10px] text-stone-300 mt-1">Порог: от 1,000 до 2,499 🏆</div>
+            <div class="text-[10px] text-lime-300 font-bold mt-1">Приз сезона: +25,000 🪙 + 50 💵 + Ханский Сундук</div>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-stone-900 border border-stone-700">
+            <span class="font-black text-purple-300">👑 Лига Манаса (Элита)</span>
+            <div class="text-[10px] text-stone-400 mt-0.5">Порог: от 2,500+ 🏆</div>
+            <div class="text-[10px] text-amber-300 font-bold mt-1">Приз сезона: +100,000 🪙 + 200 💵 + Титул «Легенда»</div>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-stone-900 border border-stone-700">
+            <span class="font-black text-stone-300">🥈 Серебряный Айыл</span>
+            <div class="text-[10px] text-stone-400 mt-0.5">Порог: от 400 до 999 🏆</div>
+            <div class="text-[10px] text-stone-300 mt-1">Приз: +10,000 🪙 + 20 💵</div>
+          </div>
+
+          <div class="p-2.5 rounded-xl bg-stone-900 border border-stone-700">
+            <span class="font-black text-amber-700">🥉 Бронзовая Орда</span>
+            <div class="text-[10px] text-stone-400 mt-0.5">Порог: от 0 до 399 🏆</div>
+            <div class="text-[10px] text-stone-300 mt-1">Приз: +3,000 🪙 + 5 💵</div>
+          </div>
+        </div>
+      `, `
+        <button onclick="closeGenericModal()" class="btn-tap w-full py-2.5 rounded-xl bg-amber-400 text-stone-950 font-black uppercase text-xs">Понятно</button>
+      `);
+    }
+
+    // 7. ПОКУПКА ВАЛЮТ В ЛАВКЕ
+    function buyShopCoins(coinsAmt, bucksCost) {
+      if (state.bucks < bucksCost) {
+        showMatchToast('💵 Не хватает баксов! Получите бесплатный бонус ниже.');
+        return;
+      }
+
+      state.bucks -= bucksCost;
+      state.coins += coinsAmt;
+      updateHUD();
+      if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
+        window.EthnoAudio.playTemirKomuz('jackpot');
+      } else {
+        playBoneSound('out', 1.5);
+      }
+      showMatchToast(`✓ Куплено +${coinsAmt.toLocaleString('ru-RU')} 🪙 за ${bucksCost} 💵!`);
+    }
+
+    function claimFreeDemoBucks() {
+      state.bucks += 50;
+      updateHUD();
+      if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
+        window.EthnoAudio.playTemirKomuz('jackpot');
+      }
+      showMatchToast('🎁 Зачислено +50 💵 бесплатных баксов!');
+    }
+
+    function claimBigBucksPack() {
+      state.bucks += 200;
+      updateHUD();
+      if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
+        window.EthnoAudio.playTemirKomuz('jackpot');
+      }
+      showMatchToast('💎 VIP-Спонсор: +200 💵 баксов получено!');
+    }
+
+    // 8. ИНСПЕКЦИЯ ЗДАНИЙ АИЛА
+    function inspectBuilding(bKey) {
+      upgradeVillageBuilding(bKey);
+    }
+
+    // Безопасная смена темы
+    const origSetSeasonTheme = window.setSeasonTheme || setSeasonTheme;
+    setSeasonTheme = function(season) {
+      state.season = season;
+      const vp = document.getElementById('app-viewport');
+      if (vp) vp.setAttribute('data-season', season);
+
+      const banner = document.getElementById('season-title-banner');
+      const path = document.getElementById('hero-chuko-path');
+
+      const btnNomad = document.getElementById('season-btn-nomad');
+      const btnCyber = document.getElementById('season-btn-cyberpunk');
+
+      if (season === 'nomad') {
+        if (banner) banner.textContent = 'Всемирные Игры Кочевников';
+        if (path) path.setAttribute('stroke', '#451a03');
+        if (btnNomad) btnNomad.className = 'btn-tap text-[9px] font-black px-1.5 py-0.5 rounded-lg bg-amber-500 text-stone-950 border border-white';
+        if (btnCyber) btnCyber.className = 'btn-tap text-[9px] font-black px-1.5 py-0.5 rounded-lg bg-stone-800 text-cyan-300 border border-cyan-500/40';
+        showMatchToast('🏹 Тема: Игры Кочевников');
+      } else {
+        if (banner) banner.textContent = 'Кибер-Ордо 2077 • Неоновый сезон';
+        if (path) path.setAttribute('stroke', '#06b6d4');
+        if (btnNomad) btnNomad.className = 'btn-tap text-[9px] font-black px-1.5 py-0.5 rounded-lg bg-stone-800 text-amber-300 border border-amber-500/40';
+        if (btnCyber) btnCyber.className = 'btn-tap text-[9px] font-black px-1.5 py-0.5 rounded-lg bg-cyan-400 text-stone-950 border border-white';
+        showMatchToast('⚡ Тема: Кибер-Ордо 2077');
+      }
+    };
+
+    // Инициализация интерактивных компонентов при старте
+    setTimeout(() => {
+      renderChestSlots();
+      renderLeaguesUI();
+    }, 200);
+
   </script>
 </body>
 </html>
