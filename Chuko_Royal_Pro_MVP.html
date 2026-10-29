@@ -10,6 +10,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/phase2_mechanics.js?v=20261029_360"></script>
+  <script src="js/monopolygo_meta.js?v=20261029_p4"></script>
+  <script src="js/ethno_av_engine.js?v=20261029_phase3"></script>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -88,6 +90,31 @@
     }
     .loader-saka { animation: flySakaLoader 1.6s infinite ease-out; }
 
+    @keyframes sakaStrike {
+      0% { transform: translate(0, 100px) scale(0.6) rotate(0deg); opacity: 0.3; }
+      50% { transform: translate(0, 10px) scale(1.15) rotate(180deg); opacity: 1; }
+      100% { transform: translate(0, -60px) scale(0.9) rotate(360deg); opacity: 1; }
+    }
+    .animate-saka-strike {
+      animation: sakaStrike 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    @keyframes hammerStrike {
+      0% { transform: rotate(-35deg) scale(1); }
+      40% { transform: rotate(20deg) scale(1.2); }
+      70% { transform: rotate(-10deg) scale(1.05); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+    .animate-hammer-strike {
+      animation: hammerStrike 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6)); }
+      50% { filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.95)); }
+    }
+    .piggy-glow { animation: pulseGlow 2s infinite ease-in-out; }
+
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     canvas { touch-action: none; display: block; }
@@ -159,12 +186,18 @@
           </div>
         </div>
 
-        <!-- Валюты и Щиты (Monopoly GO) -->
+        <!-- Валюты, Щиты и Копилка (Monopoly GO) -->
         <div class="flex items-center gap-1">
           <!-- Щиты защиты -->
           <div onclick="switchLobbyTab('village')" class="btn-tap h-9 flex items-center gap-1 bg-stone-950/80 px-2 py-1 rounded-xl border border-cyan-500/40 active:scale-95 shadow cursor-pointer" title="Щиты защиты от набегов">
             <span class="text-xs">🛡️</span>
             <span id="hud-shields" class="text-[11px] font-black text-cyan-300">3/3</span>
+          </div>
+          <!-- Ханская Копилка -->
+          <div onclick="MonopolyGoMeta.openPiggyModal()" class="btn-tap h-9 flex items-center gap-1 bg-stone-950/80 px-2 py-1 rounded-xl border border-amber-500/40 active:scale-95 shadow cursor-pointer relative" title="Ханская Копилка (+15% с матчей)">
+            <span class="text-xs">🏺</span>
+            <span id="piggy-amount" class="text-[11px] font-black text-amber-300">0 🪙</span>
+            <span id="piggy-widget-badge" class="hidden absolute -top-1 -right-1 px-1 py-0.2 rounded-full bg-lime-400 text-stone-950 font-black text-[7px] animate-bounce">ГОТОВА!</span>
           </div>
           <!-- Баксы -->
           <div onclick="switchLobbyTab('shop')" class="btn-tap h-9 flex items-center gap-1 bg-stone-950/80 px-2 py-1 rounded-xl border border-emerald-500/40 active:scale-95 shadow cursor-pointer">
@@ -354,53 +387,89 @@
         </div>
 
         <!-- ==================== ТАБ 2: МОЯ ОРДА (MONOPOLY GO BUILD & RAID META) ==================== -->
-        <div id="tab-view-village" class="hidden flex flex-col p-3 gap-3 min-h-full">
+        <div id="tab-view-village" class="hidden flex flex-col p-3 gap-2.5 min-h-full">
           
-          <!-- Шапка поселения / Региона -->
-          <div class="hud-card rounded-2xl p-3 border border-amber-500/40 bg-gradient-to-r from-stone-900 via-amber-950/30 to-stone-900 flex justify-between items-center shadow-lg">
-            <div>
-              <span class="text-[9px] font-black uppercase text-amber-400 tracking-wider">Регион Кочевья #1</span>
+          <!-- Шапка поселения / Региональный прогресс кочевья -->
+          <div id="village-region-card" class="hud-card rounded-2xl p-3 border border-amber-500/40 bg-gradient-to-r from-emerald-950/70 via-stone-900 to-amber-950/40 flex justify-between items-center shadow-lg">
+            <div class="flex-1 pr-2">
+              <div class="flex items-center gap-1.5 mb-0.5">
+                <span class="text-[9px] font-black uppercase text-amber-400 tracking-wider">Регион Кочевья</span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold">Roadmap</span>
+              </div>
               <h3 id="village-region-name" class="text-base font-black text-white">Жайлоо Суусамыр</h3>
-              <p class="text-[11px] text-stone-300">Постройте все 4 здания, чтобы открыть <b class="text-cyan-300">Иссык-Куль</b></p>
+              <p id="village-region-tagline" class="text-[10px] text-stone-300 truncate">Изумрудные высокогорные пастбища и стан батыров</p>
+              
+              <!-- 3-этапный roadmap индикатор -->
+              <div class="flex items-center gap-1 mt-2 text-[9px] font-black">
+                <span class="px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-300 border border-emerald-400/50">1. Суусамыр</span>
+                <span class="text-stone-500">➔</span>
+                <span class="px-1.5 py-0.5 rounded bg-stone-800 text-stone-400 border border-stone-700">2. Иссык-Куль</span>
+                <span class="text-stone-500">➔</span>
+                <span class="px-1.5 py-0.5 rounded bg-stone-800 text-stone-400 border border-stone-700">3. Хан-Теңири</span>
+              </div>
             </div>
-            <div class="text-right">
-              <span class="text-[10px] text-stone-400 font-bold">Прогресс:</span>
-              <div id="village-progress-badge" class="text-sm font-black text-lime-400">2 / 4</div>
+            <div class="text-right shrink-0">
+              <span class="text-[10px] text-stone-400 font-bold">Построек MAX:</span>
+              <div id="village-progress-badge" class="text-base font-black text-lime-400">0 / 4</div>
+              <div class="text-[8px] text-stone-400">до перехода</div>
             </div>
+          </div>
+
+          <!-- БАННЕР СБОРА ДАНИ (ХАНСКАЯ ЮРТА) -->
+          <div id="village-tribute-banner" class="hud-card rounded-2xl p-2.5 border border-yellow-500/40 bg-gradient-to-r from-amber-950/50 via-stone-900 to-amber-950/30 flex items-center justify-between shadow-md">
+            <div class="flex items-center gap-2">
+              <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-xl shadow">
+                🛖
+              </div>
+              <div class="text-left">
+                <div class="text-[9px] font-black uppercase text-amber-300 tracking-wider">Ханская Дань</div>
+                <div class="text-xs font-black text-white flex items-center gap-1">
+                  <span>Накоплено:</span>
+                  <span id="tribute-pending-amount" class="text-amber-300">0 / 1,600 🪙</span>
+                </div>
+                <div class="text-[9px] text-stone-400">Скорость: <b id="tribute-rate-label" class="text-lime-300">+200 🪙/час</b></div>
+              </div>
+            </div>
+            <button onclick="MonopolyGoMeta.claimTribute()" id="tribute-claim-btn" class="btn-tap px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 cursor-pointer">
+              Собрать
+            </button>
           </div>
 
           <!-- Индикатор Щитов и Кнопка НАБЕГА (Чапкын) -->
           <div class="grid grid-cols-2 gap-2">
             <div class="hud-card rounded-xl p-2.5 flex items-center justify-between border-cyan-500/40 bg-cyan-950/20">
-              <div>
+              <div class="text-left">
                 <div class="text-[10px] font-bold text-stone-300">Щиты от набегов:</div>
                 <div id="village-shields-display" class="text-sm font-black text-cyan-300 mt-0.5">🛡️ 🛡️ 🛡️</div>
+                <div id="village-shields-timer" class="text-[9px] text-cyan-400/80 mt-0.5 font-bold">Полный запас</div>
               </div>
               <span class="text-[9px] font-bold text-cyan-400 bg-cyan-500/20 px-1.5 py-0.5 rounded border border-cyan-400/30">Активны</span>
             </div>
 
-            <button onclick="launchVillageRaid()" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border-rose-500/50 bg-gradient-to-r from-red-950/40 to-stone-900 active:scale-95 shadow cursor-pointer">
+            <button onclick="launchVillageRaid()" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border-rose-500/50 bg-gradient-to-r from-red-950/50 to-stone-900 active:scale-95 shadow cursor-pointer">
               <div class="text-left">
                 <div class="text-[10px] font-black text-rose-300 uppercase">Набег (Чапкын)</div>
-                <div class="text-[10px] text-stone-300">Грабеж юрт соперников</div>
+                <div class="text-[10px] text-stone-300">Грабеж аулов врагов</div>
+                <div class="text-[9px] text-amber-300 font-bold">До 10,000 🪙 куш</div>
               </div>
-              <span class="text-xl">⚔️</span>
+              <span class="text-2xl animate-pulse">⚔️</span>
             </button>
           </div>
 
-          <!-- 4 ЗДАНИЯ КОЧЕВЬЯ ДЛЯ ПРОКАЧКИ (COIN SINK) -->
+          <!-- 4 ЗДАНИЯ КОЧЕВЬЯ ДЛЯ ПРОКАЧКИ (5 УРОВНЕЙ КАЖДОГО) -->
           <div class="flex flex-col gap-2">
             
             <!-- Здание 1: Ханская Юрта -->
-            <div class="hud-card rounded-2xl p-3 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
+            <div class="hud-card rounded-2xl p-2.5 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
               <div class="flex items-center gap-2.5">
                 <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl shadow">🛖</div>
                 <div class="text-left">
                   <div class="flex items-center gap-1.5">
                     <h4 class="text-xs font-black text-white">Ханская Юрта</h4>
-                    <span id="bldg-yurt-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded">Ур. 1</span>
+                    <span id="bldg-yurt-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded">Ур. 1/5</span>
                   </div>
-                  <p class="text-[10px] text-stone-300">Пассивный доход: <b class="text-amber-300">+200 🪙/час</b></p>
+                  <p id="bldg-yurt-perk" class="text-[10px] text-amber-300 font-bold">+200 🪙/час (дань)</p>
+                  <p id="bldg-yurt-next-perk" class="text-[9px] text-stone-400">След: +450 🪙/час</p>
                 </div>
               </div>
               <button onclick="upgradeVillageBuilding('yurt')" id="bldg-yurt-btn" class="btn-tap px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 cursor-pointer">
@@ -409,15 +478,16 @@
             </div>
 
             <!-- Здание 2: Кузница Сака -->
-            <div class="hud-card rounded-2xl p-3 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
+            <div class="hud-card rounded-2xl p-2.5 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
               <div class="flex items-center gap-2.5">
                 <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl shadow">🔨</div>
                 <div class="text-left">
                   <div class="flex items-center gap-1.5">
                     <h4 class="text-xs font-black text-white">Кузница Сака</h4>
-                    <span id="bldg-forge-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded">Ур. 1</span>
+                    <span id="bldg-forge-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded">Ур. 1/5</span>
                   </div>
-                  <p class="text-[10px] text-stone-300">Скидка на апгрейд битков: <b class="text-lime-300">-10%</b></p>
+                  <p id="bldg-forge-perk" class="text-[10px] text-lime-300 font-bold">-10% цена прокачки Сака</p>
+                  <p id="bldg-forge-next-perk" class="text-[9px] text-stone-400">След: -15% на прокачку</p>
                 </div>
               </div>
               <button onclick="upgradeVillageBuilding('forge')" id="bldg-forge-btn" class="btn-tap px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 cursor-pointer">
@@ -426,15 +496,16 @@
             </div>
 
             <!-- Здание 3: Загон Аргамаков -->
-            <div class="hud-card rounded-2xl p-3 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
+            <div class="hud-card rounded-2xl p-2.5 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
               <div class="flex items-center gap-2.5">
                 <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl shadow">🐎</div>
                 <div class="text-left">
                   <div class="flex items-center gap-1.5">
                     <h4 class="text-xs font-black text-white">Загон Аргамаков</h4>
-                    <span id="bldg-stable-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded">Ур. 1</span>
+                    <span id="bldg-stable-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded">Ур. 1/5</span>
                   </div>
-                  <p class="text-[10px] text-stone-300">Ускорение сундуков: <b class="text-cyan-300">-15% время</b></p>
+                  <p id="bldg-stable-perk" class="text-[10px] text-cyan-300 font-bold">-15% время сундуков</p>
+                  <p id="bldg-stable-next-perk" class="text-[9px] text-stone-400">След: -25% времени</p>
                 </div>
               </div>
               <button onclick="upgradeVillageBuilding('stable')" id="bldg-stable-btn" class="btn-tap px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 cursor-pointer">
@@ -443,15 +514,16 @@
             </div>
 
             <!-- Здание 4: Дозорная Башня -->
-            <div class="hud-card rounded-2xl p-3 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
+            <div class="hud-card rounded-2xl p-2.5 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
               <div class="flex items-center gap-2.5">
                 <div class="w-11 h-11 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-2xl shadow">🏰</div>
                 <div class="text-left">
                   <div class="flex items-center gap-1.5">
                     <h4 class="text-xs font-black text-white">Дозорная Башня</h4>
-                    <span id="bldg-tower-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-cyan-400 text-stone-950 rounded">Ур. 1</span>
+                    <span id="bldg-tower-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-cyan-400 text-stone-950 rounded">Ур. 1/5</span>
                   </div>
-                  <p class="text-[10px] text-stone-300">Запас щитов: <b class="text-cyan-300">+1 Щит защиты</b></p>
+                  <p id="bldg-tower-perk" class="text-[10px] text-cyan-300 font-bold">Макс. 3 щита (+1 каждые 8ч)</p>
+                  <p id="bldg-tower-next-perk" class="text-[9px] text-stone-400">След: 3 щита (+1 щит)</p>
                 </div>
               </div>
               <button onclick="upgradeVillageBuilding('tower')" id="bldg-tower-btn" class="btn-tap px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 cursor-pointer">
@@ -459,6 +531,21 @@
               </button>
             </div>
 
+          </div>
+
+          <!-- ==================== ЖУРНАЛ НАБЕГОВ (ОБОРОНА И МЕСТЬ) ==================== -->
+          <div class="hud-card rounded-2xl p-3 border border-stone-700 bg-stone-900/95 flex flex-col gap-2 shadow">
+            <div class="flex items-center justify-between border-b border-white/10 pb-1.5">
+              <div class="flex items-center gap-1.5">
+                <span class="text-base">📜</span>
+                <h4 class="text-xs font-black text-white uppercase">Журнал Набегов</h4>
+              </div>
+              <span class="text-[9px] font-bold text-stone-400">Последние 5 атак</span>
+            </div>
+
+            <div id="village-raid-logs-list" class="flex flex-col gap-1.5">
+              <!-- Рендерится динамически через MonopolyGoMeta.renderRaidLogUI() -->
+            </div>
           </div>
 
         </div>
@@ -817,6 +904,172 @@
       </div>
     </div>
 
+    <!-- ==================== 7. МОДАЛЬНОЕ ОКНО НАБЕГА «ЧАПКЫН» ==================== -->
+    <div id="modal-raid" class="hidden absolute inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 overscroll-contain">
+      <div class="hud-card w-full max-w-sm rounded-3xl p-4 border-2 border-rose-500 flex flex-col gap-3 max-h-[92dvh] overflow-y-auto no-scrollbar" onclick="event.stopPropagation();">
+        
+        <!-- Шапка соперника -->
+        <div class="flex justify-between items-center border-b border-white/10 pb-2">
+          <div class="flex items-center gap-2">
+            <div id="raid-rival-avatar" class="w-10 h-10 rounded-xl bg-red-950/60 border border-rose-500/50 flex items-center justify-center text-2xl shadow">
+              🐺
+            </div>
+            <div class="text-left">
+              <div class="flex items-center gap-1.5">
+                <h3 id="raid-rival-name" class="text-sm font-black text-white">Арстан_Ош</h3>
+                <span id="raid-rival-division" class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">Золотое Ханство</span>
+              </div>
+              <div class="flex items-center gap-1 mt-0.5">
+                <span class="text-[10px] text-stone-400 font-bold">Оборона:</span>
+                <span id="raid-rival-shields" class="text-xs font-black text-cyan-300">🛡️ 🛡️</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="MonopolyGoMeta.closeRaidModal()" class="btn-tap w-9 h-9 rounded-xl bg-stone-800 text-stone-300 font-black text-sm flex items-center justify-center border border-white/10 active:scale-95 shadow">✕</button>
+        </div>
+
+        <!-- Статус баннер набега -->
+        <div id="raid-status-banner" class="text-[11px] font-bold text-center py-1.5 px-3 rounded-xl bg-black/60 border border-amber-500/30 text-amber-300">
+          🎯 <b>ВЫБЕРИТЕ ЦЕЛЬ:</b> Нажмите на одну из 3 юрт для броска Сака!
+        </div>
+
+        <!-- 3 ИНТЕРАКТИВНЫХ ШАТРА СТОЯНКИ СОПЕРНИКА -->
+        <div class="relative py-2 flex flex-col gap-2 items-center w-full">
+          
+          <!-- Шатер 1: Ханская ставка (Центр, x1.5 куш) -->
+          <div onclick="MonopolyGoMeta.executeRaidStrike('khan')" id="raid-tent-khan" class="btn-tap w-full p-2.5 rounded-2xl bg-gradient-to-r from-amber-950/40 via-stone-900 to-amber-950/40 border-2 border-amber-400/60 flex items-center justify-between cursor-pointer relative shadow-lg active:scale-95 group">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-3xl shadow">
+                🛖
+              </div>
+              <div class="text-left">
+                <h4 class="text-xs font-black text-white group-hover:text-amber-300">Ханский Шатер</h4>
+                <p class="text-[10px] text-amber-300 font-bold">Главная сокровищница (x1.5)</p>
+                <span class="text-[9px] text-stone-400">Шанс сорвать супер-джекпот</span>
+              </div>
+            </div>
+            <span class="text-xs font-black px-2 py-1 rounded-lg bg-amber-400 text-stone-950 uppercase shadow">Удар!</span>
+            <div class="tent-fx absolute inset-0 pointer-events-none"></div>
+          </div>
+
+          <!-- Шатер 2: Казначейство (x1.25 куш) -->
+          <div onclick="MonopolyGoMeta.executeRaidStrike('treasury')" id="raid-tent-treasury" class="btn-tap w-full p-2.5 rounded-2xl bg-stone-900/90 border border-yellow-500/40 flex items-center justify-between cursor-pointer relative shadow active:scale-95 group">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-yellow-500/20 border border-yellow-400/40 flex items-center justify-center text-3xl shadow">
+                💰
+              </div>
+              <div class="text-left">
+                <h4 class="text-xs font-black text-white group-hover:text-yellow-300">Казначейская Юрта</h4>
+                <p class="text-[10px] text-yellow-300 font-bold">Золотые сундуки (x1.25)</p>
+                <span class="text-[9px] text-stone-400">Надежный запас монет</span>
+              </div>
+            </div>
+            <span class="text-xs font-black px-2 py-1 rounded-lg bg-yellow-400 text-stone-950 uppercase shadow">Удар!</span>
+            <div class="tent-fx absolute inset-0 pointer-events-none"></div>
+          </div>
+
+          <!-- Шатер 3: Табун Аргамаков (x1.0 куш) -->
+          <div onclick="MonopolyGoMeta.executeRaidStrike('stable')" id="raid-tent-stable" class="btn-tap w-full p-2.5 rounded-2xl bg-stone-900/90 border border-stone-700 flex items-center justify-between cursor-pointer relative shadow active:scale-95 group">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-stone-800 border border-stone-600 flex items-center justify-center text-3xl shadow">
+                🐎
+              </div>
+              <div class="text-left">
+                <h4 class="text-xs font-black text-white group-hover:text-stone-200">Табунный Загон</h4>
+                <p class="text-[10px] text-stone-300 font-bold">Обоз аргамаков (x1.0)</p>
+                <span class="text-[9px] text-stone-400">Легкая добыча набега</span>
+              </div>
+            </div>
+            <span class="text-xs font-black px-2 py-1 rounded-lg bg-stone-700 text-white uppercase shadow">Удар!</span>
+            <div class="tent-fx absolute inset-0 pointer-events-none"></div>
+          </div>
+
+          <!-- Летящий снаряд Сака (анимация) -->
+          <div id="raid-saka-projectile" class="hidden absolute pointer-events-none z-30 w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-red-600 border-2 border-white shadow-2xl flex items-center justify-center font-black text-xs text-stone-950">
+            САКА
+          </div>
+
+        </div>
+
+        <!-- Нижняя панель с выбранным Сака игрока -->
+        <div class="p-2 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between text-[10px]">
+          <span class="text-stone-400">Ваш боевой Сака:</span>
+          <span id="raid-player-saka-label" class="font-black text-amber-300">Ханский Свинец</span>
+        </div>
+
+        <!-- Карточка результатов набега (показывается после удара) -->
+        <div id="raid-result-card" class="hidden"></div>
+
+      </div>
+    </div>
+
+    <!-- ==================== 8. МОДАЛЬНОЕ ОКНО ХАНСКОЙ КОПИЛКИ ==================== -->
+    <div id="modal-piggy" class="hidden absolute inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 overscroll-contain">
+      <div class="hud-card w-full max-w-sm rounded-3xl p-5 border-2 border-amber-400 flex flex-col items-center gap-3 text-center shadow-2xl" onclick="event.stopPropagation();">
+        
+        <div class="w-full flex justify-between items-center border-b border-white/10 pb-2">
+          <div class="text-left">
+            <h3 class="text-base font-black uppercase text-amber-300">Ханская Копилка</h3>
+            <p class="text-[10px] text-stone-300">+15% бонусов с каждого сыгранного матча</p>
+          </div>
+          <button onclick="MonopolyGoMeta.closePiggyModal()" class="btn-tap w-9 h-9 rounded-xl bg-stone-800 text-stone-300 font-black text-sm flex items-center justify-center border border-white/10 active:scale-95 shadow">✕</button>
+        </div>
+
+        <!-- Интерактивный кувшин и молот -->
+        <div class="relative w-40 h-32 flex items-center justify-center my-1">
+          <div id="piggy-jar-graphic" class="text-6xl transition-transform duration-300">
+            🏺
+          </div>
+          <div id="piggy-hammer-graphic" class="hidden absolute -top-3 -right-1 text-5xl pointer-events-none transform -rotate-45">
+            🔨
+          </div>
+        </div>
+
+        <!-- Сумма накоплений -->
+        <div class="w-full bg-black/40 p-3 rounded-2xl border border-amber-400/30 flex flex-col items-center gap-1">
+          <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Накоплено золота:</span>
+          <div id="piggy-modal-amount" class="text-2xl font-black text-lime-400">0 🪙</div>
+          <div class="w-full h-2 rounded-full bg-stone-800 overflow-hidden mt-1">
+            <div id="piggy-modal-bar" class="h-full bg-gradient-to-r from-amber-500 to-lime-400 transition-all duration-300" style="width: 0%"></div>
+          </div>
+          <span class="text-[9px] text-stone-400 mt-0.5">Вместимость: 10,000 🪙</span>
+        </div>
+
+        <!-- Кнопка разбить молотом -->
+        <button onclick="MonopolyGoMeta.breakPiggyBank()" id="piggy-break-btn" class="w-full py-3 rounded-2xl bg-stone-800 text-stone-500 font-bold text-xs uppercase cursor-not-allowed">
+          Нужно минимум 500 🪙
+        </button>
+
+      </div>
+    </div>
+
+    <!-- ==================== 9. МОДАЛЬНОЕ ОКНО ПЕРЕХОДА РЕГИОНА (LANDMARK COMPLETION) ==================== -->
+    <div id="modal-landmark" class="hidden absolute inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-3 overscroll-contain">
+      <div class="hud-card w-full max-w-sm rounded-3xl p-5 border-2 border-yellow-400 flex flex-col items-center gap-3 text-center shadow-2xl animate-fade-in" onclick="event.stopPropagation();">
+        <span class="text-5xl animate-bounce">👑</span>
+        <h3 id="landmark-modal-title" class="text-lg font-black uppercase text-amber-300">ПОКОРЕНИЕ РЕГИОНА!</h3>
+        <p id="landmark-modal-body" class="text-xs text-stone-200 leading-relaxed">
+          Все 4 ориентира поселения отстроены до максимального уровня!
+        </p>
+
+        <!-- Награды -->
+        <div class="w-full bg-black/50 p-3 rounded-2xl border border-amber-400/40 flex flex-col gap-2 my-1">
+          <div class="text-[10px] font-bold text-stone-400 uppercase">Королевские Награды За Переход:</div>
+          <div class="flex justify-around items-center">
+            <div class="flex items-center gap-1 text-sm font-black text-lime-400" id="landmark-reward-coins">+10,000 🪙</div>
+            <div class="flex items-center gap-1 text-sm font-black text-cyan-300" id="landmark-reward-bucks">+15 💵</div>
+          </div>
+          <div id="landmark-reward-skin" class="text-xs font-black text-amber-300 border-t border-white/10 pt-1.5">
+            🦴 Эксклюзивный скин Сака
+          </div>
+        </div>
+
+        <button onclick="MonopolyGoMeta.closeLandmarkModal()" class="btn-tap w-full py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-lime-400 text-stone-950 font-black text-xs uppercase shadow-xl active:scale-95">
+          ПЕРЕКОЧЕВАТЬ В НОВЫЙ РЕГИОН!
+        </button>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -1101,6 +1354,19 @@
 
     function playBoneSound(type = 'hit', intensity = 1) {
       try {
+        if (window.EthnoAudio) {
+          if (type === 'hit') {
+            window.EthnoAudio.playBoneImpact(intensity);
+            return;
+          } else if (type === 'out') {
+            window.EthnoAudio.playDobulbas(false);
+            return;
+          } else if (type === 'khan_triumph') {
+            window.EthnoAudio.playDobulbas(true);
+            window.EthnoAudio.playTemirKomuz('jackpot');
+            return;
+          }
+        }
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
@@ -1153,6 +1419,13 @@
         initSupabase();
       } catch (e) {
         console.warn('Init supabase failed:', e);
+      }
+      try {
+        if (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.init === 'function') {
+          window.MonopolyGoMeta.init(state);
+        }
+      } catch (e) {
+        console.warn('Init MonopolyGoMeta failed:', e);
       }
       let pct = 0;
       const bar = document.getElementById('loader-bar');
@@ -1217,40 +1490,15 @@
       }
 
       // Обновление элементов Моей Орды и Щитов
-      const sh = document.getElementById('hud-shields');
-      const shDisp = document.getElementById('village-shields-display');
-      if (state.village) {
+      if (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.renderAll === 'function') {
+        window.MonopolyGoMeta.renderAll();
+      } else if (state.village) {
+        const sh = document.getElementById('hud-shields');
+        const shDisp = document.getElementById('village-shields-display');
         const count = state.village.shields;
         if (sh) sh.textContent = `${count}/${state.village.maxShields}`;
         if (shDisp) {
           shDisp.textContent = count > 0 ? '🛡️ '.repeat(count) : '❌ Нет щитов';
-        }
-
-        const bldgs = state.village.buildings;
-        if (bldgs) {
-          const yurtLvl = document.getElementById('bldg-yurt-lvl');
-          const forgeLvl = document.getElementById('bldg-forge-lvl');
-          const stableLvl = document.getElementById('bldg-stable-lvl');
-          const towerLvl = document.getElementById('bldg-tower-lvl');
-          if (yurtLvl) yurtLvl.textContent = `Ур. ${bldgs.yurt.level}`;
-          if (forgeLvl) forgeLvl.textContent = `Ур. ${bldgs.forge.level}`;
-          if (stableLvl) stableLvl.textContent = `Ур. ${bldgs.stable.level}`;
-          if (towerLvl) towerLvl.textContent = `Ур. ${bldgs.tower.level}`;
-
-          const yurtBtn = document.getElementById('bldg-yurt-btn');
-          const forgeBtn = document.getElementById('bldg-forge-btn');
-          const stableBtn = document.getElementById('bldg-stable-btn');
-          const towerBtn = document.getElementById('bldg-tower-btn');
-          if (yurtBtn) yurtBtn.textContent = `${bldgs.yurt.baseCost * bldgs.yurt.level} 🪙`;
-          if (forgeBtn) forgeBtn.textContent = `${bldgs.forge.baseCost * bldgs.forge.level} 🪙`;
-          if (stableBtn) stableBtn.textContent = `${bldgs.stable.baseCost * bldgs.stable.level} 🪙`;
-          if (towerBtn) towerBtn.textContent = `${bldgs.tower.baseCost * bldgs.tower.level} 🪙`;
-
-          const prog = document.getElementById('village-progress-badge');
-          if (prog) {
-            const done = Object.values(bldgs).filter(b => b.level > 1).length;
-            prog.textContent = `${done} / 4`;
-          }
         }
       }
     }
@@ -1338,7 +1586,7 @@
           </div>
 
           <button onclick="upgradeSaka('${s.id}')" class="btn-tap w-full py-1.5 rounded-xl bg-amber-400 text-stone-950 font-black text-xs">
-            ⬆ Улучшить статы (+3) за ${s.upgradeCost.toLocaleString('ru-RU')} 🪙
+            ⬆ Улучшить (+3) за ${Math.round(s.upgradeCost * (1 - ((window.MonopolyGoMeta && typeof window.MonopolyGoMeta.getForgeDiscount === 'function') ? window.MonopolyGoMeta.getForgeDiscount() : 0))).toLocaleString('ru-RU')} 🪙 ${((window.MonopolyGoMeta && typeof window.MonopolyGoMeta.getForgeDiscount === 'function') ? window.MonopolyGoMeta.getForgeDiscount() : 0) > 0 ? `(-${Math.round(((window.MonopolyGoMeta && typeof window.MonopolyGoMeta.getForgeDiscount === 'function') ? window.MonopolyGoMeta.getForgeDiscount() : 0) * 100)}% 🔨)` : ''}
           </button>
         `;
         container.appendChild(card);
@@ -1359,8 +1607,13 @@
     async function upgradeSaka(id) {
       const s = state.sakaList.find(x => x.id === id);
       if (!s) return;
-      if (state.coins < s.upgradeCost) {
-        showModal('🛒', 'Недостаточно монет', `Для улучшения требуется <b>${s.upgradeCost.toLocaleString('ru-RU')} 🪙</b>.`);
+      const discount = (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.getForgeDiscount === 'function')
+        ? window.MonopolyGoMeta.getForgeDiscount()
+        : 0;
+      const cost = Math.round(s.upgradeCost * (1 - discount));
+
+      if (state.coins < cost) {
+        showModal('🛒', 'Недостаточно монет', `Для улучшения требуется <b>${cost.toLocaleString('ru-RU')} 🪙</b>.`);
         return;
       }
 
@@ -1373,7 +1626,7 @@
         await syncFromCloud();
         showModal('✨', 'Сака улучшен!', `Новый уровень: <b>${data.new_level}</b>! Характеристики выросли на +3.`);
       } else {
-        state.coins -= s.upgradeCost;
+        state.coins -= cost;
         s.level += 1;
         s.massStat = Math.min(100, s.massStat + 3);
         s.stabilityStat = Math.min(100, s.stabilityStat + 3);
@@ -1418,6 +1671,12 @@
       if (key === 'rankings') {
         openRankingsModal();
         return;
+      }
+      if (key === 'piggy') {
+        if (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.openPiggyModal === 'function') {
+          window.MonopolyGoMeta.openPiggyModal();
+          return;
+        }
       }
 
       const map = {
@@ -1609,67 +1868,16 @@
 
     // ==================== МОЯ ОРДА (MONOPOLY GO BUILD & RAID) ====================
     function upgradeVillageBuilding(bKey) {
-      const bldg = state.village.buildings[bKey];
-      if (!bldg) return;
-
-      const cost = bldg.baseCost * bldg.level;
-      if (state.coins < cost) {
-        showMatchToast('🪙 Не хватает ' + (cost - state.coins) + ' монет для улучшения!');
-        if (window.ChukoHaptics && typeof window.ChukoHaptics.notification === 'function') {
-          window.ChukoHaptics.notification('error');
-        }
+      if (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.upgradeBuilding === 'function') {
+        window.MonopolyGoMeta.upgradeBuilding(bKey);
         return;
-      }
-
-      state.coins -= cost;
-      bldg.level += 1;
-
-      if (bKey === 'tower') {
-        state.village.shields = Math.min(state.village.maxShields, state.village.shields + 1);
-      }
-
-      updateHUD();
-      playBoneSound('out', 1.2);
-      if (window.ChukoHaptics && typeof window.ChukoHaptics.notification === 'function') {
-        window.ChukoHaptics.notification('success');
-      }
-
-      showMatchToast('✨ ' + bldg.name + ' улучшена до Ур. ' + bldg.level + '!');
-
-      // Проверка завершения всех построек региона
-      const allUpgraded = Object.values(state.village.buildings).every(b => b.level >= 2);
-      if (allUpgraded && state.village.region === 1) {
-        state.village.region = 2;
-        state.village.regionName = 'Озеро Иссык-Куль';
-        const regName = document.getElementById('village-region-name');
-        if (regName) regName.textContent = 'Озеро Иссык-Куль';
-        showModal('🎉', 'НОВЫЙ РЕГИОН ОТКРЫТ!', 'Поздравляем! Ваш айыл перекочевал в живописный регион <b>Озеро Иссык-Куль</b>!<br>Бонус перекочевки: <b class="text-lime-300">+5,000 🪙</b> и <b>+5 💵</b>!');
-        state.coins += 5000;
-        state.bucks += 5;
-        updateHUD();
       }
     }
 
-    function launchVillageRaid() {
-      const rivals = ['Арстан_Ош', 'Тайсон_Бишкек', 'Беркут_Нарын', 'Чингиз_Талас', 'Кайрат_Джалал-Абад'];
-      const rival = rivals[Math.floor(Math.random() * rivals.length)];
-      const hasShield = Math.random() < 0.45;
-
-      if (hasShield) {
-        state.coins += 500;
-        updateHUD();
-        playBoneSound('hit', 1.2);
-        showModal('🛡️', 'Набег на айыл [' + rival + ']', 'Батыр <b>' + rival + '</b> был начеку! Его Дозорная Башня активировала <b>Щит</b> и отразила лобовой бросок.<br><br>Вам удалось захватить лишь малый обоз: <b class="text-amber-300">+500 🪙</b>.');
-      } else {
-        const loot = 2500;
-        state.coins += loot;
-        state.piggyCoins += 300;
-        updateHUD();
-        playBoneSound('out', 1.5);
-        if (window.ChukoHaptics && typeof window.ChukoHaptics.onKnockout === 'function') {
-          window.ChukoHaptics.onKnockout(true);
-        }
-        showModal('🔥', 'РАЗГРОМ АЙЫЛА [' + rival + ']!', 'Точный бросок тяжелого Сака снес Ханский шатер батыра <b>' + rival + '</b>!<br>У соперника не было щитов защиты!<br><br>Награбленный куш: <b class="text-lime-300">+' + loot.toLocaleString('ru-RU') + ' 🪙</b> и <b class="text-amber-300">+300 🪙 в копилку</b>!');
+    function launchVillageRaid(rivalName = null, opts = {}) {
+      if (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.openRaidModal === 'function') {
+        window.MonopolyGoMeta.openRaidModal(rivalName, opts);
+        return;
       }
     }
 
@@ -1680,7 +1888,11 @@
 
       container.innerHTML = state.sakaList.map(saka => {
         const isEquipped = state.equippedSakaId === saka.id;
-        const upgradeCost = (saka.upgradeCost || 800) * (saka.level || 1);
+        const discount = (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.getForgeDiscount === 'function')
+          ? window.MonopolyGoMeta.getForgeDiscount()
+          : 0;
+        const baseUpgradeCost = (saka.upgradeCost || 800) * (saka.level || 1);
+        const upgradeCost = Math.round(baseUpgradeCost * (1 - discount));
 
         return `
           <div class="hud-card rounded-2xl p-3 border ` + (isEquipped ? 'border-amber-400 bg-amber-500/10' : 'border-stone-700 bg-stone-900/90') + ` flex flex-col gap-2.5 shadow">
@@ -1749,7 +1961,7 @@
             <div class="flex justify-between items-center border-t border-white/10 pt-2">
               <span class="text-[10px] text-lime-400 font-bold">+15 к характеристикам</span>
               <button onclick="upgradeSakaCue('` + saka.id + `')" class="btn-tap px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 text-xs font-black uppercase active:scale-95 shadow cursor-pointer">
-                Улучшить (` + upgradeCost.toLocaleString('ru-RU') + ` 🪙)
+                Улучшить (` + upgradeCost.toLocaleString('ru-RU') + ` 🪙` + (discount > 0 ? ` -` + Math.round(discount * 100) + `% 🔨` : ``) + `)
               </button>
             </div>
           </div>
@@ -1769,7 +1981,12 @@
       const saka = state.sakaList.find(s => s.id === sakaId);
       if (!saka) return;
 
-      const cost = (saka.upgradeCost || 800) * (saka.level || 1);
+      const discount = (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.getForgeDiscount === 'function')
+        ? window.MonopolyGoMeta.getForgeDiscount()
+        : 0;
+      const baseCost = (saka.upgradeCost || 800) * (saka.level || 1);
+      const cost = Math.round(baseCost * (1 - discount));
+
       if (state.coins < cost) {
         showMatchToast('🪙 Не хватает ' + (cost - state.coins) + ' монет для прокачки!');
         return;
@@ -1792,7 +2009,11 @@
       state.coins += 500;
       state.bucks += 2;
       updateHUD();
-      playBoneSound('out', 1.5);
+      if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
+        window.EthnoAudio.playTemirKomuz('jackpot');
+      } else {
+        playBoneSound('out', 1.5);
+      }
       showModal('🎁', 'ЕЖЕДНЕВНЫЙ ПОДАРОК КОЧЕВНИКА!', 'Вам начислено: <b class="text-amber-300">+500 🪙</b> и <b class="text-emerald-300">+2 💵</b>!<br>Возвращайтесь завтра за новой порцией наград!');
     }
 
@@ -1840,6 +2061,7 @@
       startArenaMatch('Тренировка (Офлайн)', 0, 0);
     }
 
+    let matchInitTimer = null;
     async function startArenaMatch(arenaName, fee, prize) {
       if (state.coins < fee) {
         showModal('🪙', 'Не хватает монет на взнос', `Для входа на арену нужно <b>${fee.toLocaleString('ru-RU')} 🪙</b>. Ваш текущий баланс: <b>${state.coins.toLocaleString('ru-RU')} 🪙</b>.`);
@@ -1873,7 +2095,28 @@
       match.targetScore = match.boneCount === 5 ? 3 : 5;
 
       showScreen('screen-game');
-      setTimeout(() => initMatchEngine(), 50);
+      if (matchInitTimer) clearTimeout(matchInitTimer);
+      matchInitTimer = setTimeout(() => {
+        initMatchEngine();
+        if (window.EthnoKalchoo && typeof window.EthnoKalchoo.showTossCeremony === 'function') {
+          window.EthnoKalchoo.showTossCeremony({
+            autoStart: true,
+            onComplete: (winner) => {
+              match.turn = winner;
+              updateTurnUI();
+              if (winner === 'player') {
+                match.phase = 'aiming';
+                placeSakaOnArc();
+                showMatchToast('🎯 Жеребьевка: Ваш первый ход!');
+              } else {
+                match.phase = 'bot_thinking';
+                showMatchToast('🐺 Жеребьевка: Bot_Batyr делает первый бросок!');
+                setTimeout(() => executeBotShot(), 900);
+              }
+            }
+          });
+        }
+      }, 50);
     }
 
     function leaveMatch() {
@@ -1956,7 +2199,18 @@
     }
 
     function initMatchEngine() {
+      if (matchInitTimer) {
+        clearTimeout(matchInitTimer);
+        matchInitTimer = null;
+      }
+      if (typeof state !== 'undefined' && state.selectedBoneCount) {
+        match.boneCount = state.selectedBoneCount;
+        match.targetScore = match.boneCount === 5 ? 3 : 5;
+      }
       resizeGameCanvas();
+      if (window.EthnoFX && typeof window.EthnoFX.clearFX === 'function') {
+        window.EthnoFX.clearFX();
+      }
       match.running = true;
       match.scorePlayer = 0;
       match.scoreBot = 0;
@@ -2251,6 +2505,9 @@
     });
 
     function releaseSlingshot(e) {
+      if (window.EthnoAudio && typeof window.EthnoAudio.stopSlingshotDrone === 'function') {
+        window.EthnoAudio.stopSlingshotDrone();
+      }
       if (!match.drag.active) return;
       if (match.drag.pointerId !== undefined && e && e.pointerId !== match.drag.pointerId) return;
 
@@ -2303,6 +2560,9 @@
       endRimDrag(e);
     });
     window.addEventListener('pointercancel', (e) => {
+      if (window.EthnoAudio && typeof window.EthnoAudio.stopSlingshotDrone === 'function') {
+        window.EthnoAudio.stopSlingshotDrone();
+      }
       if (match.drag.active) {
         match.drag.active = false;
         match.drag.pointerId = undefined;
@@ -2395,6 +2655,9 @@
               a.vAngle = (Math.random() - 0.5) * 0.25;
               b.vAngle = (Math.random() - 0.5) * 0.32;
               playBoneSound('hit', Math.min(1.5, Math.abs(velAlongNormal) / 8));
+              if (window.EthnoFX && Math.abs(velAlongNormal) > 2.8) {
+                window.EthnoFX.spawnImpactShockwave((a.x + b.x) * 0.5, (a.y + b.y) * 0.5, Math.min(2.0, Math.abs(velAlongNormal) / 6));
+              }
               if (window.ChukoHaptics && typeof window.ChukoHaptics.onCollision === 'function') {
                 window.ChukoHaptics.onCollision(Math.abs(velAlongNormal));
               }
@@ -2408,6 +2671,9 @@
         if (!a.active) return;
         const distFromCenter = Math.hypot(a.x - match.centerX, a.y - match.centerY);
         if (distFromCenter > match.circleRadius) {
+          if (window.EthnoFX && typeof window.EthnoFX.spawnBallisticKnockout === 'function') {
+            window.EthnoFX.spawnBallisticKnockout(a, match);
+          }
           if (window.KhanRule && typeof window.KhanRule.processKnockout === 'function') {
             window.KhanRule.processKnockout(a, match, state, playBoneSound, showMatchToast);
             if (a.isKhan && match.turn === 'player') {
@@ -2451,6 +2717,11 @@
         match.phase = 'ended';
         const playerWon = match.scorePlayer >= match.scoreBot;
 
+        // Пополнение Ханской Копилки (+15% с каждого сыгранного матча с банком)
+        if (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.addMatchBonus === 'function' && match.prizePool > 0) {
+          window.MonopolyGoMeta.addMatchBonus(match.prizePool);
+        }
+
         if (sbClient && currentUser && state.currentMatchId) {
           const { data } = await sbClient.rpc('finish_match', {
             p_match_id: state.currentMatchId,
@@ -2467,6 +2738,10 @@
             updateHUD();
 
             if (playerWon) {
+              if (window.EthnoAudio && typeof window.EthnoAudio.playDobulbas === 'function') {
+                window.EthnoAudio.playDobulbas(true);
+                window.EthnoAudio.playTemirKomuz('jackpot');
+              }
               showModal('🏆', 'Победа в Ордо!', `Вы выбили ${match.scorePlayer} чуко!<br>Банк арены: <b class="text-lime-300">+${data.prize.toLocaleString('ru-RU')} 🪙</b><br>Кубки: <b class="text-amber-300">+${data.trophy_change} 🏆</b>`, `
                 <button onclick="closeGenericModal(); showScreen('screen-lobby');" class="btn-tap flex-1 py-2.5 rounded-xl bg-lime-400 text-stone-950 font-black uppercase text-xs">Забрать приз</button>
               `);
@@ -2480,6 +2755,10 @@
         }
 
         if (playerWon) {
+          if (window.EthnoAudio && typeof window.EthnoAudio.playDobulbas === 'function') {
+            window.EthnoAudio.playDobulbas(true);
+            window.EthnoAudio.playTemirKomuz('jackpot');
+          }
           state.coins += match.prizePool;
           state.trophies += 25;
           updateHUD();
@@ -2650,6 +2929,11 @@
       ctx.strokeStyle = state.season === 'cyberpunk' ? '#06b6d4' : '#f59e0b';
       ctx.stroke();
 
+      // Neo-Nomad: Процедурный орнамент «Кочкор мүйүз» по внешнему контуру Ордо
+      if (window.EthnoFX && typeof window.EthnoFX.drawKochkorMuiuzRim === 'function') {
+        window.EthnoFX.drawKochkorMuiuzRim(ctx, match, toScreen);
+      }
+
       // Внутреннее тактическое кольцо Ордо
       ctx.beginPath();
       ctx.setLineDash([6, 6]);
@@ -2658,6 +2942,11 @@
       ctx.strokeStyle = 'rgba(255,255,255,0.22)';
       ctx.stroke();
       ctx.setLineDash([]);
+
+      // Neo-Nomad: Сакральный светящийся «Түндүк» с мягким дыханием под гарнизоном Хана
+      if (window.EthnoFX && typeof window.EthnoFX.drawSolarTunduk === 'function') {
+        window.EthnoFX.drawSolarTunduk(ctx, match, toScreen);
+      }
 
       // 360° Чек сызыгы: Отрисовка круговой орбиты выбора угла броска со всех сторон света
       if (match.phase === 'aiming') {
@@ -2717,6 +3006,11 @@
           if (window.ChukoHaptics && typeof window.ChukoHaptics.onPullStep === 'function') {
             window.ChukoHaptics.onPullStep(powerRatio);
           }
+
+          // Procedural Audio: Нарастающий микро-дрон натяжения рогатки Сака
+          if (window.EthnoAudio && typeof window.EthnoAudio.updateSlingshotDrone === 'function') {
+            window.EthnoAudio.updateSlingshotDrone(powerRatio);
+          }
         }
       }
 
@@ -2738,6 +3032,11 @@
           drawChukoPiece(p.x, p.y, p.radius, p.angle, false, p.isKhan, null, null);
         }
       });
+
+      // Neo-Nomad: Баллистический 3D-полет выбитых альчиков, динамические тени, ударные кольца и искры
+      if (window.EthnoFX && typeof window.EthnoFX.renderOverlayAndFX === 'function') {
+        window.EthnoFX.renderOverlayAndFX(ctx, match, toScreen);
+      }
       ctx.restore();
     }
 

@@ -106,8 +106,14 @@ async function runVerification() {
   await sendCommand('Runtime.enable');
   await sendCommand('Page.enable');
 
-  console.log('Waiting for loader and page init...');
-  await sleep(1500);
+  console.log('Waiting for loader, document complete and modules...');
+  for (let i = 0; i < 35; i++) {
+    await sleep(200);
+    try {
+      const isReady = await evaluate(`(() => document.readyState === 'complete' && typeof window.Phase2Mechanics !== 'undefined')()`);
+      if (isReady) break;
+    } catch (e) {}
+  }
 
   // --- CHECK 1: Global modules existence ---
   console.log('\n[CDP CHECK 1] Inspecting Phase 2 modules in browser context...');
