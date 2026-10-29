@@ -598,12 +598,167 @@
     }
   };
 
+  // ============================================================
+  // 5. МОДУЛЬ ПЕРИМЕТРА ОРДО (360° ЧЕК СЫЗЫГЫ / ВЫБОР ПОЗИЦИИ АТАКИ)
+  // В каноническом Ордо игрок свободно выбирает угол броска со всех 360° круга
+  // ============================================================
+  const OrdoPerimeter = {
+    /**
+     * Название направления на кыргызском и русском по углу в радианах
+     * @param {number} angleRad Угол в радианах
+     */
+    getCardinalInfo(angleRad) {
+      let deg = (angleRad * 180 / Math.PI) % 360;
+      if (deg < 0) deg += 360;
+
+      // 0: East, 90: South, 180: West, 270: North
+      if (deg >= 337.5 || deg < 22.5) {
+        return { deg: Math.round(deg), nameKg: 'Чыгыш', nameRu: 'Восток', icon: '➡️' };
+      } else if (deg >= 22.5 && deg < 67.5) {
+        return { deg: Math.round(deg), nameKg: 'Түштүк-Чыгыш', nameRu: 'Юго-Восток', icon: '↘️' };
+      } else if (deg >= 67.5 && deg < 112.5) {
+        return { deg: Math.round(deg), nameKg: 'Түштүк', nameRu: 'Юг', icon: '⬇️' };
+      } else if (deg >= 112.5 && deg < 157.5) {
+        return { deg: Math.round(deg), nameKg: 'Түштүк-Батыш', nameRu: 'Юго-Запад', icon: '↙️' };
+      } else if (deg >= 157.5 && deg < 202.5) {
+        return { deg: Math.round(deg), nameKg: 'Батыш', nameRu: 'Запад', icon: '⬅️' };
+      } else if (deg >= 202.5 && deg < 247.5) {
+        return { deg: Math.round(deg), nameKg: 'Түндүк-Батыш', nameRu: 'Северо-Запад', icon: '↖️' };
+      } else if (deg >= 247.5 && deg < 292.5) {
+        return { deg: Math.round(deg), nameKg: 'Түндүк', nameRu: 'Север', icon: '⬆️' };
+      } else {
+        return { deg: Math.round(deg), nameKg: 'Түндүк-Чыгыш', nameRu: 'Северо-Восток', icon: '↗️' };
+      }
+    },
+
+    /**
+     * Преобразует градусы 0..360 в радианы
+     */
+    degToRad(deg) {
+      return (deg * Math.PI) / 180;
+    },
+
+    /**
+     * Преобразует радианы в градусы 0..360
+     */
+    radToDeg(rad) {
+      let deg = (rad * 180 / Math.PI) % 360;
+      if (deg < 0) deg += 360;
+      return Math.round(deg);
+    },
+
+    /**
+     * Вычисляет мировые координаты Сака на орбите чека Ордо
+     * @param {number} angleRad
+     * @param {number} centerX
+     * @param {number} centerY
+     * @param {number} circleRadius
+     * @param {number} offset
+     */
+    getCoordinates(angleRad, centerX, centerY, circleRadius, offset = 28) {
+      const orbitDist = circleRadius + offset;
+      return {
+        x: centerX + Math.cos(angleRad) * orbitDist,
+        y: centerY + Math.sin(angleRad) * orbitDist
+      };
+    },
+
+    /**
+     * Тактический выбор позиции для ИИ Bot_Batyr:
+     * Находит наиболее уязвимый альчик (ближе всего к краю круга или Хан)
+     * и занимает позицию на противоположной стороне, чтобы ударом выбить его наружу
+     */
+    calculateBotStance(alchiks, centerX, centerY, circleRadius) {
+      const active = (alchiks || []).filter(a => a.active);
+      if (!active.length) {
+        return -Math.PI * 0.5; // Север по умолчанию
+      }
+
+      let bestTarget = active[0];
+      let maxScore = -1;
+
+      for (const a of active) {
+        const d = Math.hypot(a.x - centerX, a.y - centerY);
+        // Хан имеет повышенный приоритет
+        const score = (a.isKhan ? 1.8 : 1.0) * (d + 2);
+        if (score > maxScore) {
+          maxScore = score;
+          bestTarget = a;
+        }
+      }
+
+      // Угол от центра круга к цели
+      const targetAngle = Math.atan2(bestTarget.y - centerY, bestTarget.x - centerX);
+      // Позиция бота должна быть на противоположной стороне, чтобы вытолкнуть альчик наружу
+      const jitter = (Math.random() - 0.5) * 0.22;
+      return targetAngle + Math.PI + jitter;
+    },
+
+    /**
+     * Отрисовка круговой орбиты перемещения игрока (Ордонун чеги) с кардинальными метками
+     */
+    drawPerimeterTrack(ctx, match, toScreen) {
+      if (!match || match.phase !== 'aiming' || !match.saka) return;
+
+      const orbitRadius = match.circleRadius + 28;
+      const numSegments = 64;
+
+      ctx.save();
+
+      // 1. Свечение круговой орбиты выбора позиции (Чек сызыгы)
+      ctx.beginPath();
+      ctx.setLineDash([5, 5]);
+      for (let i = 0; i <= numSegments; i++) {
+        const a = (i / numSegments) * Math.PI * 2;
+        const wx = match.centerX + Math.cos(a) * orbitRadius;
+        const wy = match.centerY + Math.sin(a) * orbitRadius;
+        const sp = toScreen(wx, wy);
+        if (i === 0) ctx.moveTo(sp.x, sp.y);
+        else ctx.lineTo(sp.x, sp.y);
+      }
+      ctx.lineWidth = 1.6;
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 2. Кардинальные точки сторон света на орбите
+      const cardinalPoints = [
+        { rad: 0, label: 'Чыгыш (Восток)' },
+        { rad: Math.PI * 0.5, label: 'Түштүк (Юг)' },
+        { rad: Math.PI, label: 'Батыш (Запад)' },
+        { rad: -Math.PI * 0.5, label: 'Түндүк (Север)' }
+      ];
+
+      cardinalPoints.forEach(p => {
+        const wx = match.centerX + Math.cos(p.rad) * (orbitRadius + 4);
+        const wy = match.centerY + Math.sin(p.rad) * (orbitRadius + 4);
+        const sp = toScreen(wx, wy);
+
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.6)';
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 3. Золотой маркер под Сака с мягкой пульсацией
+      const sakaSp = toScreen(match.saka.x, match.saka.y);
+      ctx.beginPath();
+      ctx.arc(sakaSp.x, sakaSp.y, 20, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.8)';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  };
+
   // Экспорт для браузера и Node.js среды тестирования
   const Phase2Mechanics = {
     Haptics: ChukoHaptics,
     GhostAiming,
     OrdoGarrison,
-    KhanRule
+    KhanRule,
+    OrdoPerimeter
   };
 
   if (typeof module !== 'undefined' && module.exports) {
@@ -615,6 +770,7 @@
     window.GhostAiming = GhostAiming;
     window.OrdoGarrison = OrdoGarrison;
     window.KhanRule = KhanRule;
+    window.OrdoPerimeter = OrdoPerimeter;
   }
 
 })(typeof window !== 'undefined' ? window : globalThis);

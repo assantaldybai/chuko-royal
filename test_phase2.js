@@ -239,6 +239,59 @@ console.log('--- STARTING PHASE 2 MECHANICS TESTS ---');
   console.log('✓ Haptics facade handles both Telegram WebApp and navigator.vibrate fallback!');
 }
 
+// ============================================================
+// TEST 7: 360-DEGREE ORDO PERIMETER STANCE & BOT AI TACTICS
+// ============================================================
+{
+  console.log('\n[TEST 7] 360° Ordo Perimeter Stance & Bot AI Tactics...');
+  const { OrdoPerimeter } = Phase2Mechanics;
+  assert.ok(OrdoPerimeter, 'OrdoPerimeter module must exist');
+
+  // 1. Проверка сторон света: Юг (PI/2), Север (-PI/2), Восток (0), Запад (PI)
+  const south = OrdoPerimeter.getCardinalInfo(Math.PI * 0.5);
+  assert.strictEqual(south.deg, 90);
+  assert.strictEqual(south.nameKg, 'Түштүк');
+  assert.strictEqual(south.nameRu, 'Юг');
+
+  const north = OrdoPerimeter.getCardinalInfo(-Math.PI * 0.5);
+  assert.strictEqual(north.deg, 270);
+  assert.strictEqual(north.nameKg, 'Түндүк');
+  assert.strictEqual(north.nameRu, 'Север');
+
+  const east = OrdoPerimeter.getCardinalInfo(0);
+  assert.strictEqual(east.deg, 0);
+  assert.strictEqual(east.nameKg, 'Чыгыш');
+  assert.strictEqual(east.nameRu, 'Восток');
+
+  const west = OrdoPerimeter.getCardinalInfo(Math.PI);
+  assert.strictEqual(west.deg, 180);
+  assert.strictEqual(west.nameKg, 'Батыш');
+  assert.strictEqual(west.nameRu, 'Запад');
+
+  // 2. Координаты на орбите
+  const cx = 200, cy = 200, radius = 100, offset = 28;
+  const coordsEast = OrdoPerimeter.getCoordinates(0, cx, cy, radius, offset);
+  assert.strictEqual(coordsEast.x, 328);
+  assert.strictEqual(coordsEast.y, 200);
+
+  const coordsSouth = OrdoPerimeter.getCoordinates(Math.PI * 0.5, cx, cy, radius, offset);
+  assert.ok(Math.abs(coordsSouth.x - 200) < 0.001);
+  assert.strictEqual(coordsSouth.y, 328);
+
+  // 3. Тактический выбор позиции для Bot_Batyr:
+  // Если уязвимый альчик находится на Востоке (x = 280, y = 200, d = 80),
+  // то бот должен занять позицию на Западе (угол ~ PI), чтобы выбить его наружу на Восток!
+  const alchiks = [
+    { x: cx, y: cy, isKhan: true, active: true },
+    { x: cx + 80, y: cy, isKhan: false, active: true } // на краю справа
+  ];
+  const botAngle = OrdoPerimeter.calculateBotStance(alchiks, cx, cy, radius);
+  const botDeg = OrdoPerimeter.radToDeg(botAngle);
+  // Бот должен встать в секторе Запада (~180° ± 15°)
+  assert.ok(botDeg >= 165 && botDeg <= 195, `Bot should position at West (approx 180°), got ${botDeg}°`);
+  console.log('✓ 360-degree Ordo Perimeter angles, coordinates, and Bot AI positioning verified!');
+}
+
 console.log('\n========================================');
 console.log('🎉 ALL PHASE 2 MECHANICS TESTS PASSED 100%!');
 console.log('========================================\n');

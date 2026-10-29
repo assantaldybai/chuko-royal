@@ -116,10 +116,11 @@ async function runVerification() {
     hasHaptics: typeof window.ChukoHaptics !== 'undefined',
     hasGhostAiming: typeof window.GhostAiming !== 'undefined',
     hasOrdoGarrison: typeof window.OrdoGarrison !== 'undefined',
-    hasKhanRule: typeof window.KhanRule !== 'undefined'
+    hasKhanRule: typeof window.KhanRule !== 'undefined',
+    hasOrdoPerimeter: typeof window.OrdoPerimeter !== 'undefined'
   })`);
   console.log('Browser modules presence:', modulesCheck);
-  if (!modulesCheck.hasPhase2 || !modulesCheck.hasGhostAiming || !modulesCheck.hasOrdoGarrison || !modulesCheck.hasKhanRule) {
+  if (!modulesCheck.hasPhase2 || !modulesCheck.hasGhostAiming || !modulesCheck.hasOrdoGarrison || !modulesCheck.hasKhanRule || !modulesCheck.hasOrdoPerimeter) {
     throw new Error('Phase 2 modules missing in browser window!');
   }
   console.log('✓ All Phase 2 modules successfully loaded in browser window!');
@@ -274,8 +275,46 @@ async function runVerification() {
   }
   console.log('✓ Khan capture awards x3 points (+3), triggers triumph modal and +500 jackpot!');
 
-  // --- CHECK 6: Console Error Auditing ---
-  console.log('\n[CDP CHECK 6] Checking browser console for exceptions or errors...');
+  // --- CHECK 6: Test 360° Ordo Perimeter Angle Selection & UI ---
+  console.log('\n[CDP CHECK 6] Testing 360° Ordo Perimeter Angle Selection & UI synchronization...');
+  const perimeterTest = await evaluate(`(() => {
+    // 1. Устанавливаем кардинал Север (Түндүк = 270°)
+    setSakaCardinal('north');
+    const northX = Math.round(match.saka.x);
+    const northY = Math.round(match.saka.y);
+
+    // 2. Устанавливаем кардинал Восток (Чыгыш = 0°)
+    setSakaCardinal('east');
+    const eastX = Math.round(match.saka.x);
+    const eastY = Math.round(match.saka.y);
+
+    // 3. Устанавливаем произвольный угол 45° через слайдер
+    onSakaAngleSlide(45);
+    const badgeText = document.getElementById('saka-angle-badge')?.textContent || '';
+    const sliderVal = document.getElementById('saka-angle-slider')?.value;
+
+    // 4. Отрисовка орбиты в Canvas без ошибок
+    renderOrdoCanvas();
+
+    return {
+      northY_is_above_center: northY < match.centerY,
+      eastX_is_right_of_center: eastX > match.centerX,
+      badgeText,
+      sliderVal,
+      sakaAngleDeg: Math.round((match.sakaAngle * 180 / Math.PI) % 360)
+    };
+  })()`);
+  console.log('360° Perimeter Stance Test Result:', perimeterTest);
+  if (!perimeterTest.northY_is_above_center || !perimeterTest.eastX_is_right_of_center) {
+    throw new Error('Saka positioning failed for North or East cardinal points!');
+  }
+  if (perimeterTest.sakaAngleDeg !== 45 || perimeterTest.sliderVal !== '45') {
+    throw new Error(`Expected angle to be 45°, got angle=${perimeterTest.sakaAngleDeg}, slider=${perimeterTest.sliderVal}`);
+  }
+  console.log('✓ 360° Ordo Perimeter stance selection, compass angles, slider and canvas rendering verified!');
+
+  // --- CHECK 7: Console Error Auditing ---
+  console.log('\n[CDP CHECK 7] Checking browser console for exceptions or errors...');
   if (consoleErrors.length > 0) {
     console.error('Browser console errors encountered:', consoleErrors);
     throw new Error('Browser console had errors during gameplay execution!');

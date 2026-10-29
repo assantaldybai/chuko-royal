@@ -509,8 +509,8 @@ function initMatchEngine() {
   match.phase = 'aiming';
   match.arcParam = 0;
 
-  const slider = document.getElementById('saka-pos-slider');
-  if (slider) slider.value = 0;
+  const slider = document.getElementById('saka-angle-slider') || document.getElementById('saka-pos-slider');
+  if (slider) slider.value = 90;
   resetSpin();
 
   const titleEl = document.getElementById('match-arena-title');
@@ -561,12 +561,21 @@ function initMatchEngine() {
   requestAnimationFrame(matchLoop);
 }
 
-function placeSakaOnArc() {
+function placeSakaOnArc(customAngle = null) {
   const eq = getEquippedSaka();
-  const arcAngle = Math.PI * 0.5 + match.arcParam * 0.52;
-  const arcDist = match.circleRadius + 34;
-  const lx = match.centerX + Math.cos(arcAngle) * arcDist;
-  const ly = match.centerY + Math.sin(arcAngle) * arcDist;
+  let arcAngle;
+  if (customAngle !== null) {
+    arcAngle = customAngle;
+  } else if (match.sakaAngle !== undefined && match.sakaAngle !== null) {
+    arcAngle = match.sakaAngle;
+  } else {
+    arcAngle = Math.PI * 0.5; // Юг по умолчанию (90°)
+  }
+  match.sakaAngle = arcAngle;
+
+  const orbitDist = match.circleRadius + 28;
+  const lx = match.centerX + Math.cos(arcAngle) * orbitDist;
+  const ly = match.centerY + Math.sin(arcAngle) * orbitDist;
 
   match.saka = {
     x: lx,
@@ -577,15 +586,91 @@ function placeSakaOnArc() {
     mass: 1.35 + (eq.massStat / 100) * 0.55,
     color: eq.color,
     border: eq.border,
-    angle: 0,
+    angle: arcAngle,
     vAngle: 0
   };
+
+  updateSakaAngleUI();
 }
 
-function onSakaArcSlide(val) {
-  match.arcParam = parseFloat(val);
-  if (match.turn === 'player' && match.phase === 'aiming') {
-    placeSakaOnArc();
+function setSakaAngle(angleRad) {
+  match.sakaAngle = angleRad;
+  const orbitDist = match.circleRadius + 28;
+  if (match.saka) {
+    match.saka.x = match.centerX + Math.cos(angleRad) * orbitDist;
+    match.saka.y = match.centerY + Math.sin(angleRad) * orbitDist;
+    match.saka.angle = angleRad;
+  } else {
+    placeSakaOnArc(angleRad);
+  }
+  updateSakaAngleUI();
+}
+
+function onSakaAngleSlide(val) {
+  const deg = parseFloat(val);
+  const rad = (deg * Math.PI) / 180;
+  setSakaAngle(rad);
+  const haptics = (typeof ChukoHaptics !== 'undefined') ? ChukoHaptics : (typeof window !== 'undefined' ? window.ChukoHaptics : null);
+  if (haptics && typeof haptics.selection === 'function') {
+    haptics.selection();
+  }
+}
+
+function setSakaCardinal(cardinal) {
+  let rad = Math.PI * 0.5;
+  if (cardinal === 'south') rad = Math.PI * 0.5; // 90°
+  else if (cardinal === 'west') rad = Math.PI; // 180°
+  else if (cardinal === 'north') rad = -Math.PI * 0.5; // 270°
+  else if (cardinal === 'east') rad = 0; // 0°
+  setSakaAngle(rad);
+  const haptics = (typeof ChukoHaptics !== 'undefined') ? ChukoHaptics : (typeof window !== 'undefined' ? window.ChukoHaptics : null);
+  if (haptics && typeof haptics.impact === 'function') {
+    haptics.impact('light');
+  }
+}
+
+function updateSakaAngleUI() {
+  if (match.sakaAngle === undefined || match.sakaAngle === null) return;
+  let deg = Math.round((match.sakaAngle * 180 / Math.PI) % 360);
+  if (deg < 0) deg += 360;
+
+  const badge = (typeof document !== 'undefined') ? document.getElementById('saka-angle-badge') : null;
+  const slider = (typeof document !== 'undefined') ? document.getElementById('saka-angle-slider') : null;
+  if (slider && document.activeElement !== slider) slider.value = deg;
+
+  const perimeter = (typeof OrdoPerimeter !== 'undefined') ? OrdoPerimeter : (typeof window !== 'undefined' ? window.OrdoPerimeter : null);
+  let info = { deg, nameKg: 'Түштүк', nameRu: 'Юг', icon: '⬇️' };
+  if (perimeter && typeof perimeter.getCardinalInfo === 'function') {
+    info = perimeter.getCardinalInfo(match.sakaAngle);
+  } else {
+    if (deg >= 337.5 || deg < 22.5) info = { deg, nameKg: 'Чыгыш', nameRu: 'Восток', icon: '➡️' };
+    else if (deg >= 67.5 && deg < 112.5) info = { deg, nameKg: 'Түштүк', nameRu: 'Юг', icon: '⬇️' };
+    else if (deg >= 157.5 && deg < 202.5) info = { deg, nameKg: 'Батыш', nameRu: 'Запад', icon: '⬅️' };
+    else if (deg >= 247.5 && deg < 292.5) info = { deg, nameKg: 'Түндүк', nameRu: 'Север', icon: '⬆️' };
+  }
+
+  if (badge) {
+    badge.innerHTML = `<span>${info.icon}</span> <span>${info.deg}° ${info.nameKg} (${info.nameRu})</span>`;
+  }
+
+  if (typeof document !== 'undefined') {
+    const isSouth = deg >= 67 && deg <= 113;
+    const isWest = deg >= 157 && deg <= 203;
+    const isNorth = deg >= 247 && deg <= 293;
+    const isEast = (deg >= 337 && deg <= 360) || (deg >= 0 && deg <= 23);
+
+    const updateBtn = (id, active) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.className = active
+        ? 'btn-tap py-1 rounded-lg text-[9px] font-bold bg-amber-500 text-stone-950 border border-white flex items-center justify-center gap-0.5'
+        : 'btn-tap py-1 rounded-lg text-[9px] font-bold bg-stone-800 text-stone-300 border border-stone-700 flex items-center justify-center gap-0.5';
+    };
+
+    updateBtn('btn-cardinal-south', isSouth);
+    updateBtn('btn-cardinal-west', isWest);
+    updateBtn('btn-cardinal-north', isNorth);
+    updateBtn('btn-cardinal-east', isEast);
   }
 }
 
@@ -640,21 +725,41 @@ function setupTouchListeners() {
     if (match.turn !== 'player' || match.phase !== 'aiming' || !match.saka) return;
     const sp = getCanvasTouch(e);
     const sakaScreen = toScreen(match.saka.x, match.saka.y);
-    if (Math.hypot(sp.x - sakaScreen.x, sp.y - sakaScreen.y) <= 68) {
+    const distToSaka = Math.hypot(sp.x - sakaScreen.x, sp.y - sakaScreen.y);
+
+    if (distToSaka <= 48) {
       match.drag.active = true;
+      match.drag.pointerId = e.pointerId;
       match.drag.currX = sp.x;
       match.drag.currY = sp.y;
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    } else {
+      const w = toWorld(sp.x, sp.y);
+      const angle = Math.atan2(w.y - match.centerY, w.x - match.centerX);
+      setSakaAngle(angle);
+
+      match.rimDrag = {
+        active: true,
+        pointerId: e.pointerId
+      };
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
     }
   });
 
   window.addEventListener('pointermove', (e) => {
-    if (!match.drag.active) return;
-    const sp = getCanvasTouch(e);
-    match.drag.currX = sp.x;
-    match.drag.currY = sp.y;
+    if (match.drag.active && (match.drag.pointerId === undefined || e.pointerId === match.drag.pointerId)) {
+      const sp = getCanvasTouch(e);
+      match.drag.currX = sp.x;
+      match.drag.currY = sp.y;
+    } else if (match.rimDrag && match.rimDrag.active && (match.rimDrag.pointerId === undefined || e.pointerId === match.rimDrag.pointerId)) {
+      const sp = getCanvasTouch(e);
+      const w = toWorld(sp.x, sp.y);
+      const angle = Math.atan2(w.y - match.centerY, w.x - match.centerX);
+      setSakaAngle(angle);
+    }
   });
 
-  window.addEventListener('pointerup', () => {
+  function releaseSlingshot() {
     if (!match.drag.active) return;
     match.drag.active = false;
 
@@ -685,6 +790,21 @@ function setupTouchListeners() {
     match.knockedThisShot = 0;
     match.phase = 'moving';
     updateTurnUI();
+  }
+
+  function endRimDrag() {
+    if (match.rimDrag && match.rimDrag.active) {
+      match.rimDrag.active = false;
+    }
+  }
+
+  window.addEventListener('pointerup', (e) => {
+    releaseSlingshot();
+    endRimDrag();
+  });
+  window.addEventListener('pointercancel', (e) => {
+    if (match.drag.active) match.drag.active = false;
+    endRimDrag();
   });
 
   const spinPad = document.getElementById('spin-pad');
@@ -902,8 +1022,14 @@ async function onShotComplete() {
     placeSakaOnArc();
   } else {
     match.phase = 'bot_thinking';
-    match.saka.x = match.centerX + (Math.random() - 0.5) * 90;
-    match.saka.y = match.centerY - match.circleRadius - 28;
+    const perimeter = (typeof OrdoPerimeter !== 'undefined') ? OrdoPerimeter : (typeof window !== 'undefined' ? window.OrdoPerimeter : null);
+    const botAngle = (perimeter && typeof perimeter.calculateBotStance === 'function')
+      ? perimeter.calculateBotStance(match.alchiks, match.centerX, match.centerY, match.circleRadius)
+      : -Math.PI * 0.5;
+    const orbitDist = match.circleRadius + 28;
+    match.saka.x = match.centerX + Math.cos(botAngle) * orbitDist;
+    match.saka.y = match.centerY + Math.sin(botAngle) * orbitDist;
+    match.sakaAngle = botAngle;
     setTimeout(() => executeBotShot(), 1100);
   }
 }
@@ -1047,13 +1173,20 @@ function renderOrdoCanvas() {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // Нижняя дуга Сака
-  if (match.turn === 'player' && match.phase === 'aiming') {
-    ctx.beginPath();
-    ctx.ellipse(match.centerX, match.centerY, rx + 34, (rx + 34) * match.tiltY, 0, Math.PI * 0.5 - 0.52, Math.PI * 0.5 + 0.52);
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = 'rgba(163, 230, 53, 0.45)';
-    ctx.stroke();
+  // 360° Чек сызыгы: Отрисовка круговой орбиты выбора угла броска со всех сторон света
+  if (match.phase === 'aiming') {
+    const perimeter = (typeof OrdoPerimeter !== 'undefined') ? OrdoPerimeter : (typeof window !== 'undefined' ? window.OrdoPerimeter : null);
+    if (perimeter && typeof perimeter.drawPerimeterTrack === 'function') {
+      perimeter.drawPerimeterTrack(ctx, match, toScreen);
+    } else {
+      ctx.beginPath();
+      ctx.ellipse(match.centerX, match.centerY, rx + 28, (rx + 28) * match.tiltY, 0, 0, Math.PI * 2);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+      ctx.setLineDash([5, 5]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
   }
 
   // Прицел со сглаженным тремором

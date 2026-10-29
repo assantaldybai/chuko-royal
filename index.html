@@ -540,25 +540,54 @@
         </div>
       </div>
 
-      <!-- Нижняя тактическая панель: Выбор стойки (3 высоты) и Позиция Сака по дуге -->
+      <!-- Нижняя тактическая панель: Стойки и Выбор позиции со всех 360° Ордо -->
       <div class="p-2.5 bg-stone-900/95 border-t border-amber-500/30 flex flex-col gap-2 z-20">
         <!-- 3 Стойки игрока (влияют на 2.5D наклон камеры и физику разлета) -->
         <div class="flex items-center justify-between gap-1">
-          <button onclick="setStance('standing')" id="stance-standing" class="btn-tap flex-1 py-1.5 px-1.5 rounded-xl text-[10px] font-black bg-stone-800 border border-stone-600 text-stone-300">
-            🧍 Стоя (Разброс)
+          <button onclick="setStance('standing')" id="stance-standing" class="btn-tap flex-1 py-1.5 px-1 rounded-xl text-[10px] font-black bg-stone-800 border border-stone-600 text-stone-300">
+            🧍 Стоя
           </button>
-          <button onclick="setStance('half')" id="stance-half" class="btn-tap flex-1 py-1.5 px-1.5 rounded-xl text-[10px] font-black bg-amber-500 text-stone-950 border border-white">
-            🥋 Полусогнут (Баланс)
+          <button onclick="setStance('half')" id="stance-half" class="btn-tap flex-1 py-1.5 px-1 rounded-xl text-[10px] font-black bg-amber-500 text-stone-950 border border-white">
+            🥋 Полусогнут
           </button>
-          <button onclick="setStance('crouch')" id="stance-crouch" class="btn-tap flex-1 py-1.5 px-1.5 rounded-xl text-[10px] font-black bg-stone-800 border border-stone-600 text-stone-300">
-            🧎 Корточки (Слайд)
+          <button onclick="setStance('crouch')" id="stance-crouch" class="btn-tap flex-1 py-1.5 px-1 rounded-xl text-[10px] font-black bg-stone-800 border border-stone-600 text-stone-300">
+            🧎 Корточки
           </button>
         </div>
 
-        <!-- Перемещение Сака по нижней дуге перед броском -->
-        <div class="flex items-center gap-2">
-          <span class="text-[10px] font-extrabold text-amber-300 whitespace-nowrap">Позиция по дуге:</span>
-          <input type="range" id="saka-pos-slider" min="-1" max="1" step="0.02" value="0" class="w-full accent-amber-400 cursor-pointer" oninput="onSakaArcSlide(this.value)">
+        <!-- Позиция на чеке Ордо: 360° свободный выбор угла броска -->
+        <div class="flex flex-col gap-1.5 bg-stone-950/80 p-2 rounded-2xl border border-amber-500/25">
+          <div class="flex items-center justify-between text-[10px]">
+            <span class="font-extrabold text-amber-300 flex items-center gap-1">
+              <span>🎯</span> <span>Ордонун чеги (Стойка):</span>
+            </span>
+            <span id="saka-angle-badge" class="font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
+              <span>⬇️</span> <span>90° Түштүк (Юг)</span>
+            </span>
+          </div>
+
+          <!-- Быстрые кардинальные стороны: Юг, Запад, Север, Восток -->
+          <div class="grid grid-cols-4 gap-1">
+            <button onclick="setSakaCardinal('south')" id="btn-cardinal-south" class="btn-tap py-1 rounded-lg text-[9px] font-bold bg-amber-500 text-stone-950 border border-white flex items-center justify-center gap-0.5">
+              <span>⬇️</span> <span>Түштүк</span>
+            </button>
+            <button onclick="setSakaCardinal('west')" id="btn-cardinal-west" class="btn-tap py-1 rounded-lg text-[9px] font-bold bg-stone-800 text-stone-300 border border-stone-700 flex items-center justify-center gap-0.5">
+              <span>⬅️</span> <span>Батыш</span>
+            </button>
+            <button onclick="setSakaCardinal('north')" id="btn-cardinal-north" class="btn-tap py-1 rounded-lg text-[9px] font-bold bg-stone-800 text-stone-300 border border-stone-700 flex items-center justify-center gap-0.5">
+              <span>⬆️</span> <span>Түндүк</span>
+            </button>
+            <button onclick="setSakaCardinal('east')" id="btn-cardinal-east" class="btn-tap py-1 rounded-lg text-[9px] font-bold bg-stone-800 text-stone-300 border border-stone-700 flex items-center justify-center gap-0.5">
+              <span>➡️</span> <span>Чыгыш</span>
+            </button>
+          </div>
+
+          <!-- Плавный 360° слайдер обхода круга -->
+          <div class="flex items-center gap-2 pt-0.5">
+            <span class="text-[9px] text-stone-300 font-bold">0°</span>
+            <input type="range" id="saka-angle-slider" min="0" max="360" step="1" value="90" class="w-full accent-amber-400 cursor-pointer h-1.5" oninput="onSakaAngleSlide(this.value)">
+            <span class="text-[9px] text-stone-300 font-bold">360°</span>
+          </div>
         </div>
       </div>
 
@@ -1336,7 +1365,8 @@
       match.turn = 'player';
       match.phase = 'aiming';
       match.arcParam = 0;
-      document.getElementById('saka-pos-slider').value = 0;
+      const angleSlider = document.getElementById('saka-angle-slider') || document.getElementById('saka-pos-slider');
+      if (angleSlider) angleSlider.value = 90;
       resetSpin();
 
       document.getElementById('match-arena-title').textContent = match.arenaName;
@@ -1378,13 +1408,21 @@
       requestAnimationFrame(matchLoop);
     }
 
-    function placeSakaOnArc() {
+    function placeSakaOnArc(customAngle = null) {
       const eq = getEquippedSaka();
-      // Полукруглая дуга в нижней части поля Ордо
-      const arcAngle = Math.PI * 0.5 + match.arcParam * 0.52; // смещение влево/вправо по нижней границе
-      const arcDist = match.circleRadius + 34;
-      const lx = match.centerX + Math.cos(arcAngle) * arcDist;
-      const ly = match.centerY + Math.sin(arcAngle) * arcDist;
+      let arcAngle;
+      if (customAngle !== null) {
+        arcAngle = customAngle;
+      } else if (match.sakaAngle !== undefined && match.sakaAngle !== null) {
+        arcAngle = match.sakaAngle;
+      } else {
+        arcAngle = Math.PI * 0.5; // Юг по умолчанию (90°)
+      }
+      match.sakaAngle = arcAngle;
+
+      const orbitDist = match.circleRadius + 28;
+      const lx = match.centerX + Math.cos(arcAngle) * orbitDist;
+      const ly = match.centerY + Math.sin(arcAngle) * orbitDist;
 
       match.saka = {
         x: lx,
@@ -1395,16 +1433,89 @@
         mass: 1.35 + (eq.massStat / 100) * 0.55,
         color: eq.color,
         border: eq.border,
-        angle: 0,
+        angle: arcAngle,
         vAngle: 0
       };
+
+      updateSakaAngleUI();
     }
 
-    function onSakaArcSlide(val) {
-      match.arcParam = parseFloat(val);
-      if (match.turn === 'player' && match.phase === 'aiming') {
-        placeSakaOnArc();
+    // 360° выбор угла броска на чеке Ордо
+    function setSakaAngle(angleRad) {
+      match.sakaAngle = angleRad;
+      const orbitDist = match.circleRadius + 28;
+      if (match.saka) {
+        match.saka.x = match.centerX + Math.cos(angleRad) * orbitDist;
+        match.saka.y = match.centerY + Math.sin(angleRad) * orbitDist;
+        match.saka.angle = angleRad;
+      } else {
+        placeSakaOnArc(angleRad);
       }
+      updateSakaAngleUI();
+    }
+
+    function onSakaAngleSlide(val) {
+      const deg = parseFloat(val);
+      const rad = (deg * Math.PI) / 180;
+      setSakaAngle(rad);
+      if (window.ChukoHaptics && typeof window.ChukoHaptics.selection === 'function') {
+        window.ChukoHaptics.selection();
+      }
+    }
+
+    function setSakaCardinal(cardinal) {
+      let rad = Math.PI * 0.5;
+      if (cardinal === 'south') rad = Math.PI * 0.5; // 90° (Юг)
+      else if (cardinal === 'west') rad = Math.PI; // 180° (Запад)
+      else if (cardinal === 'north') rad = -Math.PI * 0.5; // 270° (Север)
+      else if (cardinal === 'east') rad = 0; // 0° (Восток)
+      setSakaAngle(rad);
+      if (window.ChukoHaptics && typeof window.ChukoHaptics.impact === 'function') {
+        window.ChukoHaptics.impact('light');
+      }
+    }
+
+    function updateSakaAngleUI() {
+      if (match.sakaAngle === undefined || match.sakaAngle === null) return;
+      let deg = Math.round((match.sakaAngle * 180 / Math.PI) % 360);
+      if (deg < 0) deg += 360;
+
+      const badge = document.getElementById('saka-angle-badge');
+      const slider = document.getElementById('saka-angle-slider');
+      if (slider && document.activeElement !== slider) slider.value = deg;
+
+      let info = { deg, nameKg: 'Түштүк', nameRu: 'Юг', icon: '⬇️' };
+      if (window.OrdoPerimeter && typeof window.OrdoPerimeter.getCardinalInfo === 'function') {
+        info = window.OrdoPerimeter.getCardinalInfo(match.sakaAngle);
+      } else {
+        if (deg >= 337.5 || deg < 22.5) info = { deg, nameKg: 'Чыгыш', nameRu: 'Восток', icon: '➡️' };
+        else if (deg >= 67.5 && deg < 112.5) info = { deg, nameKg: 'Түштүк', nameRu: 'Юг', icon: '⬇️' };
+        else if (deg >= 157.5 && deg < 202.5) info = { deg, nameKg: 'Батыш', nameRu: 'Запад', icon: '⬅️' };
+        else if (deg >= 247.5 && deg < 292.5) info = { deg, nameKg: 'Түндүк', nameRu: 'Север', icon: '⬆️' };
+      }
+
+      if (badge) {
+        badge.innerHTML = `<span>${info.icon}</span> <span>${info.deg}° ${info.nameKg} (${info.nameRu})</span>`;
+      }
+
+      // Подсветка активной кардинальной кнопки
+      const isSouth = deg >= 67 && deg <= 113;
+      const isWest = deg >= 157 && deg <= 203;
+      const isNorth = deg >= 247 && deg <= 293;
+      const isEast = (deg >= 337 && deg <= 360) || (deg >= 0 && deg <= 23);
+
+      const updateBtn = (id, active) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.className = active
+          ? 'btn-tap py-1 rounded-lg text-[9px] font-bold bg-amber-500 text-stone-950 border border-white flex items-center justify-center gap-0.5'
+          : 'btn-tap py-1 rounded-lg text-[9px] font-bold bg-stone-800 text-stone-300 border border-stone-700 flex items-center justify-center gap-0.5';
+      };
+
+      updateBtn('btn-cardinal-south', isSouth);
+      updateBtn('btn-cardinal-west', isWest);
+      updateBtn('btn-cardinal-north', isNorth);
+      updateBtn('btn-cardinal-east', isEast);
     }
 
     // Смена стойки игрока: Стоя / Полусогнутый / На корточках
@@ -1495,8 +1606,10 @@
       match.canvasRect = canvas.getBoundingClientRect();
       const sp = getCanvasTouch(e);
       const sakaScreen = toScreen(match.saka.x, match.saka.y);
+      const distToSaka = Math.hypot(sp.x - sakaScreen.x, sp.y - sakaScreen.y);
 
-      if (Math.hypot(sp.x - sakaScreen.x, sp.y - sakaScreen.y) <= 68) {
+      if (distToSaka <= 48) {
+        // Касание на Сака -> прицеливание и натяжение рогатки
         match.drag.active = true;
         match.drag.pointerId = e.pointerId;
         match.drag.currX = sp.x;
@@ -1505,14 +1618,35 @@
         if (audioCtx && audioCtx.state === 'suspended') {
           audioCtx.resume();
         }
+      } else {
+        // Касание по кругу Ордо / чеку: свободный выбор угла броска 360°
+        const w = toWorld(sp.x, sp.y);
+        const angle = Math.atan2(w.y - match.centerY, w.x - match.centerX);
+        setSakaAngle(angle);
+
+        // Включаем круговой драг по орбите
+        match.rimDrag = {
+          active: true,
+          pointerId: e.pointerId
+        };
+        try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
       }
     });
 
     window.addEventListener('pointermove', (e) => {
-      if (!match.drag.active || (match.drag.pointerId !== undefined && e.pointerId !== match.drag.pointerId)) return;
-      const sp = getCanvasTouch(e);
-      match.drag.currX = sp.x;
-      match.drag.currY = sp.y;
+      if (match.drag.active && (match.drag.pointerId === undefined || e.pointerId === match.drag.pointerId)) {
+        const sp = getCanvasTouch(e);
+        match.drag.currX = sp.x;
+        match.drag.currY = sp.y;
+      } else if (match.rimDrag && match.rimDrag.active && (match.rimDrag.pointerId === undefined || e.pointerId === match.rimDrag.pointerId)) {
+        const sp = getCanvasTouch(e);
+        const w = toWorld(sp.x, sp.y);
+        const angle = Math.atan2(w.y - match.centerY, w.x - match.centerX);
+        setSakaAngle(angle);
+      }
     });
 
     function releaseSlingshot(e) {
@@ -1554,12 +1688,25 @@
       updateTurnUI();
     }
 
-    window.addEventListener('pointerup', releaseSlingshot);
+    function endRimDrag(e) {
+      if (match.rimDrag && match.rimDrag.active) {
+        if (match.rimDrag.pointerId !== undefined) {
+          try { canvas.releasePointerCapture(match.rimDrag.pointerId); } catch (_) {}
+        }
+        match.rimDrag.active = false;
+      }
+    }
+
+    window.addEventListener('pointerup', (e) => {
+      releaseSlingshot(e);
+      endRimDrag(e);
+    });
     window.addEventListener('pointercancel', (e) => {
       if (match.drag.active) {
         match.drag.active = false;
         match.drag.pointerId = undefined;
       }
+      endRimDrag(e);
     });
 
     // ==================== ОБНОВЛЕНИЕ ФИЗИКИ 2.5D ОРДО ====================
@@ -1760,9 +1907,14 @@
         placeSakaOnArc();
       } else {
         match.phase = 'bot_thinking';
-        // Ставим Сака бота сверху круга Ордо
-        match.saka.x = match.centerX + (Math.random() - 0.5) * 90;
-        match.saka.y = match.centerY - match.circleRadius - 28;
+        // Тактический выбор угла стрельбы для Bot_Batyr со всего периметра Ордо
+        const botAngle = (window.OrdoPerimeter && typeof window.OrdoPerimeter.calculateBotStance === 'function')
+          ? window.OrdoPerimeter.calculateBotStance(match.alchiks, match.centerX, match.centerY, match.circleRadius)
+          : -Math.PI * 0.5;
+        const orbitDist = match.circleRadius + 28;
+        match.saka.x = match.centerX + Math.cos(botAngle) * orbitDist;
+        match.saka.y = match.centerY + Math.sin(botAngle) * orbitDist;
+        match.sakaAngle = botAngle;
         setTimeout(() => executeBotShot(), 1100);
       }
     }
@@ -1906,13 +2058,19 @@
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Нижняя дуга позиционирования Сака игрока
-      if (match.turn === 'player' && match.phase === 'aiming') {
-        ctx.beginPath();
-        ctx.ellipse(match.centerX, match.centerY, rx + 34, (rx + 34) * match.tiltY, 0, Math.PI * 0.5 - 0.52, Math.PI * 0.5 + 0.52);
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = 'rgba(163, 230, 53, 0.45)';
-        ctx.stroke();
+      // 360° Чек сызыгы: Отрисовка круговой орбиты выбора угла броска со всех сторон света
+      if (match.phase === 'aiming') {
+        if (window.OrdoPerimeter && typeof window.OrdoPerimeter.drawPerimeterTrack === 'function') {
+          window.OrdoPerimeter.drawPerimeterTrack(ctx, match, toScreen);
+        } else {
+          ctx.beginPath();
+          ctx.ellipse(match.centerX, match.centerY, rx + 28, (rx + 28) * match.tiltY, 0, 0, Math.PI * 2);
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+          ctx.setLineDash([5, 5]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
       }
 
       // 8 Ball Pool линия прицеливания с Ghost Ball и проекцией рикошета
