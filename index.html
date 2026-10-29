@@ -2063,6 +2063,7 @@
     }
 
     function startTrainingMode() {
+      match.isFriendlyLocal = false;
       startArenaMatch('Тренировка (Офлайн)', 0, 0);
     }
 
@@ -2098,6 +2099,7 @@
       match.fee = fee;
       match.boneCount = state.selectedBoneCount;
       match.targetScore = match.boneCount === 5 ? 3 : 5;
+      match.isFriendlyLocal = false;
 
       showScreen('screen-game');
       if (matchInitTimer) clearTimeout(matchInitTimer);
@@ -2461,7 +2463,8 @@
     }
 
     canvas.addEventListener('pointerdown', (e) => {
-      if (match.turn !== 'player' || match.phase !== 'aiming' || !match.saka) return;
+      const isAllowedToAim = match.isFriendlyLocal ? (match.phase === 'aiming') : (match.turn === 'player' && match.phase === 'aiming');
+      if (!isAllowedToAim || !match.saka) return;
       if (e.isPrimary === false) return;
 
       match.canvasRect = canvas.getBoundingClientRect();
@@ -2721,6 +2724,43 @@
       const remaining = match.alchiks.filter(a => a.active).length;
       if (match.scorePlayer >= match.targetScore || match.scoreBot >= match.targetScore || remaining === 0) {
         match.phase = 'ended';
+
+        // 1. Окончание Дружеского матча 1v1 (Pass & Play на одном телефоне)
+        if (match.isFriendlyLocal) {
+          if (window.EthnoAudio && typeof window.EthnoAudio.playDobulbas === 'function') {
+            window.EthnoAudio.playDobulbas(true);
+            window.EthnoAudio.playTemirKomuz('jackpot');
+          }
+          const p1 = match.p1Name || 'Игрок 1';
+          const p2 = match.p2Name || 'Игрок 2 (Друг)';
+          const winnerName = (match.scorePlayer > match.scoreBot) ? p1 : ((match.scoreBot > match.scorePlayer) ? p2 : 'Ничья');
+          const isDraw = match.scorePlayer === match.scoreBot;
+
+          showModal(isDraw ? '🤝' : '🏆', isDraw ? 'Боевая ничья!' : `Победа: ${winnerName}!`, `
+            <div class="flex flex-col gap-2 py-2 text-center text-xs">
+              <div class="text-sm font-black text-amber-300">Финальный счет матча:</div>
+              <div class="flex items-center justify-center gap-4 text-base font-black my-1">
+                <div class="p-2.5 rounded-xl bg-lime-950/60 border border-lime-400 text-lime-300">
+                  ${p1}: <span class="text-xl">${match.scorePlayer}</span> 🦴
+                </div>
+                <span class="text-stone-400 font-black text-xl">:</span>
+                <div class="p-2.5 rounded-xl bg-cyan-950/60 border border-cyan-400 text-cyan-300">
+                  ${p2}: <span class="text-xl">${match.scoreBot}</span> 🦴
+                </div>
+              </div>
+              <p class="text-stone-300 text-[11px]">${isDraw ? 'Оба батыра показали равное мастерство в Ордо!' : `Батыр <b>${winnerName}</b> оказался точнее и забирает победу!`}</p>
+            </div>
+          `, `
+            <button onclick="startFriendMatchLocal()" class="btn-tap flex-1 py-2.5 rounded-xl bg-gradient-to-r from-lime-400 to-yellow-400 text-stone-950 font-black uppercase text-xs shadow">
+              ⚔️ Сыграть реванш
+            </button>
+            <button onclick="closeGenericModal(); showScreen('screen-lobby');" class="btn-tap px-3 py-2.5 rounded-xl bg-stone-800 text-stone-300 font-bold text-xs">
+              В меню
+            </button>
+          `);
+          return;
+        }
+
         const playerWon = match.scorePlayer >= match.scoreBot;
 
         // Пополнение Ханской Копилки (+15% с каждого сыгранного матча с банком)
@@ -2779,7 +2819,27 @@
         return;
       }
 
-      // Правило Ордо: если выбил хотя бы 1 альчик — получаешь бонусный ход!
+      // 2. Управление ходами для Локального Дружеского матча (Pass & Play на одном телефоне)
+      if (match.isFriendlyLocal) {
+        const p1 = match.p1Name || 'Игрок 1';
+        const p2 = match.p2Name || 'Игрок 2 (Друг)';
+
+        if (match.knockedThisShot > 0) {
+          const curName = (match.turn === 'player') ? p1 : p2;
+          showMatchToast(`🔥 ${curName} выбил чуко! Бонусный ход!`);
+        } else {
+          match.turn = (match.turn === 'player') ? 'bot' : 'player';
+          const nextName = (match.turn === 'player') ? p1 : p2;
+          showMatchToast(`📱 Передайте телефон: Ходит ${nextName}!`);
+        }
+
+        updateTurnUI();
+        match.phase = 'aiming';
+        placeSakaOnArc();
+        return; // ВАЖНО: В режиме на одном телефоне БОТ НЕ СТРЕЛЯЕТ!
+      }
+
+      // 3. Стандартный матч против Bot_Batyr
       if (match.knockedThisShot > 0) {
         showMatchToast(match.turn === 'player' ? '🔥 Чуко выбит! Бонусный ход!' : '🐺 Bot_Batyr выбил чуко и бьет снова!');
       } else {
@@ -2793,7 +2853,6 @@
         placeSakaOnArc();
       } else {
         match.phase = 'bot_thinking';
-        // Тактический выбор угла стрельбы для Bot_Batyr со всего периметра Ордо
         const botAngle = (window.OrdoPerimeter && typeof window.OrdoPerimeter.calculateBotStance === 'function')
           ? window.OrdoPerimeter.calculateBotStance(match.alchiks, match.centerX, match.centerY, match.circleRadius)
           : -Math.PI * 0.5;
@@ -2834,6 +2893,39 @@
       const pBox = document.getElementById('player-turn-box');
       const bBox = document.getElementById('bot-turn-box');
       const badge = document.getElementById('turn-status-badge');
+
+      if (match.isFriendlyLocal) {
+        const p1 = match.p1Name || 'Игрок 1';
+        const p2 = match.p2Name || 'Игрок 2 (Друг)';
+
+        const p1NameElem = pBox.querySelector('.text-\\[11px\\]') || pBox.querySelector('div > div:first-child');
+        if (p1NameElem) p1NameElem.textContent = p1;
+        const p2NameElem = bBox.querySelector('.text-\\[11px\\]') || bBox.querySelector('div > div:first-child');
+        if (p2NameElem) p2NameElem.textContent = p2;
+        const p2Avatar = bBox.querySelector('.w-8');
+        if (p2Avatar) p2Avatar.textContent = '🎯';
+
+        if (match.turn === 'player') {
+          pBox.className = 'flex items-center gap-2 px-2.5 py-1 rounded-xl border-2 border-lime-400 bg-lime-950/40 transition-all';
+          bBox.className = 'flex items-center gap-2 px-2.5 py-1 rounded-xl border-2 border-transparent bg-stone-800/75 transition-all';
+          badge.textContent = match.phase === 'moving' ? 'Бросок...' : `Ход: ${p1} • Тяните Сака`;
+          badge.className = 'text-[10px] font-black px-2 py-0.5 rounded bg-lime-400 text-stone-950 mt-0.5';
+        } else {
+          pBox.className = 'flex items-center gap-2 px-2.5 py-1 rounded-xl border-2 border-transparent bg-stone-800/75 transition-all';
+          bBox.className = 'flex items-center gap-2 px-2.5 py-1 rounded-xl border-2 border-cyan-400 bg-cyan-950/40 transition-all';
+          badge.textContent = match.phase === 'moving' ? 'Бросок...' : `Ход: ${p2} • Тяните Сака`;
+          badge.className = 'text-[10px] font-black px-2 py-0.5 rounded bg-cyan-400 text-stone-950 mt-0.5';
+        }
+        return;
+      }
+
+      // Обычный матч против Бота
+      const p1NameElem = pBox.querySelector('.text-\\[11px\\]') || pBox.querySelector('div > div:first-child');
+      if (p1NameElem) p1NameElem.textContent = state.username || 'Nomad_kg';
+      const p2NameElem = bBox.querySelector('.text-\\[11px\\]') || bBox.querySelector('div > div:first-child');
+      if (p2NameElem) p2NameElem.textContent = 'Bot_Batyr';
+      const p2Avatar = bBox.querySelector('.w-8');
+      if (p2Avatar) p2Avatar.textContent = '🐺';
 
       if (match.turn === 'player') {
         pBox.className = 'flex items-center gap-2 px-2.5 py-1 rounded-xl border-2 border-lime-400 bg-lime-950/40 transition-all';
@@ -3318,27 +3410,32 @@
       showModal('👥', 'Игра с Другом (1v1)', `
         <div class="flex flex-col gap-3 py-1 text-left text-xs">
           <!-- Режим 1: Pass and Play на одном экране -->
-          <div class="p-3 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-stone-900 border border-emerald-500/40 flex flex-col gap-1.5 shadow">
+          <div class="p-3 rounded-2xl bg-gradient-to-r from-emerald-950/60 to-stone-900 border border-emerald-500/40 flex flex-col gap-2 shadow">
             <div class="flex items-center justify-between">
-              <h4 class="font-black text-emerald-300 text-xs uppercase">⚔️ Локальный матч (Pass & Play)</h4>
+              <h4 class="font-black text-emerald-300 text-xs uppercase">⚔️ Матч на одном телефоне (Pass & Play)</h4>
               <span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-1.5 py-0.2 rounded font-bold">1 Телефон</span>
             </div>
-            <p class="text-[11px] text-stone-300">Играйте вдвоем с другом на одном телефоне, передавая устройство по очереди!</p>
-            <button onclick="startFriendMatchLocal()" class="btn-tap mt-1 py-2 px-3 rounded-xl bg-emerald-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95">
-              Играть на одном телефоне ▶
+            <p class="text-[11px] text-stone-300">Играйте вдвоем на одном телефоне, передавая устройство по очереди после каждого удара!</p>
+            <button onclick="startFriendMatchLocal()" class="btn-tap py-2.5 px-3 rounded-xl bg-emerald-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 flex items-center justify-center gap-1.5">
+              <span>📱</span> Начать игру на одном телефоне ▶
             </button>
           </div>
 
           <!-- Режим 2: Приглашение по коду/ссылке -->
           <div class="p-3 rounded-2xl bg-stone-900 border border-amber-500/30 flex flex-col gap-2 shadow">
             <div class="flex items-center justify-between">
-              <h4 class="font-black text-amber-300 text-xs uppercase">📱 Онлайн-приглашение</h4>
+              <h4 class="font-black text-amber-300 text-xs uppercase">🌐 Приглашение по ссылке</h4>
               <span class="text-[9px] text-amber-400 font-mono font-bold">${roomCode}</span>
             </div>
-            <p class="text-[11px] text-stone-300">Отправьте персональную ссылку другу в Telegram или WhatsApp:</p>
-            <button onclick="copyFriendInvite('${roomCode}')" class="btn-tap py-2 px-3 rounded-xl bg-amber-400 text-stone-950 font-black text-xs uppercase flex items-center justify-center gap-1.5 shadow active:scale-95">
-              <span>📋</span> Скопировать ссылку для друга
-            </button>
+            <p class="text-[11px] text-stone-300">Отправьте ссылку другу в Telegram, WhatsApp или соцсетях:</p>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="shareFriendInvite('${roomCode}')" class="btn-tap py-2 px-2.5 rounded-xl bg-amber-400 text-stone-950 font-black text-[11px] uppercase flex items-center justify-center gap-1 shadow active:scale-95">
+                <span>📲</span> Поделиться
+              </button>
+              <button onclick="copyFriendInvite('${roomCode}')" class="btn-tap py-2 px-2.5 rounded-xl bg-stone-800 text-stone-200 border border-white/10 font-bold text-[11px] uppercase flex items-center justify-center gap-1 shadow active:scale-95">
+                <span>📋</span> Копировать
+              </button>
+            </div>
           </div>
         </div>
       `, `
@@ -3346,16 +3443,66 @@
       `);
     }
 
+    function shareFriendInvite(code) {
+      const url = `https://chuko.uyoom.app/?room=${code}`;
+      if (navigator.share) {
+        navigator.share({
+          title: 'Chuko Royal — Дуэль в Ордо',
+          text: `Сыграй со мной в кыргызское Ордо в комнате #${code}!`,
+          url: url
+        }).catch(() => copyFriendInvite(code));
+      } else {
+        copyFriendInvite(code);
+      }
+    }
+
     function startFriendMatchLocal() {
       closeGenericModal();
       setMatchBoneCount(5);
-      match.arenaName = 'Дружеский Ордо (1v1)';
+      match.arenaName = 'Дружеский 1v1 (Pass & Play)';
       match.prizePool = 0;
+      match.fee = 0;
       match.isFriendlyLocal = true;
+      match.p1Name = state.username || 'Игрок 1';
+      match.p2Name = 'Игрок 2 (Друг)';
+      match.scorePlayer = 0;
+      match.scoreBot = 0;
+      match.turn = 'player';
+      match.phase = 'aiming';
+
       showScreen('screen-game');
-      initMatchCanvas();
+      resizeGameCanvas();
       initMatchEngine();
-      showMatchToast('👥 Дружеский матч запущен! Ходит Игрок 1');
+      updateTurnUI();
+      showMatchToast('👥 Матч на одном телефоне! Ходит Игрок 1');
+    }
+
+    // Обработка URL инвайта комнаты (?room=CHUKO-XXXX)
+    function checkUrlRoomInvite() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const roomId = params.get('room') || params.get('join');
+        if (roomId) {
+          setTimeout(() => {
+            showModal('⚔️', 'ВЫЗОВ НА ДУЭЛЬ ОРДО!', `
+              <div class="flex flex-col gap-2.5 text-center py-2 text-xs">
+                <div class="text-sm font-black text-amber-300">Комната #${roomId}</div>
+                <p class="text-stone-300">Друг отправил вам ссылку-вызов на приватную дуэль в Ордо!</p>
+                <div class="p-2.5 rounded-xl bg-stone-900 border border-amber-400/40 text-[11px] text-stone-300">
+                  Формат: <b>5 костей</b> • До 3 выбитых чуко • 360° выбор угла
+                </div>
+              </div>
+            `, `
+              <button onclick="startFriendMatchLocal()" class="btn-tap flex-1 py-2.5 rounded-xl bg-gradient-to-r from-lime-400 to-yellow-400 text-stone-950 font-black uppercase text-xs shadow">
+                ⚔️ ПРИНЯТЬ ВЫЗОВ И В БОЙ!
+              </button>
+              <button onclick="closeGenericModal()" class="btn-tap px-3 py-2.5 rounded-xl bg-stone-800 text-stone-300 font-bold text-xs">
+                В лобби
+              </button>
+            `);
+          }, 500);
+        }
+      } catch (e) {}
     }
 
     function copyFriendInvite(code) {
@@ -3662,6 +3809,7 @@
     setTimeout(() => {
       renderChestSlots();
       renderLeaguesUI();
+      checkUrlRoomInvite();
     }, 200);
 
   </script>
