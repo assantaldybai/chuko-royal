@@ -131,13 +131,13 @@
       <div class="z-20 flex items-center justify-between gap-1.5 hud-card rounded-2xl p-1.5">
         <!-- Профиль и кубки -->
         <div onclick="openFeatureModal('profile')" class="btn-tap flex items-center gap-2 bg-black/40 pr-2.5 pl-1 py-1 rounded-xl border border-white/10">
-          <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-red-800 border-2 border-amber-300 flex items-center justify-center text-xl shadow">
-            🥷
+          <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-red-800 border-2 border-amber-300 flex items-center justify-center text-xl shadow overflow-hidden">
+            <span id="hud-avatar">🥷</span>
             <span id="hud-level" class="absolute -bottom-1 -right-1 bg-sky-500 text-[9px] font-black px-1 rounded border border-white">1</span>
           </div>
           <div>
             <div class="flex items-center gap-1">
-              <span id="hud-username" class="text-xs font-black leading-none text-white max-w-[85px] truncate">Nomad_kg</span>
+              <span id="hud-username" class="text-xs font-black leading-none text-white max-w-[125px] truncate">Батыр</span>
               <span class="text-[10px] text-amber-300" title="Лига Золотой Орды">⭐III</span>
             </div>
             <div class="flex items-center gap-1.5 mt-1 text-[11px] font-black text-amber-400">
@@ -611,35 +611,54 @@
     async function checkOrCreateSession() {
       try {
         if (!sbClient) return;
-        const { data: { session } } = await sbClient.auth.getSession();
+
+        // Если в URL есть OAuth токен от Google — ждем пока Supabase его распарсит
+        const hasOAuth = window.location.hash.includes('access_token') ||
+                         window.location.search.includes('code=');
+
+        let session = (await sbClient.auth.getSession())?.data?.session;
+
+        if (!session && hasOAuth) {
+          for (let i = 0; i < 15; i++) {
+            await new Promise(r => setTimeout(r, 200));
+            session = (await sbClient.auth.getSession())?.data?.session;
+            if (session) break;
+          }
+        }
+
         if (session?.user) {
           currentUser = session.user;
+          if (window.location.hash.includes('access_token')) {
+            history.replaceState(null, '', window.location.pathname);
+          }
           await syncFromCloud();
           subscribeToRealtime();
-        } else {
-          // Реальный постоянный гостевой аккаунт игрока в Supabase
-          let guestId = localStorage.getItem('chuko_guest_id');
-          if (!guestId) {
-            guestId = 'guest_' + Math.random().toString(36).substring(2, 10);
-            localStorage.setItem('chuko_guest_id', guestId);
-          }
-          const email = `${guestId}@chuko.pro`;
-          const pwd = `pwd_${guestId}_42!`;
-          
-          let login = await sbClient.auth.signInWithPassword({ email, password: pwd });
-          if (login.error) {
-            const signup = await sbClient.auth.signUp({
-              email,
-              password: pwd,
-              options: { data: { name: 'Nomad_kg' } }
-            });
-            login = signup;
-          }
-          if (login.data?.user) {
-            currentUser = login.data.user;
-            await syncFromCloud();
-            subscribeToRealtime();
-          }
+          return;
+        }
+
+        // Если сессии нет — вход через постоянного гостя
+        let guestId = localStorage.getItem('chuko_guest_id');
+        if (!guestId) {
+          guestId = 'guest_' + Math.random().toString(36).substring(2, 10);
+          localStorage.setItem('chuko_guest_id', guestId);
+        }
+        const email = `${guestId}@chuko.pro`;
+        const pwd = `pwd_${guestId}_42!`;
+        const guestName = 'Батыр_' + guestId.slice(-4);
+        
+        let login = await sbClient.auth.signInWithPassword({ email, password: pwd });
+        if (login.error) {
+          const signup = await sbClient.auth.signUp({
+            email,
+            password: pwd,
+            options: { data: { name: guestName, full_name: guestName } }
+          });
+          login = signup;
+        }
+        if (login.data?.user) {
+          currentUser = login.data.user;
+          await syncFromCloud();
+          subscribeToRealtime();
         }
       } catch (e) {
         console.warn('[Supabase Session]', e);
@@ -712,7 +731,9 @@
       if (!sbClient) return;
       await sbClient.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.href }
+        options: {
+          redirectTo: window.location.origin + window.location.pathname
+        }
       });
     }
 
@@ -721,7 +742,8 @@
       await sbClient.auth.signOut();
       currentUser = null;
       closeGenericModal();
-      openProfileModal();
+      localStorage.removeItem('chuko_guest_id');
+      await checkOrCreateSession();
     }
 
     // ==================== СОСТОЯНИЕ ИГРОКА (ДАННЫЕ ИЗ БАЗЫ) ====================
@@ -735,7 +757,7 @@
       playerLevel: 1,
       selectedBoneCount: 5,
       equippedSakaId: 'lead',
-      username: 'Nomad_kg',
+      username: 'Игрок',
       currentMatchId: null,
       sakaList: [
         {
@@ -839,6 +861,16 @@
       if (kb) kb.style.width = Math.min(100, ((state.knockedTotal % 20) / 20) * 100) + '%';
       if (u) u.textContent = state.username;
       if (lvl) lvl.textContent = state.playerLevel || 1;
+
+      const av = document.getElementById('hud-avatar');
+      if (av) {
+        const photo = currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture;
+        if (photo) {
+          av.innerHTML = `<img src="${photo}" class="w-full h-full object-cover rounded-lg" />`;
+        } else {
+          av.textContent = '🥷';
+        }
+      }
 
       const eq = getEquippedSaka();
       if (eqEl && eq) {
@@ -1021,24 +1053,25 @@
     }
 
     function openProfileModal() {
-      const isLinked = currentUser && !currentUser.is_anonymous && currentUser.app_metadata?.provider === 'google';
+      const isLinked = currentUser && !currentUser.is_anonymous && (currentUser.app_metadata?.provider === 'google' || currentUser.app_metadata?.providers?.includes('google'));
       const email = currentUser?.email || 'Не привязан';
       const googleBtn = isLinked
-        ? `<button onclick="signOutGoogle()" class="btn-tap flex-1 py-2 rounded-xl bg-stone-800 text-rose-300 font-bold text-xs border border-rose-500/40">Выйти из Google</button>`
+        ? `<button onclick="signOutGoogle()" class="btn-tap flex-1 py-2 rounded-xl bg-stone-800 text-rose-300 font-bold text-xs border border-rose-500/40">Выйти из аккаунта</button>`
         : `<button onclick="signInWithGoogle()" class="btn-tap flex-1 py-2 rounded-xl bg-white text-stone-900 font-bold text-xs flex items-center justify-center gap-1.5 shadow"><span>🌐</span> Войти через Google</button>`;
 
-      showModal('🥷', `Профиль: ${state.username}`, `
+      showModal('🥷', `Профиль игрока`, `
         <div class="flex flex-col gap-2 text-left">
           <div class="p-2.5 rounded-xl bg-black/40 border border-white/10 text-[11px]">
+            <div>👤 Никнейм: <b class="text-amber-300">${state.username}</b></div>
             <div>🏆 Кубки: <b class="text-amber-300">${state.trophies.toLocaleString('ru-RU')}</b></div>
             <div>💰 Копилка: <b class="text-lime-300">${state.piggyCoins.toLocaleString('ru-RU')} 🪙</b></div>
             <div>🦴 Выбито чуко: <b class="text-white">${state.knockedTotal}</b></div>
             <div class="mt-1 pt-1 border-t border-white/10 text-[10px]">
-              Синхронизация: <span class="text-emerald-400 font-bold">🟢 Активна</span>
+              Облачное сохранение: <span class="text-emerald-400 font-bold">🟢 Активно</span>
             </div>
           </div>
           <div class="text-[10px] text-stone-400 text-center">
-            ${isLinked ? `Google: <b class="text-white">${email}</b>` : 'Сохраняйте результат через Google:'}
+            ${isLinked ? `Google аккаунт: <b class="text-white">${email}</b>` : 'Войдите через Google для сохранения прогресса:'}
           </div>
         </div>
       `, `${googleBtn}<button onclick="closeGenericModal()" class="btn-tap py-2 px-3 rounded-xl bg-amber-400 text-stone-950 font-black text-xs">OK</button>`);
