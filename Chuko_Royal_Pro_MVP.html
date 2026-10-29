@@ -1335,6 +1335,7 @@
         }
       ]
     };
+    window.state = state;
 
     // ==================== ЗВУКОВОЙ СИНТЕЗАТОР (Web Audio API без внешних файлов) ====================
     let audioCtx = null;
@@ -2158,6 +2159,7 @@
       saka: null,
       drag: { active: false, currX: 0, currY: 0 }
     };
+    window.match = match;
 
     function resizeGameCanvas() {
       const wrapper = document.getElementById('canvas-wrapper');
