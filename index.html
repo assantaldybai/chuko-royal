@@ -587,14 +587,14 @@
     // ==================== БЭКЕНД И ОБЛАЧНАЯ СИНХРОНИЗАЦИЯ SUPABASE ====================
     const SUPABASE_URL = 'https://dtrdicglclbfhcdxuutz.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_AQuKpOK5j6he7jiNt2t_gg_4h49rFuD';
-    let supabase = null;
+    let sbClient = null;
     let currentUser = null;
 
     function initSupabase() {
       try {
-        if (window.supabase) {
-          supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-          supabase.auth.onAuthStateChange(async (event, session) => {
+        if (window.supabase && typeof window.supabase.createClient === 'function') {
+          sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+          sbClient.auth.onAuthStateChange(async (event, session) => {
             if (session?.user) {
               currentUser = session.user;
               await syncFromCloud();
@@ -610,8 +610,8 @@
 
     async function checkOrCreateSession() {
       try {
-        if (!supabase) return;
-        const { data: { session } } = await supabase.auth.getSession();
+        if (!sbClient) return;
+        const { data: { session } } = await sbClient.auth.getSession();
         if (session?.user) {
           currentUser = session.user;
           await syncFromCloud();
@@ -626,9 +626,9 @@
           const email = `${guestId}@chuko.pro`;
           const pwd = `pwd_${guestId}_42!`;
           
-          let login = await supabase.auth.signInWithPassword({ email, password: pwd });
+          let login = await sbClient.auth.signInWithPassword({ email, password: pwd });
           if (login.error) {
-            const signup = await supabase.auth.signUp({
+            const signup = await sbClient.auth.signUp({
               email,
               password: pwd,
               options: { data: { name: 'Nomad_kg' } }
@@ -647,9 +647,9 @@
     }
 
     async function syncFromCloud() {
-      if (!supabase || !currentUser) return;
+      if (!sbClient || !currentUser) return;
       try {
-        const { data, error } = await supabase.rpc('get_my_profile');
+        const { data, error } = await sbClient.rpc('get_my_profile');
         if (error) {
           console.warn('[Sync Profile Error]', error);
           return;
@@ -690,9 +690,9 @@
     }
 
     function subscribeToRealtime() {
-      if (!supabase || !currentUser) return;
+      if (!sbClient || !currentUser) return;
       try {
-        supabase
+        sbClient
           .channel('realtime-profile')
           .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${currentUser.id}` }, (payload) => {
             if (payload.new) {
@@ -709,16 +709,16 @@
     }
 
     async function signInWithGoogle() {
-      if (!supabase) return;
-      await supabase.auth.signInWithOAuth({
+      if (!sbClient) return;
+      await sbClient.auth.signInWithOAuth({
         provider: 'google',
         options: { redirectTo: window.location.href }
       });
     }
 
     async function signOutGoogle() {
-      if (!supabase) return;
-      await supabase.auth.signOut();
+      if (!sbClient) return;
+      await sbClient.auth.signOut();
       currentUser = null;
       closeGenericModal();
       openProfileModal();
@@ -784,22 +784,31 @@
     }
 
     // ==================== ЗАГРУЗЧИК И ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ ====================
+    let loaderDone = false;
     function initLoader() {
-      initSupabase();
+      if (loaderDone) return;
+      loaderDone = true;
+      try {
+        initSupabase();
+      } catch (e) {
+        console.warn('Init supabase failed:', e);
+      }
       let pct = 0;
       const bar = document.getElementById('loader-bar');
       const pctText = document.getElementById('loader-pct');
       const timer = setInterval(() => {
-        pct += 8;
+        pct += 12;
         if (pct >= 100) {
           pct = 100;
           clearInterval(timer);
-          setTimeout(() => showScreen('screen-lobby'), 250);
+          setTimeout(() => showScreen('screen-lobby'), 150);
         }
-        bar.style.width = pct + '%';
-        pctText.textContent = pct + '%';
-      }, 95);
-      updateHUD();
+        if (bar) bar.style.width = pct + '%';
+        if (pctText) pctText.textContent = pct + '%';
+      }, 50);
+      try {
+        updateHUD();
+      } catch (e) {}
     }
 
     function showScreen(screenId) {
@@ -933,8 +942,8 @@
       updateHUD();
       renderSakaList();
 
-      if (supabase && currentUser) {
-        supabase.rpc('equip_saka', { p_saka_type: id }).catch(e => console.warn(e));
+      if (sbClient && currentUser) {
+        sbClient.rpc('equip_saka', { p_saka_type: id }).catch(e => console.warn(e));
       }
     }
 
@@ -946,8 +955,8 @@
         return;
       }
 
-      if (supabase && currentUser) {
-        const { data, error } = await supabase.rpc('upgrade_saka', { p_saka_type: id });
+      if (sbClient && currentUser) {
+        const { data, error } = await sbClient.rpc('upgrade_saka', { p_saka_type: id });
         if (error) {
           showModal('❌', 'Ошибка прокачки', error.message);
           return;
@@ -1039,8 +1048,8 @@
       showModal('🌟', 'Мировой Рейтинг Ордо', '<div class="py-4 text-center text-stone-400 text-xs">Загрузка рейтинга...</div>');
       let list = [];
       try {
-        if (supabase) {
-          const { data } = await supabase.rpc('get_leaderboard', { p_limit: 10 });
+        if (sbClient) {
+          const { data } = await sbClient.rpc('get_leaderboard', { p_limit: 10 });
           if (data && data.length) list = data;
         }
       } catch (e) {}
@@ -1073,8 +1082,8 @@
     }
 
     function claimFreeGift() {
-      if (supabase && currentUser) {
-        supabase.rpc('claim_daily_bonus').then(({ data, error }) => {
+      if (sbClient && currentUser) {
+        sbClient.rpc('claim_daily_bonus').then(({ data, error }) => {
           if (error) {
             showModal('⏰', 'Уже получено', error.message);
           } else if (data) {
@@ -1126,8 +1135,8 @@
         return;
       }
 
-      if (supabase && currentUser && fee > 0) {
-        const { data, error } = await supabase.rpc('start_match', {
+      if (sbClient && currentUser && fee > 0) {
+        const { data, error } = await sbClient.rpc('start_match', {
           p_arena_name: arenaName,
           p_bone_count: state.selectedBoneCount,
           p_fee: fee,
@@ -1540,8 +1549,8 @@
         match.phase = 'ended';
         const playerWon = match.scorePlayer >= match.scoreBot;
 
-        if (supabase && currentUser && state.currentMatchId) {
-          const { data } = await supabase.rpc('finish_match', {
+        if (sbClient && currentUser && state.currentMatchId) {
+          const { data } = await sbClient.rpc('finish_match', {
             p_match_id: state.currentMatchId,
             p_won: playerWon,
             p_player_score: match.scorePlayer,
@@ -1820,7 +1829,19 @@
       if (match.running) resizeGameCanvas();
     });
 
-    window.onload = initLoader;
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initLoader);
+    } else {
+      initLoader();
+    }
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const loader = document.getElementById('screen-loader');
+        if (loader && !loader.classList.contains('hidden')) {
+          showScreen('screen-lobby');
+        }
+      }, 800);
+    });
   </script>
 </body>
 </html>
