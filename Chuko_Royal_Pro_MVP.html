@@ -2,13 +2,18 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Chuko Royal — Full Pro MVP</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/phase2_mechanics.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sal: env(safe-area-inset-left, 0px);
+      --sar: env(safe-area-inset-right, 0px);
       --bg-top: #1e3a8a;
       --bg-mid: #b45309;
       --bg-bot: #291507;
@@ -47,9 +52,14 @@
       background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 48%, var(--bg-bot) 100%);
       overflow: hidden; box-shadow: 0 0 60px rgba(0,0,0,0.95);
       display: flex; flex-direction: column; transition: background 0.4s ease;
+      padding-top: var(--sat);
+      padding-bottom: var(--sab);
+      padding-left: var(--sal);
+      padding-right: var(--sar);
+      box-sizing: border-box;
     }
     @media (min-width: 440px) {
-      #app-viewport { height: 95dvh; border-radius: 30px; border: 4px solid #27272a; }
+      #app-viewport { height: 95dvh; border-radius: 30px; border: 4px solid #27272a; padding: 0; }
     }
 
     .hud-card {
@@ -146,19 +156,19 @@
           </div>
         </div>
 
-        <!-- Валюты: Баксы и Монеты -->
+        <!-- Валюты: Баксы и Монеты с увеличенными тап-зонами >=44px -->
         <div class="flex items-center gap-1.5">
           <!-- Баксы -->
-          <div onclick="openFeatureModal('shop')" class="btn-tap flex items-center gap-1 bg-black/55 px-2 py-1 rounded-xl border border-emerald-500/40">
-            <span class="text-xs">💵</span>
+          <div onclick="openFeatureModal('shop')" class="btn-tap min-h-[44px] flex items-center gap-1.5 bg-black/55 px-2.5 py-1.5 rounded-xl border border-emerald-500/40 cursor-pointer active:scale-95">
+            <span class="text-sm">💵</span>
             <span id="hud-bucks" class="text-xs font-black text-emerald-300">85</span>
-            <span class="w-4 h-4 rounded bg-emerald-500 text-stone-950 font-black text-xs flex items-center justify-center leading-none">+</span>
+            <span class="w-6 h-6 rounded-lg bg-emerald-500 text-stone-950 font-black text-xs flex items-center justify-center leading-none shadow">+</span>
           </div>
           <!-- Монеты -->
-          <div onclick="openFeatureModal('shop')" class="btn-tap flex items-center gap-1 bg-black/55 px-2 py-1 rounded-xl border border-amber-500/40">
-            <span class="text-xs">🪙</span>
+          <div onclick="openFeatureModal('shop')" class="btn-tap min-h-[44px] flex items-center gap-1.5 bg-black/55 px-2.5 py-1.5 rounded-xl border border-amber-500/40 cursor-pointer active:scale-95">
+            <span class="text-sm">🪙</span>
             <span id="hud-coins" class="text-xs font-black text-amber-300">192,280</span>
-            <span class="w-4 h-4 rounded bg-amber-400 text-stone-950 font-black text-xs flex items-center justify-center leading-none">+</span>
+            <span class="w-6 h-6 rounded-lg bg-amber-400 text-stone-950 font-black text-xs flex items-center justify-center leading-none shadow">+</span>
           </div>
         </div>
       </div>
@@ -516,7 +526,7 @@
             <p class="text-[10px] text-stone-300 mt-0.5 mb-3">Сместите красную точку: верх — накат вперед, низ — оттяжка назад, бока — дуга.</p>
 
             <!-- Интерактивный круг Сака -->
-            <div id="spin-pad" class="relative w-36 h-36 rounded-full bg-gradient-to-br from-amber-100 via-amber-200 to-amber-500 border-4 border-amber-800 shadow-inner flex items-center justify-center cursor-pointer">
+            <div id="spin-pad" class="relative w-36 h-36 rounded-full bg-gradient-to-br from-amber-100 via-amber-200 to-amber-500 border-4 border-amber-800 shadow-inner flex items-center justify-center cursor-pointer select-none touch-none">
               <div class="absolute inset-x-3 h-px bg-amber-900/30"></div>
               <div class="absolute inset-y-3 w-px bg-amber-900/30"></div>
               <div id="spin-selector-dot" class="w-6 h-6 rounded-full bg-red-600 border-2 border-white shadow-lg pointer-events-none" style="transform: translate(0px, 0px);"></div>
@@ -555,14 +565,14 @@
     </div>
 
     <!-- ==================== 5. МОДАЛЬНОЕ ОКНО КОЛЛЕКЦИИ И ПРОКАЧКИ САКА ==================== -->
-    <div id="modal-saka" class="hidden absolute inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3">
-      <div class="hud-card w-full max-w-sm rounded-3xl p-4 border-2 border-amber-400 flex flex-col gap-3 max-h-[88dvh] overflow-y-auto no-scrollbar">
+    <div id="modal-saka" onclick="if(event.target === this) closeSakaModal();" class="hidden absolute inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 overscroll-contain">
+      <div class="hud-card w-full max-w-sm rounded-3xl p-4 border-2 border-amber-400 flex flex-col gap-3 max-h-[88dvh] overflow-y-auto no-scrollbar" onclick="event.stopPropagation();">
         <div class="flex justify-between items-center border-b border-white/10 pb-2">
           <div>
             <h3 class="text-base font-black uppercase text-amber-300">Коллекция и Прокачка Сака</h3>
             <p class="text-[10px] text-stone-300">Статы напрямую влияют на силу удара и тремор прицела</p>
           </div>
-          <button onclick="closeSakaModal()" class="btn-tap w-8 h-8 rounded-xl bg-stone-800 font-black text-sm">✕</button>
+          <button onclick="closeSakaModal()" aria-label="Закрыть окно" class="btn-tap w-11 h-11 rounded-2xl bg-stone-800 font-black text-base flex items-center justify-center border border-white/10 active:scale-95 shadow">✕</button>
         </div>
 
         <div id="saka-collection-list" class="flex flex-col gap-2.5"></div>
@@ -570,13 +580,13 @@
     </div>
 
     <!-- ==================== 6. УНИВЕРСАЛЬНОЕ МОДАЛЬНОЕ ОКНО (Клубы, Pool Pass, Итог матча) ==================== -->
-    <div id="modal-generic" class="hidden absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="hud-card w-full max-w-sm rounded-3xl p-5 border-2 border-amber-400 text-center flex flex-col gap-3">
+    <div id="modal-generic" onclick="if(event.target === this) closeGenericModal();" class="hidden absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain">
+      <div class="hud-card w-full max-w-sm rounded-3xl p-5 border-2 border-amber-400 text-center flex flex-col gap-3" onclick="event.stopPropagation();">
         <div id="modal-icon" class="text-4xl mx-auto">🏆</div>
         <h3 id="modal-title" class="text-lg font-black uppercase text-amber-300">Раздел</h3>
         <p id="modal-body" class="text-xs text-stone-200 leading-relaxed"></p>
         <div id="modal-actions" class="flex gap-2 mt-1">
-          <button onclick="closeGenericModal()" class="btn-tap flex-1 py-2.5 rounded-xl bg-amber-400 text-stone-950 font-black uppercase text-xs">Понятно</button>
+          <button onclick="closeGenericModal()" class="btn-tap flex-1 min-h-[44px] py-2.5 rounded-xl bg-amber-400 text-stone-950 font-black uppercase text-xs shadow active:scale-95">Понятно</button>
         </div>
       </div>
     </div>
@@ -776,6 +786,20 @@
 
     // ==================== ЗВУКОВОЙ СИНТЕЗАТОР (Web Audio API без внешних файлов) ====================
     let audioCtx = null;
+
+    function unlockAudioOnGesture() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    ['click', 'touchstart', 'pointerdown'].forEach(evt => {
+      document.addEventListener(evt, unlockAudioOnGesture, { once: true, passive: true });
+    });
+
     function playBoneSound(type = 'hit', intensity = 1) {
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -801,6 +825,22 @@
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
           osc.start(now);
           osc.stop(now + 0.2);
+        } else if (type === 'khan_triumph') {
+          // Королевский триумфальный фанфар (арпеджио C5 - E5 - G5 - C6)
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.connect(g);
+            g.connect(audioCtx.destination);
+            o.type = 'triangle';
+            const noteStart = now + idx * 0.07;
+            o.frequency.setValueAtTime(freq, noteStart);
+            g.gain.setValueAtTime(0.35, noteStart);
+            g.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.32);
+            o.start(noteStart);
+            o.stop(noteStart + 0.33);
+          });
         }
       } catch (e) {}
     }
@@ -1022,6 +1062,17 @@
       document.getElementById('modal-generic').classList.add('hidden');
     }
 
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeGenericModal();
+        closeSakaModal();
+        const spinPop = document.getElementById('spin-popover');
+        if (spinPop && !spinPop.classList.contains('hidden')) {
+          spinPop.classList.add('hidden');
+        }
+      }
+    });
+
     function openFeatureModal(key) {
       if (key === 'profile') {
         openProfileModal();
@@ -1200,6 +1251,10 @@
 
     function leaveMatch() {
       match.running = false;
+      if (match.rafId) {
+        cancelAnimationFrame(match.rafId);
+        match.rafId = null;
+      }
       showScreen('screen-lobby');
     }
 
@@ -1237,13 +1292,24 @@
     function resizeGameCanvas() {
       const wrapper = document.getElementById('canvas-wrapper');
       const rect = wrapper.getBoundingClientRect();
-      canvas.width = rect.width || 390;
-      canvas.height = rect.height || 520;
-      match.width = canvas.width;
-      match.height = canvas.height;
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      const cssWidth = rect.width || 390;
+      const cssHeight = rect.height || 520;
+
+      // Задаем физический буфер с учетом плотности Retina
+      canvas.width = Math.round(cssWidth * dpr);
+      canvas.height = Math.round(cssHeight * dpr);
+      canvas.style.width = cssWidth + 'px';
+      canvas.style.height = cssHeight + 'px';
+
+      // Логические размеры для физического движка остаются в CSS-пикселях
+      match.dpr = dpr;
+      match.width = cssWidth;
+      match.height = cssHeight;
       match.centerX = match.width / 2;
       match.centerY = match.height * 0.42;
       match.circleRadius = Math.min(match.width * 0.445, match.height * 0.37);
+      match.canvasRect = rect;
     }
 
     // Перевод логических координат поля Ордо в экранные 2.5D координаты
@@ -1280,27 +1346,30 @@
       document.getElementById('score-target').textContent = match.targetScore;
       document.getElementById('score-target-b').textContent = match.targetScore;
 
-      // Расстановка 5 или 9 альчиков (в центре — Хан)
-      match.alchiks = [];
+      // Каноническая расстановка Ордо гарнизона (Үймөк) вокруг Хана
       const count = match.boneCount;
-      const spacing = count === 5 ? 25 : 20;
-      const startX = match.centerX - ((count - 1) * spacing) / 2;
-      const midIndex = Math.floor(count / 2);
-
-      for (let i = 0; i < count; i++) {
-        const isKhan = (i === midIndex);
-        match.alchiks.push({
-          x: startX + i * spacing,
-          y: match.centerY + (i % 2 === 0 ? -4 : 4),
-          vx: 0,
-          vy: 0,
-          radius: isKhan ? 12.5 : 11,
-          mass: isKhan ? 1.38 : 1.18, // Тяжелые кости для реалистичного добивания
-          angle: (i * 0.4) - 0.6,
-          vAngle: 0,
-          isKhan: isKhan,
-          active: true
-        });
+      if (window.OrdoGarrison && typeof window.OrdoGarrison.generateCluster === 'function') {
+        match.alchiks = window.OrdoGarrison.generateCluster(count, match.centerX, match.centerY);
+      } else {
+        match.alchiks = [];
+        const spacing = count === 5 ? 25 : 20;
+        const startX = match.centerX - ((count - 1) * spacing) / 2;
+        const midIndex = Math.floor(count / 2);
+        for (let i = 0; i < count; i++) {
+          const isKhan = (i === midIndex);
+          match.alchiks.push({
+            x: startX + i * spacing,
+            y: match.centerY + (i % 2 === 0 ? -4 : 4),
+            vx: 0,
+            vy: 0,
+            radius: isKhan ? 12.5 : 11,
+            mass: isKhan ? 1.38 : 1.18,
+            angle: (i * 0.4) - 0.6,
+            vAngle: 0,
+            isKhan: isKhan,
+            active: true
+          });
+        }
       }
 
       setStance('half');
@@ -1376,48 +1445,85 @@
     }
 
     const spinPad = document.getElementById('spin-pad');
-    spinPad.addEventListener('pointerdown', (e) => {
+    let isSpinDragging = false;
+
+    function handleSpinInput(clientX, clientY) {
       const rect = spinPad.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      let dx = (e.clientX - cx) / (rect.width / 2);
-      let dy = (e.clientY - cy) / (rect.height / 2);
+      let dx = (clientX - cx) / (rect.width / 2);
+      let dy = (clientY - cy) / (rect.height / 2);
       const len = Math.hypot(dx, dy);
       if (len > 0.85) { dx = (dx / len) * 0.85; dy = (dy / len) * 0.85; }
       match.spinX = dx;
       match.spinY = dy;
       updateSpinVisuals();
+    }
+
+    spinPad.addEventListener('pointerdown', (e) => {
+      isSpinDragging = true;
+      try { spinPad.setPointerCapture(e.pointerId); } catch (_) {}
+      handleSpinInput(e.clientX, e.clientY);
     });
+
+    spinPad.addEventListener('pointermove', (e) => {
+      if (!isSpinDragging) return;
+      handleSpinInput(e.clientX, e.clientY);
+    });
+
+    const endSpinDrag = (e) => {
+      if (!isSpinDragging) return;
+      isSpinDragging = false;
+      try { spinPad.releasePointerCapture(e.pointerId); } catch (_) {}
+    };
+
+    spinPad.addEventListener('pointerup', endSpinDrag);
+    spinPad.addEventListener('pointercancel', endSpinDrag);
 
     // ==================== УПРАВЛЕНИЕ НАТЯЖЕНИЕМ (SLINGSHOT) И ТРЕМОР ПРИЦЕЛА ====================
     function getCanvasTouch(e) {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const rect = match.canvasRect || canvas.getBoundingClientRect();
+      const clientX = e.clientX !== undefined ? e.clientX : (e.touches ? e.touches[0].clientX : 0);
+      const clientY = e.clientY !== undefined ? e.clientY : (e.touches ? e.touches[0].clientY : 0);
       return { x: clientX - rect.left, y: clientY - rect.top };
     }
 
     canvas.addEventListener('pointerdown', (e) => {
       if (match.turn !== 'player' || match.phase !== 'aiming' || !match.saka) return;
+      if (e.isPrimary === false) return;
+
+      match.canvasRect = canvas.getBoundingClientRect();
       const sp = getCanvasTouch(e);
       const sakaScreen = toScreen(match.saka.x, match.saka.y);
+
       if (Math.hypot(sp.x - sakaScreen.x, sp.y - sakaScreen.y) <= 68) {
         match.drag.active = true;
+        match.drag.pointerId = e.pointerId;
         match.drag.currX = sp.x;
         match.drag.currY = sp.y;
+        try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
       }
     });
 
     window.addEventListener('pointermove', (e) => {
-      if (!match.drag.active) return;
+      if (!match.drag.active || (match.drag.pointerId !== undefined && e.pointerId !== match.drag.pointerId)) return;
       const sp = getCanvasTouch(e);
       match.drag.currX = sp.x;
       match.drag.currY = sp.y;
     });
 
-    window.addEventListener('pointerup', () => {
+    function releaseSlingshot(e) {
       if (!match.drag.active) return;
+      if (match.drag.pointerId !== undefined && e && e.pointerId !== match.drag.pointerId) return;
+
       match.drag.active = false;
+      if (match.drag.pointerId !== undefined) {
+        try { canvas.releasePointerCapture(match.drag.pointerId); } catch (_) {}
+        match.drag.pointerId = undefined;
+      }
 
       const sakaScreen = toScreen(match.saka.x, match.saka.y);
       const dx = sakaScreen.x - match.drag.currX;
@@ -1428,16 +1534,13 @@
       const eq = getEquippedSaka();
       const powerRatio = pull / 115;
 
-      // Модификаторы стойки: Стоя (мощный удар), Полусогнутый (баланс), Корточки (точный настильный слайд)
       let stanceMult = 1.0;
       if (match.stance === 'standing') stanceMult = 1.14;
       if (match.stance === 'crouch') stanceMult = 0.94;
 
-      // Увеличенная на +40% сила удара по твоему запросу
       const maxSpeed = 22.4 * stanceMult * (0.92 + (eq.massStat / 100) * 0.16);
       const speed = powerRatio * maxSpeed;
 
-      // Тремор прицела (виляние уменьшено на 30% + зависит от стата Меткости Сака и стойки)
       const stabilityFactor = 1 - (eq.stabilityStat / 140);
       const stanceSway = match.stance === 'standing' ? 1.2 : (match.stance === 'crouch' ? 0.65 : 0.95);
       const swayAmp = powerRatio > 0.5 ? (powerRatio - 0.5) * 0.112 * stabilityFactor * stanceSway : 0;
@@ -1449,6 +1552,14 @@
       match.knockedThisShot = 0;
       match.phase = 'moving';
       updateTurnUI();
+    }
+
+    window.addEventListener('pointerup', releaseSlingshot);
+    window.addEventListener('pointercancel', (e) => {
+      if (match.drag.active) {
+        match.drag.active = false;
+        match.drag.pointerId = undefined;
+      }
     });
 
     // ==================== ОБНОВЛЕНИЕ ФИЗИКИ 2.5D ОРДО ====================
@@ -1536,6 +1647,9 @@
               a.vAngle = (Math.random() - 0.5) * 0.25;
               b.vAngle = (Math.random() - 0.5) * 0.32;
               playBoneSound('hit', Math.min(1.5, Math.abs(velAlongNormal) / 8));
+              if (window.ChukoHaptics && typeof window.ChukoHaptics.onCollision === 'function') {
+                window.ChukoHaptics.onCollision(Math.abs(velAlongNormal));
+              }
             }
           }
         }
@@ -1546,19 +1660,26 @@
         if (!a.active) return;
         const distFromCenter = Math.hypot(a.x - match.centerX, a.y - match.centerY);
         if (distFromCenter > match.circleRadius) {
-          a.active = false;
-          match.knockedThisShot += 1;
-          playBoneSound('out');
-
-          if (match.turn === 'player') {
-            match.scorePlayer += 1;
-            state.knockedTotal += 1;
-            state.piggyCoins += 150;
-            document.getElementById('score-player').textContent = match.scorePlayer;
+          if (window.KhanRule && typeof window.KhanRule.processKnockout === 'function') {
+            window.KhanRule.processKnockout(a, match, state, playBoneSound, showMatchToast);
+            if (a.isKhan && match.turn === 'player') {
+              window.KhanRule.showTriumphModal(showModal, state.username);
+            }
           } else {
-            match.scoreBot += 1;
-            document.getElementById('score-bot').textContent = match.scoreBot;
+            a.active = false;
+            match.knockedThisShot += 1;
+            playBoneSound('out');
+            if (match.turn === 'player') {
+              match.scorePlayer += (a.isKhan ? 3 : 1);
+              state.knockedTotal += 1;
+              state.piggyCoins += (a.isKhan ? 500 : 150);
+              document.getElementById('score-player').textContent = match.scorePlayer;
+            } else {
+              match.scoreBot += (a.isKhan ? 3 : 1);
+              document.getElementById('score-bot').textContent = match.scoreBot;
+            }
           }
+          updateHUD();
         }
       });
 
@@ -1741,6 +1862,8 @@
     }
 
     function renderOrdoCanvas() {
+      ctx.save();
+      ctx.scale(match.dpr || 1, match.dpr || 1);
       ctx.clearRect(0, 0, match.width, match.height);
 
       // 2.5D перспектива зала/ковра
@@ -1792,7 +1915,7 @@
         ctx.stroke();
       }
 
-      // Короткий прицел с учетом плавного тремора руки при натяжении
+      // 8 Ball Pool линия прицеливания с Ghost Ball и проекцией рикошета
       if (match.drag.active && match.phase === 'aiming' && match.saka) {
         const sakaSp = toScreen(match.saka.x, match.saka.y);
         const dx = sakaSp.x - match.drag.currX;
@@ -1806,28 +1929,35 @@
           const swayAmp = powerRatio > 0.5 ? (powerRatio - 0.5) * 0.112 * stabilityFactor : 0;
           const aimAngle = Math.atan2(dy, dx) + Math.sin(match.swayTime) * swayAmp;
 
-          // Укороченный луч прицела (64px)
-          const aimLen = 64;
-          const endWorldX = match.saka.x + Math.cos(aimAngle) * aimLen;
-          const endWorldY = match.saka.y + Math.sin(aimAngle) * aimLen;
-          const endSp = toScreen(endWorldX, endWorldY);
+          if (window.GhostAiming && typeof window.GhostAiming.drawGuideline === 'function') {
+            window.GhostAiming.drawGuideline(ctx, match, aimAngle, powerRatio, toScreen);
+          } else {
+            const aimLen = 80;
+            const endWorldX = match.saka.x + Math.cos(aimAngle) * aimLen;
+            const endWorldY = match.saka.y + Math.sin(aimAngle) * aimLen;
+            const endSp = toScreen(endWorldX, endWorldY);
+            ctx.beginPath();
+            ctx.setLineDash([5, 5]);
+            ctx.moveTo(sakaSp.x, sakaSp.y);
+            ctx.lineTo(endSp.x, endSp.y);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = powerRatio > 0.75 ? '#ef4444' : '#fde047';
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
 
-          ctx.beginPath();
-          ctx.setLineDash([5, 5]);
-          ctx.moveTo(sakaSp.x, sakaSp.y);
-          ctx.lineTo(endSp.x, endSp.y);
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = powerRatio > 0.75 ? '#ef4444' : '#fde047';
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          // Линия натяжения рогатки
+          // Линия натяжения рогатки (Слинг)
           ctx.beginPath();
           ctx.moveTo(sakaSp.x, sakaSp.y);
           ctx.lineTo(match.drag.currX, match.drag.currY);
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2.5;
           ctx.strokeStyle = 'rgba(255,255,255,0.45)';
           ctx.stroke();
+
+          // Тактильный отклик при натяжении
+          if (window.ChukoHaptics && typeof window.ChukoHaptics.onPullStep === 'function') {
+            window.ChukoHaptics.onPullStep(powerRatio);
+          }
         }
       }
 
@@ -1849,13 +1979,14 @@
           drawChukoPiece(p.x, p.y, p.radius, p.angle, false, p.isKhan, null, null);
         }
       });
+      ctx.restore();
     }
 
     function matchLoop() {
       if (!match.running) return;
       updateMatchPhysics();
       renderOrdoCanvas();
-      requestAnimationFrame(matchLoop);
+      match.rafId = requestAnimationFrame(matchLoop);
     }
 
     window.addEventListener('resize', () => {

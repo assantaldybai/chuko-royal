@@ -87,6 +87,22 @@ function playBoneSound(type = 'hit', intensity = 1) {
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
       osc.start(now);
       osc.stop(now + 0.2);
+    } else if (type === 'khan_triumph') {
+      // Королевский триумфальный фанфар (арпеджио C5 - E5 - G5 - C6)
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.type = 'triangle';
+        const noteStart = now + idx * 0.07;
+        o.frequency.setValueAtTime(freq, noteStart);
+        g.gain.setValueAtTime(0.35, noteStart);
+        g.gain.exponentialRampToValueAtTime(0.001, noteStart + 0.32);
+        o.start(noteStart);
+        o.stop(noteStart + 0.33);
+      });
     }
   } catch (e) {}
 }
@@ -511,27 +527,32 @@ function initMatchEngine() {
   if (stEl) stEl.textContent = match.targetScore;
   if (stbEl) stbEl.textContent = match.targetScore;
 
-  // Расстановка 5 или 9 альчиков (в центре — Хан)
-  match.alchiks = [];
+  // Каноническая расстановка Ордо гарнизона (Үймөк) вокруг Хана
   const count = match.boneCount;
-  const spacing = count === 5 ? 25 : 20;
-  const startX = match.centerX - ((count - 1) * spacing) / 2;
-  const midIndex = Math.floor(count / 2);
-
-  for (let i = 0; i < count; i++) {
-    const isKhan = (i === midIndex);
-    match.alchiks.push({
-      x: startX + i * spacing,
-      y: match.centerY + (i % 2 === 0 ? -4 : 4),
-      vx: 0,
-      vy: 0,
-      radius: isKhan ? 12.5 : 11,
-      mass: isKhan ? 1.38 : 1.18,
-      angle: (i * 0.4) - 0.6,
-      vAngle: 0,
-      isKhan: isKhan,
-      active: true
-    });
+  if (typeof OrdoGarrison !== 'undefined' && typeof OrdoGarrison.generateCluster === 'function') {
+    match.alchiks = OrdoGarrison.generateCluster(count, match.centerX, match.centerY);
+  } else if (typeof window !== 'undefined' && window.OrdoGarrison) {
+    match.alchiks = window.OrdoGarrison.generateCluster(count, match.centerX, match.centerY);
+  } else {
+    match.alchiks = [];
+    const spacing = count === 5 ? 25 : 20;
+    const startX = match.centerX - ((count - 1) * spacing) / 2;
+    const midIndex = Math.floor(count / 2);
+    for (let i = 0; i < count; i++) {
+      const isKhan = (i === midIndex);
+      match.alchiks.push({
+        x: startX + i * spacing,
+        y: match.centerY + (i % 2 === 0 ? -4 : 4),
+        vx: 0,
+        vy: 0,
+        radius: isKhan ? 12.5 : 11,
+        mass: isKhan ? 1.38 : 1.18,
+        angle: (i * 0.4) - 0.6,
+        vAngle: 0,
+        isKhan: isKhan,
+        active: true
+      });
+    }
   }
 
   setStance('half');
@@ -763,6 +784,11 @@ function updateMatchPhysics() {
           a.vAngle = (Math.random() - 0.5) * 0.25;
           b.vAngle = (Math.random() - 0.5) * 0.32;
           playBoneSound('hit', Math.min(1.5, Math.abs(velAlongNormal) / 8));
+          if (typeof ChukoHaptics !== 'undefined' && typeof ChukoHaptics.onCollision === 'function') {
+            ChukoHaptics.onCollision(Math.abs(velAlongNormal));
+          } else if (typeof window !== 'undefined' && window.ChukoHaptics) {
+            window.ChukoHaptics.onCollision(Math.abs(velAlongNormal));
+          }
         }
       }
     }
@@ -773,21 +799,30 @@ function updateMatchPhysics() {
     if (!a.active) return;
     const distFromCenter = Math.hypot(a.x - match.centerX, a.y - match.centerY);
     if (distFromCenter > match.circleRadius) {
-      a.active = false;
-      match.knockedThisShot += 1;
-      playBoneSound('out');
-
-      if (match.turn === 'player') {
-        match.scorePlayer += 1;
-        state.knockedTotal += 1;
-        state.piggyCoins += 150;
-        const pScoreEl = document.getElementById('score-player');
-        if (pScoreEl) pScoreEl.textContent = match.scorePlayer;
+      const khanRuleObj = (typeof KhanRule !== 'undefined') ? KhanRule : (typeof window !== 'undefined' ? window.KhanRule : null);
+      if (khanRuleObj && typeof khanRuleObj.processKnockout === 'function') {
+        khanRuleObj.processKnockout(a, match, state, playBoneSound, showMatchToast);
+        if (a.isKhan && match.turn === 'player') {
+          khanRuleObj.showTriumphModal(showModal, state.username);
+        }
       } else {
-        match.scoreBot += 1;
-        const bScoreEl = document.getElementById('score-bot');
-        if (bScoreEl) bScoreEl.textContent = match.scoreBot;
+        a.active = false;
+        match.knockedThisShot += 1;
+        playBoneSound('out');
+
+        if (match.turn === 'player') {
+          match.scorePlayer += (a.isKhan ? 3 : 1);
+          state.knockedTotal += 1;
+          state.piggyCoins += (a.isKhan ? 500 : 150);
+          const pScoreEl = document.getElementById('score-player');
+          if (pScoreEl) pScoreEl.textContent = match.scorePlayer;
+        } else {
+          match.scoreBot += (a.isKhan ? 3 : 1);
+          const bScoreEl = document.getElementById('score-bot');
+          if (bScoreEl) bScoreEl.textContent = match.scoreBot;
+        }
       }
+      updateHUD();
     }
   });
 
@@ -1035,26 +1070,37 @@ function renderOrdoCanvas() {
       const swayAmp = powerRatio > 0.5 ? (powerRatio - 0.5) * 0.112 * stabilityFactor : 0;
       const aimAngle = Math.atan2(dy, dx) + Math.sin(match.swayTime) * swayAmp;
 
-      const aimLen = 64;
-      const endWorldX = match.saka.x + Math.cos(aimAngle) * aimLen;
-      const endWorldY = match.saka.y + Math.sin(aimAngle) * aimLen;
-      const endSp = toScreen(endWorldX, endWorldY);
+      const ghostAimObj = (typeof GhostAiming !== 'undefined') ? GhostAiming : (typeof window !== 'undefined' ? window.GhostAiming : null);
+      if (ghostAimObj && typeof ghostAimObj.drawGuideline === 'function') {
+        ghostAimObj.drawGuideline(ctx, match, aimAngle, powerRatio, toScreen);
+      } else {
+        const aimLen = 80;
+        const endWorldX = match.saka.x + Math.cos(aimAngle) * aimLen;
+        const endWorldY = match.saka.y + Math.sin(aimAngle) * aimLen;
+        const endSp = toScreen(endWorldX, endWorldY);
 
-      ctx.beginPath();
-      ctx.setLineDash([5, 5]);
-      ctx.moveTo(sakaSp.x, sakaSp.y);
-      ctx.lineTo(endSp.x, endSp.y);
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = powerRatio > 0.75 ? '#ef4444' : '#fde047';
-      ctx.stroke();
-      ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(sakaSp.x, sakaSp.y);
+        ctx.lineTo(endSp.x, endSp.y);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = powerRatio > 0.75 ? '#ef4444' : '#fde047';
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
 
       ctx.beginPath();
       ctx.moveTo(sakaSp.x, sakaSp.y);
       ctx.lineTo(match.drag.currX, match.drag.currY);
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2.5;
       ctx.strokeStyle = 'rgba(255,255,255,0.45)';
       ctx.stroke();
+
+      if (typeof ChukoHaptics !== 'undefined' && typeof ChukoHaptics.onPullStep === 'function') {
+        ChukoHaptics.onPullStep(powerRatio);
+      } else if (typeof window !== 'undefined' && window.ChukoHaptics) {
+        window.ChukoHaptics.onPullStep(powerRatio);
+      }
     }
   }
 
