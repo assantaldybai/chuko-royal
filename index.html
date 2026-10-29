@@ -133,11 +133,11 @@
         <div onclick="openFeatureModal('profile')" class="btn-tap flex items-center gap-2 bg-black/40 pr-2.5 pl-1 py-1 rounded-xl border border-white/10">
           <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-red-800 border-2 border-amber-300 flex items-center justify-center text-xl shadow">
             🥷
-            <span class="absolute -bottom-1 -right-1 bg-sky-500 text-[9px] font-black px-1 rounded border border-white">42</span>
+            <span id="hud-level" class="absolute -bottom-1 -right-1 bg-sky-500 text-[9px] font-black px-1 rounded border border-white">1</span>
           </div>
           <div>
             <div class="flex items-center gap-1">
-              <span class="text-xs font-black leading-none text-white">Nomad_kg</span>
+              <span id="hud-username" class="text-xs font-black leading-none text-white max-w-[85px] truncate">Nomad_kg</span>
               <span class="text-[10px] text-amber-300" title="Лига Золотой Орды">⭐III</span>
             </div>
             <div class="flex items-center gap-1.5 mt-1 text-[11px] font-black text-amber-400">
@@ -594,10 +594,11 @@
       try {
         if (window.supabase) {
           supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-          supabase.auth.onAuthStateChange((event, session) => {
+          supabase.auth.onAuthStateChange(async (event, session) => {
             if (session?.user) {
               currentUser = session.user;
-              syncFromCloud();
+              await syncFromCloud();
+              subscribeToRealtime();
             }
           });
           checkOrCreateSession();
@@ -614,25 +615,30 @@
         if (session?.user) {
           currentUser = session.user;
           await syncFromCloud();
+          subscribeToRealtime();
         } else {
-          // Тихий гостевой вход в Supabase без всплывающих окон
+          // Реальный постоянный гостевой аккаунт игрока в Supabase
           let guestId = localStorage.getItem('chuko_guest_id');
           if (!guestId) {
-            guestId = 'guest_' + Math.random().toString(36).substring(2, 9);
+            guestId = 'guest_' + Math.random().toString(36).substring(2, 10);
             localStorage.setItem('chuko_guest_id', guestId);
           }
           const email = `${guestId}@chuko.pro`;
           const pwd = `pwd_${guestId}_42!`;
-          const login = await supabase.auth.signInWithPassword({ email, password: pwd });
+          
+          let login = await supabase.auth.signInWithPassword({ email, password: pwd });
+          if (login.error) {
+            const signup = await supabase.auth.signUp({
+              email,
+              password: pwd,
+              options: { data: { name: 'Nomad_kg' } }
+            });
+            login = signup;
+          }
           if (login.data?.user) {
             currentUser = login.data.user;
             await syncFromCloud();
-          } else {
-            const signup = await supabase.auth.signUp({ email, password: pwd, options: { data: { name: 'Nomad_kg' } } });
-            if (signup.data?.user) {
-              currentUser = signup.data.user;
-              await syncFromCloud();
-            }
+            subscribeToRealtime();
           }
         }
       } catch (e) {
@@ -643,17 +649,62 @@
     async function syncFromCloud() {
       if (!supabase || !currentUser) return;
       try {
-        const { data } = await supabase.rpc('get_my_profile');
+        const { data, error } = await supabase.rpc('get_my_profile');
+        if (error) {
+          console.warn('[Sync Profile Error]', error);
+          return;
+        }
         if (data?.profile) {
           const p = data.profile;
           state.coins = Number(p.coins);
           state.bucks = p.bucks;
           state.trophies = p.trophies;
+          state.playerLevel = p.level || 1;
           state.piggyCoins = Number(p.piggy_coins);
           state.knockedTotal = p.total_knocked;
           state.username = p.username || 'Nomad_kg';
-          updateHUD();
         }
+        if (data?.sakas && data.sakas.length > 0) {
+          state.sakaList = data.sakas.map(s => ({
+            id: s.saka_type,
+            name: s.saka_name,
+            level: s.level,
+            color: s.color,
+            border: s.border_color,
+            massStat: s.mass_stat,
+            stabilityStat: s.stability_stat,
+            bounceStat: s.bounce_stat,
+            upgradeCost: Math.round(800 * Math.pow(1.4, s.level - 1)),
+            isEquipped: s.is_equipped
+          }));
+          const eq = state.sakaList.find(s => s.isEquipped);
+          if (eq) state.equippedSakaId = eq.id;
+        }
+        updateHUD();
+        if (document.getElementById('modal-saka') && !document.getElementById('modal-saka').classList.contains('hidden')) {
+          renderSakaList();
+        }
+      } catch (e) {
+        console.error('[Cloud Sync Exception]', e);
+      }
+    }
+
+    function subscribeToRealtime() {
+      if (!supabase || !currentUser) return;
+      try {
+        supabase
+          .channel('realtime-profile')
+          .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${currentUser.id}` }, (payload) => {
+            if (payload.new) {
+              state.coins = Number(payload.new.coins);
+              state.trophies = payload.new.trophies;
+              state.piggyCoins = Number(payload.new.piggy_coins);
+              state.playerLevel = payload.new.level;
+              state.knockedTotal = payload.new.total_knocked;
+              updateHUD();
+            }
+          })
+          .subscribe();
       } catch (e) {}
     }
 
@@ -673,14 +724,15 @@
       openProfileModal();
     }
 
-    // ==================== ГЛОБАЛЬНОЕ СОСТОЯНИЕ ИГРОКА И КОЛЛЕКЦИИ САКА ====================
+    // ==================== СОСТОЯНИЕ ИГРОКА (ДАННЫЕ ИЗ БАЗЫ) ====================
     const state = {
       season: 'nomad',
-      coins: 192280,
-      bucks: 85,
-      trophies: 1230,
-      piggyCoins: 14500,
-      knockedTotal: 12,
+      coins: 5000,
+      bucks: 10,
+      trophies: 0,
+      piggyCoins: 0,
+      knockedTotal: 0,
+      playerLevel: 1,
       selectedBoneCount: 5,
       equippedSakaId: 'lead',
       username: 'Nomad_kg',
@@ -689,35 +741,13 @@
         {
           id: 'lead',
           name: 'Ханский Свинец',
-          level: 3,
+          level: 1,
           color: '#f59e0b',
           border: '#fef3c7',
-          massStat: 78,      // Вес (пробивная мощь)
-          stabilityStat: 74, // Меткость (снижает виляние прицела)
-          bounceStat: 70,    // Упругость (передача импульса)
-          upgradeCost: 1500
-        },
-        {
-          id: 'cyber',
-          name: 'Кибер-Титан X9',
-          level: 4,
-          color: '#06b6d4',
-          border: '#ecfeff',
-          massStat: 86,
-          stabilityStat: 88,
-          bounceStat: 82,
-          upgradeCost: 3000
-        },
-        {
-          id: 'jade',
-          name: 'Иссык-Кульский Нефрит',
-          level: 2,
-          color: '#10b981',
-          border: '#d1fae5',
-          massStat: 72,
-          stabilityStat: 92,
-          bounceStat: 75,
-          upgradeCost: 1200
+          massStat: 60,
+          stabilityStat: 55,
+          bounceStat: 52,
+          upgradeCost: 800
         }
       ]
     };
@@ -782,19 +812,42 @@
     }
 
     function updateHUD() {
-      document.getElementById('hud-coins').textContent = state.coins.toLocaleString('ru-RU');
-      document.getElementById('hud-bucks').textContent = state.bucks;
-      document.getElementById('hud-trophies').textContent = state.trophies.toLocaleString('ru-RU');
-      document.getElementById('piggy-amount').textContent = state.piggyCoins.toLocaleString('ru-RU') + ' 🪙';
-      document.getElementById('knockout-counter').textContent = state.knockedTotal;
-      document.getElementById('knockout-bar').style.width = Math.min(100, (state.knockedTotal / 20) * 100) + '%';
+      const c = document.getElementById('hud-coins');
+      const b = document.getElementById('hud-bucks');
+      const t = document.getElementById('hud-trophies');
+      const p = document.getElementById('piggy-amount');
+      const k = document.getElementById('knockout-counter');
+      const kb = document.getElementById('knockout-bar');
+      const u = document.getElementById('hud-username');
+      const lvl = document.getElementById('hud-level');
+      const eqEl = document.getElementById('lobby-equipped-saka');
+
+      if (c) c.textContent = Number(state.coins).toLocaleString('ru-RU');
+      if (b) b.textContent = state.bucks;
+      if (t) t.textContent = Number(state.trophies).toLocaleString('ru-RU');
+      if (p) p.textContent = Number(state.piggyCoins).toLocaleString('ru-RU') + ' 🪙';
+      if (k) k.textContent = state.knockedTotal;
+      if (kb) kb.style.width = Math.min(100, ((state.knockedTotal % 20) / 20) * 100) + '%';
+      if (u) u.textContent = state.username;
+      if (lvl) lvl.textContent = state.playerLevel || 1;
 
       const eq = getEquippedSaka();
-      document.getElementById('lobby-equipped-saka').textContent = `${eq.name} (Ур. ${eq.level})`;
+      if (eqEl && eq) {
+        eqEl.textContent = `${eq.name} (Ур. ${eq.level})`;
+      }
     }
 
     function getEquippedSaka() {
-      return state.sakaList.find(s => s.id === state.equippedSakaId) || state.sakaList[0];
+      return state.sakaList.find(s => s.id === state.equippedSakaId) || state.sakaList[0] || {
+        id: 'lead',
+        name: 'Ханский Свинец',
+        level: 1,
+        color: '#f59e0b',
+        border: '#fef3c7',
+        massStat: 60,
+        stabilityStat: 55,
+        bounceStat: 52
+      };
     }
 
     // ==================== СМЕНА СЕЗОНА НА ГЛАВНОМ ЭКРАНЕ ====================
@@ -876,32 +929,40 @@
 
     function equipSaka(id) {
       state.equippedSakaId = id;
+      state.sakaList.forEach(s => s.isEquipped = (s.id === id));
       updateHUD();
       renderSakaList();
 
       if (supabase && currentUser) {
-        supabase.rpc('upgrade_saka', { p_saka_type: id }).catch(e => console.warn(e));
+        supabase.rpc('equip_saka', { p_saka_type: id }).catch(e => console.warn(e));
       }
     }
 
-    function upgradeSaka(id) {
+    async function upgradeSaka(id) {
       const s = state.sakaList.find(x => x.id === id);
       if (!s) return;
       if (state.coins < s.upgradeCost) {
-        showModal('🛒', 'Недостаточно монет', 'Сыграйте матч на арене или откройте сундук, чтобы заработать больше монет!');
+        showModal('🛒', 'Недостаточно монет', `Для улучшения требуется <b>${s.upgradeCost.toLocaleString('ru-RU')} 🪙</b>.`);
         return;
       }
-      state.coins -= s.upgradeCost;
-      s.level += 1;
-      s.massStat = Math.min(100, s.massStat + 3);
-      s.stabilityStat = Math.min(100, s.stabilityStat + 3);
-      s.bounceStat = Math.min(100, s.bounceStat + 3);
-      s.upgradeCost = Math.round(s.upgradeCost * 1.4);
-      updateHUD();
-      renderSakaList();
 
       if (supabase && currentUser) {
-        supabase.rpc('upgrade_saka', { p_saka_type: id }).catch(e => console.warn(e));
+        const { data, error } = await supabase.rpc('upgrade_saka', { p_saka_type: id });
+        if (error) {
+          showModal('❌', 'Ошибка прокачки', error.message);
+          return;
+        }
+        await syncFromCloud();
+        showModal('✨', 'Сака улучшен!', `Новый уровень: <b>${data.new_level}</b>! Характеристики выросли на +3.`);
+      } else {
+        state.coins -= s.upgradeCost;
+        s.level += 1;
+        s.massStat = Math.min(100, s.massStat + 3);
+        s.stabilityStat = Math.min(100, s.stabilityStat + 3);
+        s.bounceStat = Math.min(100, s.bounceStat + 3);
+        s.upgradeCost = Math.round(s.upgradeCost * 1.4);
+        updateHUD();
+        renderSakaList();
       }
     }
 
@@ -1059,12 +1120,30 @@
       startArenaMatch('Тренировка (Офлайн)', 0, 0);
     }
 
-    function startArenaMatch(arenaName, fee, prize) {
+    async function startArenaMatch(arenaName, fee, prize) {
       if (state.coins < fee) {
-        showModal('🪙', 'Не хватает монет на взнос', 'Выберите арену с меньшим взносом или заберите бесплатные монеты в меню Подарков.');
+        showModal('🪙', 'Не хватает монет на взнос', `Для входа на арену нужно <b>${fee.toLocaleString('ru-RU')} 🪙</b>. Ваш текущий баланс: <b>${state.coins.toLocaleString('ru-RU')} 🪙</b>.`);
         return;
       }
-      state.coins -= fee;
+
+      if (supabase && currentUser && fee > 0) {
+        const { data, error } = await supabase.rpc('start_match', {
+          p_arena_name: arenaName,
+          p_bone_count: state.selectedBoneCount,
+          p_fee: fee,
+          p_prize: prize
+        });
+
+        if (error) {
+          showModal('❌', 'Ошибка арены', error.message);
+          return;
+        }
+        state.currentMatchId = data;
+        state.coins -= fee;
+      } else {
+        state.coins -= fee;
+      }
+
       updateHUD();
 
       match.arenaName = arenaName;
@@ -1072,17 +1151,6 @@
       match.fee = fee;
       match.boneCount = state.selectedBoneCount;
       match.targetScore = match.boneCount === 5 ? 3 : 5;
-
-      if (supabase && currentUser && fee > 0) {
-        supabase.rpc('start_match', {
-          p_arena_name: arenaName,
-          p_bone_count: match.boneCount,
-          p_fee: fee,
-          p_prize: prize
-        }).then(({ data }) => {
-          if (data) state.currentMatchId = data;
-        }).catch(() => {});
-      }
 
       showScreen('screen-game');
       setTimeout(() => initMatchEngine(), 50);
@@ -1465,12 +1533,41 @@
       setTimeout(() => { t.style.opacity = '0'; }, 1600);
     }
 
-    function onShotComplete() {
+    async function onShotComplete() {
       // Проверка победы
       const remaining = match.alchiks.filter(a => a.active).length;
       if (match.scorePlayer >= match.targetScore || match.scoreBot >= match.targetScore || remaining === 0) {
         match.phase = 'ended';
         const playerWon = match.scorePlayer >= match.scoreBot;
+
+        if (supabase && currentUser && state.currentMatchId) {
+          const { data } = await supabase.rpc('finish_match', {
+            p_match_id: state.currentMatchId,
+            p_won: playerWon,
+            p_player_score: match.scorePlayer,
+            p_bot_score: match.scoreBot,
+            p_knocked: match.scorePlayer
+          });
+
+          if (data && data.new_coins !== undefined) {
+            state.coins = Number(data.new_coins);
+            state.trophies = data.new_trophies;
+            state.piggyCoins += match.scorePlayer * 150;
+            updateHUD();
+
+            if (playerWon) {
+              showModal('🏆', 'Победа в Ордо!', `Вы выбили ${match.scorePlayer} чуко!<br>Банк арены: <b class="text-lime-300">+${data.prize.toLocaleString('ru-RU')} 🪙</b><br>Кубки: <b class="text-amber-300">+${data.trophy_change} 🏆</b>`, `
+                <button onclick="closeGenericModal(); showScreen('screen-lobby');" class="btn-tap flex-1 py-2.5 rounded-xl bg-lime-400 text-stone-950 font-black uppercase text-xs">Забрать приз</button>
+              `);
+            } else {
+              showModal('🐺', 'Матч окончен', `Bot_Batyr выиграл (${match.scoreBot}:${match.scorePlayer}).<br>Кубки: <b class="text-rose-400">${data.trophy_change} 🏆</b>.<br>Возьмите реванш!`, `
+                <button onclick="closeGenericModal(); showScreen('screen-lobby');" class="btn-tap flex-1 py-2.5 rounded-xl bg-amber-400 text-stone-950 font-black uppercase text-xs">В меню</button>
+              `);
+            }
+            return;
+          }
+        }
+
         if (playerWon) {
           state.coins += match.prizePool;
           state.trophies += 25;
@@ -1482,22 +1579,6 @@
           showModal('🐺', 'Матч окончен', `Bot_Batyr оказался точнее (${match.scoreBot}:${match.scorePlayer}). Прокачайте статы Сака и возьмите реванш!`, `
             <button onclick="closeGenericModal(); showScreen('screen-lobby');" class="btn-tap flex-1 py-2.5 rounded-xl bg-amber-400 text-stone-950 font-black uppercase text-xs">В меню</button>
           `);
-        }
-
-        if (supabase && currentUser && state.currentMatchId) {
-          supabase.rpc('finish_match', {
-            p_match_id: state.currentMatchId,
-            p_won: playerWon,
-            p_player_score: match.scorePlayer,
-            p_bot_score: match.scoreBot,
-            p_knocked: match.scorePlayer
-          }).then(({ data }) => {
-            if (data && data.new_coins !== undefined) {
-              state.coins = Number(data.new_coins);
-              state.trophies = data.new_trophies;
-              updateHUD();
-            }
-          }).catch(() => {});
         }
         return;
       }
