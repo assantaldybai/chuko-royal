@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Chuko Royal — Full Pro MVP</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/phase2_mechanics.js"></script>
+  <script src="js/phase2_mechanics.js?v=20261029_360"></script>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -256,6 +259,14 @@
 
           <!-- БЛОК РЕЖИМОВ ИГРЫ (Все 7 режимов + Спецсобытие за выбитые альчики) -->
           <div class="w-full flex flex-col gap-1.5 mt-1">
+
+            <!-- Бейдж обновления 360° Ордо -->
+            <div class="py-1 px-2.5 rounded-xl bg-amber-500/15 border border-amber-400/40 flex items-center justify-between text-[10px]">
+              <span class="text-amber-200 font-extrabold flex items-center gap-1.5">
+                <span class="animate-pulse">🎯</span> <span>Ордо 360°: Свободный выбор угла стрельбы!</span>
+              </span>
+              <span class="text-[9px] bg-amber-400 text-stone-950 px-1.5 py-0.5 rounded font-black uppercase">Новое</span>
+            </div>
 
             <!-- 1. Главная кнопка: ИГРА 1 НА 1 -->
             <button onclick="openArenaSelect('1v1')" class="btn-tap w-full py-2.5 px-3 rounded-2xl bg-gradient-to-b from-lime-400 via-lime-500 to-green-700 border-2 border-lime-200 shadow-[0_6px_20px_rgba(132,204,22,0.45)] flex items-center justify-between">
@@ -1405,6 +1416,9 @@
       setStance('half');
       placeSakaOnArc();
       updateTurnUI();
+      setTimeout(() => {
+        showMatchToast('🎯 Тапайте по кругу Ордо или кнопкам внизу для выбора 360° угла!');
+      }, 400);
       requestAnimationFrame(matchLoop);
     }
 
