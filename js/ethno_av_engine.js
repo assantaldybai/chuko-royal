@@ -21,11 +21,15 @@
     droneLFO: null,
     droneLFOGain: null,
     isDroneActive: false,
+    isMuted: false,
 
     /**
      * Initializes or resumes the AudioContext with user-gesture unlock.
      */
     getContext() {
+      if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) {
+        return null;
+      }
       if (!this.ctx) {
         const AudioContextClass = (typeof window !== 'undefined')
           ? (window.AudioContext || window.webkitAudioContext)
@@ -60,18 +64,19 @@
 
     /**
      * 1. AUTHENTIC BONE COLLISION SOUND:
-     * Bandpass white noise burst (2.4kHz, 15ms) + sub-bass 808 sine drop (90Hz -> 35Hz, 80ms)
-     * scaling with impact velocity.
+     * Crisp dry acoustic knucklebone clack (high-frequency bandpass click at 2.6kHz + 
+     * hollow bone resonance at 850Hz + subtle felt table absorption). Zero muddy 808 synth drop.
      * @param {number} velocity Impact velocity or normalized intensity (0.1 to 2.5)
      */
     playBoneImpact(velocity = 1.0) {
       try {
+        if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return;
         const ctx = this.getContext();
         if (!ctx) return;
         const now = ctx.currentTime;
         const clampedVel = Math.max(0.15, Math.min(2.5, velocity));
 
-        // --- COMPONENT A: High-Frequency Bandpass White Noise Click (2.4kHz, 15ms) ---
+        // --- COMPONENT A: High-Frequency Bandpass White Noise Click (2.6kHz, 12ms) ---
         const noiseBuf = this.getNoiseBuffer();
         if (noiseBuf) {
           const noiseSrc = ctx.createBufferSource();
@@ -79,39 +84,39 @@
 
           const bandpass = ctx.createBiquadFilter();
           bandpass.type = 'bandpass';
-          bandpass.frequency.setValueAtTime(2400, now);
-          bandpass.Q.setValueAtTime(2.8, now);
+          bandpass.frequency.setValueAtTime(2600, now);
+          bandpass.Q.setValueAtTime(3.2, now);
 
           const noiseGain = ctx.createGain();
-          const noiseVol = Math.min(0.7, 0.35 * clampedVel);
+          const noiseVol = Math.min(0.65, 0.32 * clampedVel);
           noiseGain.gain.setValueAtTime(noiseVol, now);
-          noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.015); // 15ms decay
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.014); // 14ms crisp decay
 
           noiseSrc.connect(bandpass);
           bandpass.connect(noiseGain);
           noiseGain.connect(ctx.destination);
 
           noiseSrc.start(now);
-          noiseSrc.stop(now + 0.02);
+          noiseSrc.stop(now + 0.016);
         }
 
-        // --- COMPONENT B: Low Sub-Bass 808 Sine Drop (90Hz -> 35Hz, 80ms) ---
+        // --- COMPONENT B: Acoustic Knucklebone Body Resonance (850Hz -> 380Hz, 24ms) ---
         const osc = ctx.createOscillator();
         const oscGain = ctx.createGain();
 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(90, now);
-        osc.frequency.exponentialRampToValueAtTime(35, now + 0.08); // 80ms drop
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(850, now);
+        osc.frequency.exponentialRampToValueAtTime(380, now + 0.024);
 
-        const oscVol = Math.min(0.65, 0.32 * Math.sqrt(clampedVel));
+        const oscVol = Math.min(0.45, 0.22 * Math.sqrt(clampedVel));
         oscGain.gain.setValueAtTime(oscVol, now);
-        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08); // 80ms decay
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
 
         osc.connect(oscGain);
         oscGain.connect(ctx.destination);
 
         osc.start(now);
-        osc.stop(now + 0.085);
+        osc.stop(now + 0.028);
       } catch (e) {
         // AudioContext disabled or blocked
       }
@@ -869,7 +874,10 @@
       id: 'alchy',
       name: 'Алчы',
       rank: 4,
-      symbol: '🌟',
+      symbol: 'Алчы [IV]',
+      renderIcon(size = 36) {
+        return (typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.saka(size, '', 'gold') : 'Алчы';
+      },
       badgeColor: 'bg-emerald-500 text-stone-950',
       borderColor: 'border-emerald-400',
       title: 'Алчы (Высшее положение)',
@@ -879,7 +887,10 @@
       id: 'taa',
       name: 'Таа',
       rank: 3,
-      symbol: '✨',
+      symbol: 'Таа [III]',
+      renderIcon(size = 36) {
+        return (typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.saka(size, '', 'lead') : 'Таа';
+      },
       badgeColor: 'bg-amber-400 text-stone-950',
       borderColor: 'border-amber-400',
       title: 'Таа (Второе положение)',
@@ -889,7 +900,10 @@
       id: 'bok',
       name: 'Бөк',
       rank: 2,
-      symbol: '🔹',
+      symbol: 'Бөк [II]',
+      renderIcon(size = 36) {
+        return (typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.saka(size, '', 'horn') : 'Бөк';
+      },
       badgeColor: 'bg-orange-500 text-stone-950',
       borderColor: 'border-orange-400',
       title: 'Бөк (Выпуклая спинка)',
@@ -899,7 +913,10 @@
       id: 'chik',
       name: 'Чик',
       rank: 1,
-      symbol: '▫️',
+      symbol: 'Чик [I]',
+      renderIcon(size = 36) {
+        return (typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.saka(size, '', 'lead') : 'Чик';
+      },
       badgeColor: 'bg-stone-400 text-stone-950',
       borderColor: 'border-stone-500',
       title: 'Чик (Вогнутое брюшко)',
@@ -969,8 +986,8 @@
         <div class="relative w-full max-w-sm rounded-3xl bg-gradient-to-b from-stone-900 to-stone-950 border-2 border-amber-500/50 p-5 shadow-2xl shadow-amber-950/60 text-stone-100 flex flex-col items-center">
           <!-- Solar Tunduk Header Icon -->
           <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-600 to-amber-300 p-0.5 shadow-lg shadow-amber-500/30 mb-2 flex items-center justify-center animate-pulse">
-            <div class="w-full h-full rounded-full bg-stone-950 flex items-center justify-center text-2xl font-black text-amber-400">
-              ☀️
+            <div class="w-full h-full rounded-full bg-stone-950 flex items-center justify-center">
+              ${(typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.coin(28) : '☀️'}
             </div>
           </div>
 
@@ -992,7 +1009,7 @@
             <!-- Player Pedestal -->
             <div id="kalchoo-box-player" class="flex flex-col items-center p-3 rounded-2xl bg-stone-900/90 border-2 border-stone-700 transition-all">
               <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Сиз (Игрок)</span>
-              <div id="kalchoo-icon-player" class="text-4xl my-2 transition-transform duration-300">🎲</div>
+              <div id="kalchoo-icon-player" class="my-2 transition-transform duration-300 flex items-center justify-center">${(typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.saka(36, '', 'lead') : '🦴'}</div>
               <div id="kalchoo-name-player" class="text-xs font-black text-stone-300">Ожидание...</div>
               <span id="kalchoo-badge-player" class="text-[9px] px-2 py-0.5 rounded-full bg-stone-800 text-stone-400 mt-1">Ранг: —</span>
             </div>
@@ -1000,7 +1017,7 @@
             <!-- Bot Pedestal -->
             <div id="kalchoo-box-bot" class="flex flex-col items-center p-3 rounded-2xl bg-stone-900/90 border-2 border-stone-700 transition-all">
               <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Bot_Batyr</span>
-              <div id="kalchoo-icon-bot" class="text-4xl my-2 transition-transform duration-300">🎲</div>
+              <div id="kalchoo-icon-bot" class="my-2 transition-transform duration-300 flex items-center justify-center">${(typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.saka(36, '', 'gold') : '🦴'}</div>
               <div id="kalchoo-name-bot" class="text-xs font-black text-stone-300">Ожидание...</div>
               <span id="kalchoo-badge-bot" class="text-[9px] px-2 py-0.5 rounded-full bg-stone-800 text-stone-400 mt-1">Ранг: —</span>
             </div>
@@ -1057,11 +1074,15 @@
         let rolls = 0;
         const rollInterval = setInterval(() => {
           rolls++;
-          const dice = ['🎲', '🦴', '✨', '⚡'];
-          iconP.textContent = dice[rolls % dice.length];
-          iconB.textContent = dice[(rolls + 2) % dice.length];
-          iconP.style.transform = `rotate(${rolls * 45}deg) scale(1.15)`;
-          iconB.style.transform = `rotate(-${rolls * 45}deg) scale(1.15)`;
+          const skins = ['gold', 'lead', 'cyber', 'horn'];
+          const s1 = skins[rolls % skins.length];
+          const s2 = skins[(rolls + 2) % skins.length];
+          if (typeof window !== 'undefined' && window.GameIcons) {
+            iconP.innerHTML = window.GameIcons.saka(36, '', s1);
+            iconB.innerHTML = window.GameIcons.saka(36, '', s2);
+          }
+          iconP.style.transform = `rotate(${rolls * 45}deg) scale(1.1)`;
+          iconB.style.transform = `rotate(-${rolls * 45}deg) scale(1.1)`;
           EthnoAudio.playBoneImpact(0.4 + (rolls % 3) * 0.2);
 
           if (rolls >= 8) {
@@ -1079,8 +1100,13 @@
 
             iconP.style.transform = 'scale(1.25)';
             iconB.style.transform = 'scale(1.25)';
-            iconP.textContent = p.symbol;
-            iconB.textContent = b.symbol;
+            if (typeof window !== 'undefined' && window.GameIcons) {
+              iconP.innerHTML = p.renderIcon ? p.renderIcon(40) : window.GameIcons.saka(40, '', 'gold');
+              iconB.innerHTML = b.renderIcon ? b.renderIcon(40) : window.GameIcons.saka(40, '', 'lead');
+            } else {
+              iconP.textContent = p.name;
+              iconB.textContent = b.name;
+            }
 
             const nameP = document.getElementById('kalchoo-name-player');
             const nameB = document.getElementById('kalchoo-name-bot');
@@ -1097,13 +1123,13 @@
             if (contest.winner === 'player') {
               boxP.className = 'flex flex-col items-center p-3 rounded-2xl bg-emerald-950/60 border-2 border-emerald-400 shadow-lg shadow-emerald-500/20';
               boxB.className = 'flex flex-col items-center p-3 rounded-2xl bg-stone-900 border-2 border-stone-800 opacity-60';
-              statusEl.innerHTML = `<span class="text-emerald-400 font-black">🏆 Сиз жеңдиңиз!</span> Альчик түштү: <b class="text-white">${p.name}</b> (ранг ${p.rank}). Баштоо укугу сиздики!`;
+              statusEl.innerHTML = `<span class="text-emerald-400 font-black inline-flex items-center gap-1">${(typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.trophy(14) : ''} Сиз жеңдиңиз!</span> Альчик түштү: <b class="text-white">${p.name}</b> (ранг ${p.rank}). Баштоо укугу сиздики!`;
               EthnoAudio.playDobulbas(false);
               EthnoAudio.playTemirKomuz('jackpot');
             } else {
               boxP.className = 'flex flex-col items-center p-3 rounded-2xl bg-stone-900 border-2 border-stone-800 opacity-60';
               boxB.className = 'flex flex-col items-center p-3 rounded-2xl bg-amber-950/60 border-2 border-amber-400 shadow-lg shadow-amber-500/20';
-              statusEl.innerHTML = `<span class="text-amber-400 font-black">🐺 Bot_Batyr жеңди!</span> Каршылашта: <b class="text-white">${b.name}</b> (ранг ${b.rank}). Биринчи бросокту бот баштайт.`;
+              statusEl.innerHTML = `<span class="text-amber-400 font-black inline-flex items-center gap-1">${(typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.avatar('batyr', 14) : ''} Bot_Batyr жеңди!</span> Каршылашта: <b class="text-white">${b.name}</b> (ранг ${b.rank}). Биринчи бросокту бот баштайт.`;
               EthnoAudio.playDobulbas(false);
             }
 

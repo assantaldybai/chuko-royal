@@ -18,7 +18,7 @@
       bgGradient: 'from-emerald-950/70 via-stone-900 to-amber-950/40',
       badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40',
       accentColor: '#10b981',
-      icon: '⛺',
+      icon: 'yurt',
       rewardCoins: 10000,
       rewardBucks: 15,
       rewardSaka: {
@@ -43,7 +43,7 @@
       bgGradient: 'from-cyan-950/70 via-stone-900 to-blue-950/40',
       badgeClass: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40',
       accentColor: '#06b6d4',
-      icon: '🌊',
+      icon: 'water',
       rewardCoins: 25000,
       rewardBucks: 30,
       rewardSaka: {
@@ -68,7 +68,7 @@
       bgGradient: 'from-purple-950/70 via-stone-900 to-amber-950/50',
       badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-400/40',
       accentColor: '#f59e0b',
-      icon: '🏔️',
+      icon: 'mountain',
       rewardCoins: 60000,
       rewardBucks: 75,
       rewardSaka: {
@@ -94,7 +94,7 @@
     yurt: {
       key: 'yurt',
       name: 'Ханская Юрта',
-      icon: '🛖',
+      icon: 'yurt',
       desc: 'Пассивный сбор дани кочевников',
       maxLevel: 5,
       costs: [1500, 3500, 7500, 15000, 30000],
@@ -102,18 +102,18 @@
       caps: [1600, 3600, 6400, 10400, 16000], // 8-часовая вместимость
       getPerkText(lvl) {
         const rate = this.ratesPerHour[lvl - 1] || 200;
-        return `+${rate.toLocaleString('ru-RU')} 🪙/час (дань)`;
+        return `+${rate.toLocaleString('ru-RU')} монет/час (дань)`;
       },
       getNextPerkText(lvl) {
         if (lvl >= 5) return 'МАКС. ДОХОД';
         const nextRate = this.ratesPerHour[lvl];
-        return `След: +${nextRate.toLocaleString('ru-RU')} 🪙/час`;
+        return `След: +${nextRate.toLocaleString('ru-RU')} монет/час`;
       }
     },
     forge: {
       key: 'forge',
       name: 'Кузница Сака',
-      icon: '🔨',
+      icon: 'forge',
       desc: 'Скидка на улучшение характеристик Сака',
       maxLevel: 5,
       costs: [2000, 4500, 10000, 20000, 40000],
@@ -131,7 +131,7 @@
     stable: {
       key: 'stable',
       name: 'Загон Аргамаков',
-      icon: '🐎',
+      icon: 'stable',
       desc: 'Ускорение времени открытия сундуков',
       maxLevel: 5,
       costs: [2500, 5500, 12000, 24000, 48000],
@@ -149,7 +149,7 @@
     tower: {
       key: 'tower',
       name: 'Дозорная Башня',
-      icon: '🏰',
+      icon: 'tower',
       desc: 'Емкость щитов и автоподзарядка',
       maxLevel: 5,
       costs: [3000, 6500, 15000, 30000, 60000],
@@ -179,7 +179,7 @@
     {
       id: 'atk_1',
       attackerName: 'Арстан_Ош',
-      avatar: '🐺',
+      avatar: 'wolf',
       division: 'Золотое Ханство',
       timeAgo: '18 мин назад',
       timestamp: Date.now() - 18 * 60 * 1000,
@@ -190,7 +190,7 @@
     {
       id: 'atk_2',
       attackerName: 'Беркут_Нарын',
-      avatar: '🦅',
+      avatar: 'eagle',
       division: 'Лига Манаса',
       timeAgo: '1 час назад',
       timestamp: Date.now() - 65 * 60 * 1000,
@@ -201,7 +201,7 @@
     {
       id: 'atk_3',
       attackerName: 'Тайсон_Бишкек',
-      avatar: '🥊',
+      avatar: 'fist',
       division: 'Серебряный Айыл',
       timeAgo: '3 часа назад',
       timestamp: Date.now() - 190 * 60 * 1000,
@@ -212,7 +212,7 @@
     {
       id: 'atk_4',
       attackerName: 'Чингиз_Талас',
-      avatar: '🐎',
+      avatar: 'horse',
       division: 'Золотое Ханство',
       timeAgo: '6 часов назад',
       timestamp: Date.now() - 360 * 60 * 1000,
@@ -223,7 +223,7 @@
     {
       id: 'atk_5',
       attackerName: 'Кайрат_Джалал-Абад',
-      avatar: '🥷',
+      avatar: 'nomad',
       division: 'Бронзовый Стан',
       timeAgo: 'Вчера',
       timestamp: Date.now() - 22 * 60 * 60 * 1000,
@@ -235,12 +235,12 @@
 
   // Соперники для набегов
   const RIVAL_CANDIDATES = [
-    { username: 'Арстан_Ош', avatar: '🐺', division: 'Золотое Ханство', shields: 2, yurtName: 'Ставка Волка' },
-    { username: 'Беркут_Нарын', avatar: '🦅', division: 'Лига Манаса', shields: 1, yurtName: 'Гнездо Беркута' },
-    { username: 'Тайсон_Бишкек', avatar: '🥊', division: 'Серебряный Айыл', shields: 0, yurtName: 'Шатер Батыра' },
-    { username: 'Чингиз_Талас', avatar: '🐎', division: 'Золотое Ханство', shields: 1, yurtName: 'Таласский Стан' },
-    { username: 'Кайрат_Джалал-Абад', avatar: '🥷', division: 'Бронзовый Стан', shields: 2, yurtName: 'Крепость Саяка' },
-    { username: 'Айбек_Баткен', avatar: '🏔️', division: 'Золотое Ханство', shields: 0, yurtName: 'Баткенский Аул' }
+    { username: 'Арстан_Ош', avatar: 'wolf', division: 'Золотое Ханство', shields: 2, yurtName: 'Ставка Волка' },
+    { username: 'Беркут_Нарын', avatar: 'eagle', division: 'Лига Манаса', shields: 1, yurtName: 'Гнездо Беркута' },
+    { username: 'Тайсон_Бишкек', avatar: 'fist', division: 'Серебряный Айыл', shields: 0, yurtName: 'Шатер Батыра' },
+    { username: 'Чингиз_Талас', avatar: 'horse', division: 'Золотое Ханство', shields: 1, yurtName: 'Таласский Стан' },
+    { username: 'Кайрат_Джалал-Абад', avatar: 'nomad', division: 'Бронзовый Стан', shields: 2, yurtName: 'Крепость Саяка' },
+    { username: 'Айбек_Баткен', avatar: 'mountain', division: 'Золотое Ханство', shields: 0, yurtName: 'Баткенский Аул' }
   ];
 
   // ============================================================
@@ -510,7 +510,7 @@
       const skinEl = document.getElementById('landmark-reward-skin');
 
       if (titleEl) {
-        titleEl.textContent = isGrandEnd ? '👑 ВЛАДЫКА СЕМИРЕЧЬЯ!' : '🎉 ' + currentReg.name.toUpperCase() + ' ПОКОРЕН!';
+        titleEl.textContent = isGrandEnd ? 'ВЛАДЫКА СЕМИРЕЧЬЯ!' : currentReg.name.toUpperCase() + ' ПОКОРЕН!';
       }
 
       if (bodyEl) {
@@ -520,14 +520,14 @@
       }
 
       if (skinEl && currentReg.rewardSaka) {
-        skinEl.textContent = `🦴 Биток «${currentReg.rewardSaka.name}»`;
+        skinEl.textContent = `Биток «${currentReg.rewardSaka.name}»`;
       }
 
       const coinBadge = document.getElementById('landmark-reward-coins');
-      if (coinBadge) coinBadge.textContent = `+${currentReg.rewardCoins.toLocaleString('ru-RU')} 🪙`;
+      if (coinBadge) coinBadge.innerHTML = `+${currentReg.rewardCoins.toLocaleString('ru-RU')} ${window.GameIcons ? window.GameIcons.coin(14) : ''}`;
 
       const bucksBadge = document.getElementById('landmark-reward-bucks');
-      if (bucksBadge) bucksBadge.textContent = `+${currentReg.rewardBucks} 💵`;
+      if (bucksBadge) bucksBadge.innerHTML = `+${currentReg.rewardBucks} ${window.GameIcons ? window.GameIcons.buck(12) : 'Баксов'}`;
 
       modal.classList.remove('hidden');
     },
@@ -554,14 +554,14 @@
       if (!bldg || !config) return;
 
       if (bldg.level >= 5) {
-        this.showToast('★ Здание уже достигло максимального 5-го уровня!');
+        this.showToast('Здание уже достигло максимального 5-го уровня!');
         return;
       }
 
       const cost = this.getBuildingCost(bKey, bldg.level);
       if (this.gameState.coins < cost) {
         const need = cost - this.gameState.coins;
-        this.showToast('🪙 Не хватает ' + need.toLocaleString('ru-RU') + ' монет!');
+        this.showToast('Не хватает ' + need.toLocaleString('ru-RU') + ' монет!');
         if (typeof window !== 'undefined' && window.ChukoHaptics && typeof window.ChukoHaptics.notification === 'function') {
           window.ChukoHaptics.notification('error');
         }
@@ -593,7 +593,7 @@
         window.ChukoHaptics.notification('success');
       }
 
-      this.showToast(`✨ ${config.name} улучшена до Ур. ${bldg.level}!`);
+      this.showToast(`${config.name} улучшена до Ур. ${bldg.level}!`);
 
       // Проверка закрытия региона
       this.checkLandmarkCompletion();
@@ -667,7 +667,7 @@
         window.ChukoHaptics.impact('heavy');
       }
 
-      this.showToast(`💰 Собрано дани: +${collected.toLocaleString('ru-RU')} 🪙!`);
+      this.showToast(`Собрано дани: +${collected.toLocaleString('ru-RU')} монет!`);
     },
 
     // ============================================================
@@ -720,7 +720,7 @@
       if (rivalName) {
         rival = RIVAL_CANDIDATES.find(r => r.username === rivalName) || {
           username: rivalName,
-          avatar: '🥷',
+          avatar: 'nomad',
           division: 'Золотое Ханство',
           shields: Math.random() < 0.5 ? 1 : 0,
           yurtName: 'Аул батыра'
@@ -755,8 +755,8 @@
       if (statusBanner) {
         statusBanner.className = 'text-[11px] font-bold text-center py-1.5 px-3 rounded-xl bg-black/60 border border-amber-500/30 text-amber-300';
         statusBanner.innerHTML = options.isRevenge
-          ? `⚔️ <b>ОПЕРАЦИЯ «МЕСТЬ»:</b> Выберите юрту соперника для удара!`
-          : `🎯 <b>ВЫБЕРИТЕ ЦЕЛЬ:</b> Нажмите на одну из 3 юрт для броска Сака!`;
+          ? `<b>ОПЕРАЦИЯ «МЕСТЬ»:</b> Выберите юрту соперника для удара!`
+          : `<b>ВЫБЕРИТЕ ЦЕЛЬ:</b> Нажмите на одну из 3 юрт для броска Сака!`;
       }
 
       if (resultCard) resultCard.classList.add('hidden');
@@ -764,7 +764,10 @@
       // Отображение щитов соперника
       if (rivalShieldsEl) {
         const sh = this.currentRaid.rival.shields;
-        rivalShieldsEl.innerHTML = sh > 0 ? '🛡️ '.repeat(sh) + ` <span class="text-[10px] text-cyan-300">(${sh} актив.)</span>` : '<span class="text-rose-400 font-bold">❌ Без защиты</span>';
+        const shieldIcon = (typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.shield(16) : '';
+        rivalShieldsEl.innerHTML = sh > 0 
+          ? Array(sh).fill(shieldIcon).join(' ') + ` <span class="text-[10px] text-cyan-300">(${sh} актив.)</span>` 
+          : '<span class="text-rose-400 font-bold">Без защиты</span>';
       }
 
       // Сброс визуала палаток
@@ -806,7 +809,7 @@
       const resultCard = (typeof document !== 'undefined') ? document.getElementById('raid-result-card') : null;
 
       if (statusBanner) {
-        statusBanner.innerHTML = '⚡ <b>БРОСОК САКА В ПОЛЕТЕ...</b>';
+        statusBanner.innerHTML = '<b>БРОСОК САКА В ПОЛЕТЕ...</b>';
         statusBanner.className = 'text-[11px] font-bold text-center py-1.5 px-3 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 animate-pulse';
       }
 
@@ -834,10 +837,10 @@
           if (fxEl) {
             fxEl.innerHTML = `
               <div class="absolute inset-0 flex items-center justify-center pointer-events-none animate-ping">
-                <span class="text-4xl">🛡️</span>
+                <span class="filter drop-shadow">${window.GameIcons ? window.GameIcons.shield(44) : ""}</span>
               </div>
               <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span class="text-3xl text-cyan-300 font-black">⚡ СКОЛ!</span>
+                <span class="text-2xl text-cyan-300 font-black tracking-wide">СКОЛ ЩИТА!</span>
               </div>
             `;
           }
@@ -850,17 +853,17 @@
           }
 
           if (statusBanner) {
-            statusBanner.innerHTML = `🛡️ <b>ЩИТ ОТРАЗИЛ УДАР!</b> Дозорная башня врага приняла урон.`;
+            statusBanner.innerHTML = `<b>ЩИТ ОТРАЗИЛ УДАР!</b> Дозорная башня врага приняла урон.`;
             statusBanner.className = 'text-[11px] font-bold text-center py-1.5 px-3 rounded-xl bg-cyan-950/70 border border-cyan-400 text-cyan-300';
           }
 
           if (resultCard) {
             resultCard.innerHTML = `
               <div class="p-3 rounded-2xl bg-gradient-to-r from-cyan-950/80 to-stone-900 border border-cyan-500/40 text-center flex flex-col gap-1.5 shadow-lg">
-                <span class="text-2xl">🛡️ 💥</span>
+                <span class="flex items-center justify-center gap-1.5">${window.GameIcons ? window.GameIcons.shield(28) : ""}</span>
                 <h4 class="text-sm font-black text-white">ЩИТ СОПЕРНИКА РАСКОЛОТ!</h4>
                 <p class="text-[11px] text-stone-300">Соперник потерял 1 щит защиты. Вам достался малый обоз:</p>
-                <div class="text-lg font-black text-amber-300">+${consolationCoins} 🪙</div>
+                <div class="text-lg font-black text-amber-300 flex items-center justify-center gap-1">+${consolationCoins} ${window.GameIcons ? window.GameIcons.coin(16) : ""}</div>
                 <button onclick="MonopolyGoMeta.closeRaidModal()" class="btn-tap mt-1 py-2 px-4 rounded-xl bg-cyan-400 text-stone-950 font-black text-xs uppercase shadow active:scale-95">Забрать и уйти</button>
               </div>
             `;
@@ -880,7 +883,7 @@
           if (fxEl) {
             fxEl.innerHTML = `
               <div class="absolute inset-0 flex items-center justify-center pointer-events-none animate-bounce">
-                <span class="text-4xl">💥🔥💨</span>
+                <span class="flex items-center justify-center">${window.GameIcons ? window.GameIcons.flame(44) : ""}</span>
               </div>
             `;
           }
@@ -893,24 +896,24 @@
           }
 
           if (statusBanner) {
-            statusBanner.innerHTML = `🔥 <b>РАЗГРОМ И ГРАБЕЖ!</b> Шатер соперника разрушен до основания!`;
+            statusBanner.innerHTML = `<b>РАЗГРОМ И ГРАБЕЖ!</b> Шатер соперника разрушен!`;
             statusBanner.className = 'text-[11px] font-bold text-center py-1.5 px-3 rounded-xl bg-red-950/80 border border-red-500 text-rose-300';
           }
 
           if (resultCard) {
             resultCard.innerHTML = `
               <div class="p-3 rounded-2xl bg-gradient-to-r from-red-950/80 via-amber-950/60 to-stone-900 border border-amber-400 text-center flex flex-col gap-1.5 shadow-xl">
-                <span class="text-3xl">🔥 🏆 💰</span>
+                <span class="flex items-center justify-center gap-2">${window.GameIcons ? window.GameIcons.trophy(36) : ""}</span>
                 <h4 class="text-sm font-black text-amber-300 uppercase">ПОЛНЫЙ РАЗГРОМ АЙЫЛА!</h4>
                 <p class="text-[11px] text-stone-200">Вы сокрушили стан батыра <b>${this.currentRaid.rival.username}</b>!</p>
                 <div class="flex justify-center items-center gap-3 my-1">
                   <div class="px-3 py-1 rounded-xl bg-black/50 border border-amber-400/40">
                     <div class="text-[9px] text-stone-400 font-bold">Награблено:</div>
-                    <div class="text-base font-black text-lime-400">+${loot.toLocaleString('ru-RU')} 🪙</div>
+                    <div class="text-base font-black text-lime-400 flex items-center justify-center gap-1">+${loot.toLocaleString('ru-RU')} ${window.GameIcons ? window.GameIcons.coin(14) : ""}</div>
                   </div>
                   <div class="px-3 py-1 rounded-xl bg-black/50 border border-amber-400/40">
                     <div class="text-[9px] text-stone-400 font-bold">В копилку:</div>
-                    <div class="text-base font-black text-amber-300">+${bonusPiggy.toLocaleString('ru-RU')} 🪙</div>
+                    <div class="text-base font-black text-amber-300 flex items-center justify-center gap-1">+${bonusPiggy.toLocaleString('ru-RU')} ${window.GameIcons ? window.GameIcons.coin(14) : ""}</div>
                   </div>
                 </div>
                 <button onclick="MonopolyGoMeta.closeRaidModal()" class="btn-tap mt-1 py-2 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95">Забрать куш</button>
@@ -971,16 +974,21 @@
 
         const isRevenged = Boolean(item.revenged);
 
+        const iconAvatar = (typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.avatar(item.avatar || 'batyr', 22) : '';
+        const shieldSvg = (typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.shield(12) : '';
+        const swordsSvg = (typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.swords(12) : '';
+        const coinSvg = (typeof window !== 'undefined' && window.GameIcons) ? window.GameIcons.coin(11) : '';
+
         card.innerHTML = `
           <div class="flex items-center gap-2">
-            <span class="text-xl">${item.avatar || '🐺'}</span>
+            <span class="flex items-center justify-center">${iconAvatar}</span>
             <div class="text-left">
               <div class="flex items-center gap-1.5">
                 <span class="text-xs font-black text-white">${item.attackerName}</span>
                 <span class="text-[9px] text-stone-400">${item.timeAgo}</span>
               </div>
-              <div class="text-[10px] ${item.blocked ? 'text-cyan-300' : 'text-rose-300'} font-bold">
-                ${item.blocked ? '🛡️ Отбито щитом' : '💥 Айыл разграблен'} • ${item.lootStolen.toLocaleString('ru-RU')} 🪙
+              <div class="text-[10px] ${item.blocked ? 'text-cyan-300' : 'text-rose-300'} font-bold flex items-center gap-1">
+                ${item.blocked ? `${shieldSvg} Отбито щитом` : `${swordsSvg} Айыл разграблен`} • ${item.lootStolen.toLocaleString('ru-RU')} ${coinSvg}
               </div>
             </div>
           </div>
@@ -988,8 +996,8 @@
           <div>
             ${isRevenged
               ? `<span class="text-[9px] font-black px-2 py-1 rounded-lg bg-stone-800 text-stone-400 border border-stone-700">Отомщено ✓</span>`
-              : `<button onclick="MonopolyGoMeta.launchRevenge('${item.id}', '${item.attackerName}')" class="btn-tap px-2.5 py-1 rounded-lg bg-gradient-to-r from-rose-500 to-red-600 text-white font-black text-[10px] uppercase shadow active:scale-95 cursor-pointer">
-                  ⚔️ Отомстить
+              : `<button onclick="MonopolyGoMeta.launchRevenge('${item.id}', '${item.attackerName}')" class="btn-tap px-2.5 py-1 rounded-lg bg-gradient-to-r from-rose-500 to-red-600 text-white font-black text-[10px] uppercase shadow active:scale-95 cursor-pointer flex items-center gap-1">
+                  ${swordsSvg} Отомстить
                 </button>`
             }
           </div>
@@ -1025,18 +1033,18 @@
       const coins = this.gameState.piggyCoins || 0;
       const pct = Math.min(100, Math.round((coins / PIGGY_CONFIG.maxCapacity) * 100));
 
-      if (amtEl) amtEl.textContent = `${coins.toLocaleString('ru-RU')} 🪙`;
+      if (amtEl) amtEl.innerHTML = `${coins.toLocaleString('ru-RU')} ${window.GameIcons ? window.GameIcons.coin(16) : ''}`; 
       if (barEl) barEl.style.width = `${pct}%`;
 
       if (breakBtn) {
         if (coins >= PIGGY_CONFIG.minSmashThreshold) {
           breakBtn.disabled = false;
           breakBtn.className = 'btn-tap w-full py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-yellow-400 to-lime-400 text-stone-950 font-black text-sm uppercase shadow-xl cursor-pointer active:scale-95 animate-pulse';
-          breakBtn.textContent = '🔨 РАЗБИТЬ ЗОЛОТЫМ МОЛОТОМ!';
+          breakBtn.textContent = 'РАЗБИТЬ ЗОЛОТЫМ МОЛОТОМ!';
         } else {
           breakBtn.disabled = true;
           breakBtn.className = 'w-full py-3 rounded-2xl bg-stone-800 text-stone-500 font-bold text-xs uppercase cursor-not-allowed';
-          breakBtn.textContent = `Нужно минимум ${PIGGY_CONFIG.minSmashThreshold} 🪙 (сейчас ${coins} 🪙)`;
+          breakBtn.textContent = `Нужно минимум ${PIGGY_CONFIG.minSmashThreshold} монет (сейчас ${coins})`;
         }
       }
 
@@ -1075,7 +1083,7 @@
       setTimeout(() => {
         // Раскол кувшина
         if (jarEl) {
-          jarEl.innerHTML = '💥';
+          jarEl.innerHTML = window.GameIcons ? window.GameIcons.coin(54) : '✓';
           jarEl.classList.add('scale-125');
         }
 
@@ -1099,7 +1107,7 @@
 
         setTimeout(() => {
           this.closePiggyModal();
-          this.showToast(`💰 Вы разбили копилку и забрали +${coins.toLocaleString('ru-RU')} 🪙!`);
+          this.showToast(`Вы разбили копилку и забрали +${coins.toLocaleString('ru-RU')} монет!`);
         }, 800);
 
       }, 400);
@@ -1145,8 +1153,20 @@
       const rateEl = document.getElementById('tribute-rate-label');
       const claimBtn = document.getElementById('tribute-claim-btn');
 
-      if (amtEl) amtEl.textContent = `${tribute.pending.toLocaleString('ru-RU')} / ${tribute.maxCap.toLocaleString('ru-RU')} 🪙`;
-      if (rateEl) rateEl.textContent = `+${tribute.ratePerHour.toLocaleString('ru-RU')} 🪙/час`;
+      if (amtEl) {
+        if (typeof window !== 'undefined' && window.GameIcons) {
+          amtEl.innerHTML = `${tribute.pending.toLocaleString('ru-RU')} / ${tribute.maxCap.toLocaleString('ru-RU')} ${window.GameIcons.coin(13)}`;
+        } else {
+          amtEl.textContent = `${tribute.pending.toLocaleString('ru-RU')} / ${tribute.maxCap.toLocaleString('ru-RU')} монет`;
+        }
+      }
+      if (rateEl) {
+        if (typeof window !== 'undefined' && window.GameIcons) {
+          rateEl.innerHTML = `+${tribute.ratePerHour.toLocaleString('ru-RU')} ${window.GameIcons.coin(11)}/час`;
+        } else {
+          rateEl.textContent = `+${tribute.ratePerHour.toLocaleString('ru-RU')} монет/час`;
+        }
+      }
 
       if (claimBtn) {
         if (tribute.pending > 0) {
@@ -1175,7 +1195,13 @@
       }
 
       if (shDisp) {
-        shDisp.textContent = v.shields > 0 ? '🛡️ '.repeat(v.shields) : '❌ Нет щитов';
+        if (typeof window !== 'undefined' && window.GameIcons) {
+          shDisp.innerHTML = v.shields > 0 
+            ? Array(v.shields).fill(window.GameIcons.shield(18)).join(' ')
+            : '<span class="text-rose-400 font-bold text-xs">Нет щитов</span>';
+        } else {
+          shDisp.innerHTML = v.shields > 0 ? Array(v.shields).fill(window.GameIcons ? window.GameIcons.shield(18) : 'Щит').join(' ') : '<span class="text-stone-500 font-bold text-xs">Нет щитов</span>';
+        }
       }
 
       if (timerDisp) {
@@ -1212,12 +1238,16 @@
           if (bldg.level >= 5) {
             btnEl.disabled = true;
             btnEl.className = 'px-3 py-1.5 rounded-xl bg-stone-800 text-amber-400 border border-amber-400/30 font-black text-xs uppercase cursor-default';
-            btnEl.textContent = '★ МАКС';
+            btnEl.textContent = 'МАКС';
           } else {
             const cost = this.getBuildingCost(key, bldg.level);
             btnEl.disabled = false;
             btnEl.className = 'btn-tap px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 cursor-pointer';
-            btnEl.textContent = `${cost.toLocaleString('ru-RU')} 🪙`;
+            if (typeof window !== 'undefined' && window.GameIcons) {
+              btnEl.innerHTML = `${cost.toLocaleString('ru-RU')} ${window.GameIcons.coin(13)}`;
+            } else {
+              btnEl.innerHTML = `${cost.toLocaleString('ru-RU')} ${window.GameIcons ? window.GameIcons.coin(12) : ''}`; 
+            }
           }
         }
       });
@@ -1232,7 +1262,7 @@
       const coins = this.gameState.piggyCoins || 0;
       const pct = Math.min(100, Math.round((coins / PIGGY_CONFIG.maxCapacity) * 100));
 
-      if (p) p.textContent = `${coins.toLocaleString('ru-RU')} 🪙`;
+      if (p) p.innerHTML = `${coins.toLocaleString('ru-RU')} ${window.GameIcons ? window.GameIcons.coin(12) : ''}`; 
       if (pb) pb.style.width = `${pct}%`;
 
       if (badge) {

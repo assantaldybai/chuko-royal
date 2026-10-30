@@ -16,13 +16,14 @@
       scene: null,
       camera: null,
       mesh: null,
+      leadPlug: null,
       material: null,
       light: null,
       animId: null,
       isDragging: false,
       prevPointer: { x: 0, y: 0 },
-      rotVelocity: { x: 0, y: 0.015 },
-      targetRotation: { x: 0.3, y: 0.4 },
+      rotVelocity: { x: 0, y: 0.012 },
+      targetRotation: { x: 0.35, y: 0.45 },
       currentSkin: 'lead'
     },
 
@@ -48,7 +49,6 @@
     // INITIALIZATION DISPATCHER
     // =================================================================
     init() {
-      // Check if Three.js is available
       if (typeof THREE === 'undefined') {
         console.warn('[Chuko3DEngine] THREE is not loaded yet. Waiting...');
         setTimeout(() => this.init(), 100);
@@ -65,17 +65,20 @@
     // Алчы (Spine/Ridge), Таа (Trochlea spool), Бөк (Belly), Чик (Hollow)
     // =================================================================
     createAstragalusGeometry() {
-      // 1. First priority: Use authentic 3D scan of real sheep astragalus
       if (typeof window !== 'undefined' && window.RealAlchikModel && typeof window.RealAlchikModel.getBufferGeometry === 'function') {
         const scanGeom = window.RealAlchikModel.getBufferGeometry(THREE);
-        if (scanGeom) return scanGeom;
+        if (scanGeom) {
+          scanGeom.center();
+          scanGeom.computeVertexNormals();
+          return scanGeom;
+        }
       }
 
-      // 2. High-precision fallback
+      // High-precision organic fallback
       const width = 2.4;
       const height = 3.6;
       const depth = 1.9;
-      const geom = new THREE.BoxGeometry(width, height, depth, 16, 20, 14);
+      const geom = new THREE.BoxGeometry(width, height, depth, 18, 22, 16);
       const pos = geom.attributes.position;
 
       for (let i = 0; i < pos.count; i++) {
@@ -83,44 +86,31 @@
         let y = pos.getY(i);
         let z = pos.getZ(i);
 
-        const ny = y / (height * 0.5); // -1 to +1 along bone length
+        const ny = y / (height * 0.5);
         const nx = x / (width * 0.5);
-        const nz = z / (depth * 0.5);
 
-        // 1. Condyle lobing at top and bottom (+Y and -Y ends)
         const endTaper = 1.0 - 0.18 * (ny * ny);
         x *= endTaper;
         z *= endTaper;
 
-        // Top condyles groove (sulcus between medial & lateral lobes)
         if (ny > 0.4) {
           const groove = Math.sin((ny - 0.4) * Math.PI) * 0.28;
           y -= Math.abs(nx) < 0.35 ? groove : -groove * 0.3;
         }
-
-        // Bottom trochlea cylindrical sweep
         if (ny < -0.4) {
           const trochlea = (1.0 - Math.abs(ny)) * 0.2;
           z += trochlea;
         }
-
-        // 2. Front & Back Sides:
-        // ТАА (+Z face): relatively flat, smooth plate with slight central fossa
         if (z > 0.4) {
           z += 0.15 * Math.cos(nx * Math.PI * 0.5);
         }
-        // АЛЧЫ (-Z face): deep central saddle groove with prominent lateral ridge
         if (z < -0.3) {
           const saddle = Math.sin((nx + 0.2) * Math.PI);
           z += saddle * 0.32;
         }
-
-        // 3. Lateral & Medial Sides:
-        // БӨК (+X face): rounded bulging convex belly
         if (x > 0.3) {
           x += 0.28 * Math.cos(ny * Math.PI * 0.5);
         }
-        // ЧИК (-X face): deep hollowed notch / waist
         if (x < -0.3) {
           x += 0.3 * Math.sin(Math.abs(ny) * Math.PI * 0.5);
         }
@@ -129,6 +119,7 @@
       }
 
       geom.computeVertexNormals();
+      geom.center();
       return geom;
     },
 
@@ -140,10 +131,10 @@
       if (!canvas) return;
 
       const container = canvas.parentElement;
-      const width = container.clientWidth || 180;
-      const height = container.clientHeight || 140;
+      const width = container.clientWidth || 200;
+      const height = container.clientHeight || 150;
 
-      // Renderer
+      // Renderer with cinematic PBR tone mapping
       const renderer = new THREE.WebGLRenderer({
         canvas,
         alpha: true,
@@ -154,52 +145,109 @@
       renderer.setSize(width, height);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      if (THREE.ACESFilmicToneMapping) {
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.05;
+      }
+      if (THREE.sRGBEncoding) {
+        renderer.outputEncoding = THREE.sRGBEncoding;
+      }
       this.hero.renderer = renderer;
 
       // Scene & Camera
       const scene = new THREE.Scene();
       this.hero.scene = scene;
 
-      const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 50);
-      camera.position.set(0, 0, 7.8);
+      const camera = new THREE.PerspectiveCamera(34, width / height, 0.1, 50);
+      camera.position.set(0, 0.15, 6.2);
       this.hero.camera = camera;
 
-      // Lighting: Warm golden key light + cool sky fill + rim light
-      const keyLight = new THREE.DirectionalLight(0xfffbeb, 1.35);
-      keyLight.position.set(4, 6, 5);
+      // Studio 3-Point Balanced Lighting (Preserves authentic ivory bone depth)
+      const ambientLight = new THREE.AmbientLight(0xfff8f0, 0.45);
+      scene.add(ambientLight);
+
+      const keyLight = new THREE.DirectionalLight(0xfff8ee, 0.85);
+      keyLight.position.set(3.2, 4.2, 3.8);
+      keyLight.castShadow = true;
       scene.add(keyLight);
       this.hero.light = keyLight;
 
-      const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.45);
-      fillLight.position.set(-4, -2, -3);
+      const fillLight = new THREE.DirectionalLight(0x94a3b8, 0.32);
+      fillLight.position.set(-3.5, -1, 2.5);
       scene.add(fillLight);
 
-      const ambientLight = new THREE.AmbientLight(0xffedd5, 0.65);
-      scene.add(ambientLight);
+      const backLight = new THREE.DirectionalLight(0xffedd5, 0.38);
+      backLight.position.set(0, 3.2, -3.5);
+      scene.add(backLight);
 
-      // Contact shadow plane underneath
-      const shadowGeom = new THREE.PlaneGeometry(4.5, 3.2);
+      // Contact shadow on pedestal
+      const shadowGeom = new THREE.CircleGeometry(1.5, 32);
       const shadowMat = new THREE.MeshBasicMaterial({
         color: 0x000000,
         transparent: true,
-        opacity: 0.35,
+        opacity: 0.65,
         depthWrite: false
       });
       const shadowMesh = new THREE.Mesh(shadowGeom, shadowMat);
       shadowMesh.rotation.x = -Math.PI / 2;
-      shadowMesh.position.y = -2.1;
+      shadowMesh.position.y = -2.05;
       scene.add(shadowMesh);
 
-      // Procedural Astragalus Mesh
-      const geom = this.createAstragalusGeometry();
-      const material = this.getSakaMaterial('lead');
-      this.hero.material = material;
+      // Nomad Ceremonial Pedestal Dais (Walnut / Felt Stand with Gold Trim)
+      const pedestalGeom = new THREE.CylinderGeometry(2.1, 2.3, 0.35, 48);
+      const pedestalMat = new THREE.MeshStandardMaterial({
+        color: 0x151210, // Dark polished walnut
+        roughness: 0.65,
+        metalness: 0.1
+      });
+      const pedestal = new THREE.Mesh(pedestalGeom, pedestalMat);
+      pedestal.position.y = -2.25;
+      pedestal.receiveShadow = true;
+      scene.add(pedestal);
 
-      const mesh = new THREE.Mesh(geom, material);
-      mesh.rotation.x = 0.3;
-      mesh.rotation.y = 0.4;
-      scene.add(mesh);
+      // Glowing Nomad Gold Runic Ring
+      const ringGeom = new THREE.RingGeometry(1.92, 2.15, 48);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0xfbbf24,
+        transparent: true,
+        opacity: 0.7,
+        side: THREE.DoubleSide
+      });
+      const ringMesh = new THREE.Mesh(ringGeom, ringMat);
+      ringMesh.rotation.x = -Math.PI / 2;
+      ringMesh.position.y = -2.07;
+      scene.add(ringMesh);
+
+      // Procedural Astragalus Mesh
+      const boneGeom = this.createAstragalusGeometry();
+      const boneMat = this.getSakaMaterial('lead');
+      this.hero.material = boneMat;
+
+      const boneGroup = new THREE.Group();
+
+      const mesh = new THREE.Mesh(boneGeom, boneMat);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      boneGroup.add(mesh);
       this.hero.mesh = mesh;
+
+      // Authentic Lead Core Inlay (Коргошун куюлган Сака) in lateral fossa
+      const plugGeom = new THREE.CylinderGeometry(0.32, 0.32, 0.25, 20);
+      const plugMat = new THREE.MeshStandardMaterial({
+        color: 0x334155, // Gunmetal Lead
+        metalness: 0.88,
+        roughness: 0.32
+      });
+      const plugMesh = new THREE.Mesh(plugGeom, plugMat);
+      plugMesh.rotation.z = Math.PI / 2;
+      plugMesh.position.set(-0.95, 0.1, 0.05);
+      boneGroup.add(plugMesh);
+      this.hero.leadPlug = plugMesh;
+
+      boneGroup.rotation.x = 0.35;
+      boneGroup.rotation.y = 0.45;
+      scene.add(boneGroup);
+      this.hero.boneGroup = boneGroup;
 
       // Setup Pointer & Touch Drag Interaction
       this.bindHeroDrag(canvas);
@@ -209,19 +257,19 @@
         this.hero.animId = requestAnimationFrame(animate);
 
         if (!this.hero.isDragging) {
-          mesh.rotation.y += this.hero.rotVelocity.y;
-          mesh.rotation.x += this.hero.rotVelocity.x;
+          boneGroup.rotation.y += this.hero.rotVelocity.y;
+          boneGroup.rotation.x += this.hero.rotVelocity.x;
           // Damping
           this.hero.rotVelocity.y *= 0.985;
           this.hero.rotVelocity.x *= 0.985;
-          if (Math.abs(this.hero.rotVelocity.y) < 0.008) {
-            this.hero.rotVelocity.y = 0.008; // subtle idle rotation
+          if (Math.abs(this.hero.rotVelocity.y) < 0.006) {
+            this.hero.rotVelocity.y = 0.006; // calm idle spin
           }
         }
 
         // Gentle floating bounce
         const time = performance.now() * 0.002;
-        mesh.position.y = Math.sin(time) * 0.12;
+        boneGroup.position.y = Math.sin(time) * 0.1;
 
         renderer.render(scene, camera);
       };
@@ -230,8 +278,8 @@
       // Responsive resize
       window.addEventListener('resize', () => {
         if (!container) return;
-        const w = container.clientWidth || 180;
-        const h = container.clientHeight || 140;
+        const w = container.clientWidth || 200;
+        const h = container.clientHeight || 150;
         camera.aspect = w / h;
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
@@ -251,17 +299,17 @@
       };
 
       const onMove = (clientX, clientY) => {
-        if (!isDown || !this.hero.mesh) return;
+        if (!isDown || !this.hero.boneGroup) return;
         const dx = clientX - startX;
         const dy = clientY - startY;
         startX = clientX;
         startY = clientY;
 
-        this.hero.mesh.rotation.y += dx * 0.018;
-        this.hero.mesh.rotation.x += dy * 0.018;
+        this.hero.boneGroup.rotation.y += dx * 0.016;
+        this.hero.boneGroup.rotation.x += dy * 0.016;
 
-        this.hero.rotVelocity.y = dx * 0.015;
-        this.hero.rotVelocity.x = dy * 0.015;
+        this.hero.rotVelocity.y = dx * 0.014;
+        this.hero.rotVelocity.x = dy * 0.014;
       };
 
       const onEnd = () => {
@@ -275,10 +323,10 @@
       window.addEventListener('pointerup', onEnd);
       window.addEventListener('pointercancel', onEnd);
 
-      // Tap spin trick on click
+      // Tap spin flip on click
       canvas.addEventListener('click', () => {
         if (Math.abs(this.hero.rotVelocity.y) < 0.05) {
-          this.hero.rotVelocity.y = 0.22; // energetic flip
+          this.hero.rotVelocity.y = 0.24;
           if (window.playBoneSound) window.playBoneSound('hit', 0.5);
           if (window.ChukoHaptics && window.ChukoHaptics.impact) {
             window.ChukoHaptics.impact('light');
@@ -287,47 +335,70 @@
       });
     },
 
+    // Rotate Hero 3D Chuko to 4 canonical anatomical views
+    rotateHeroTo(viewName) {
+      if (!this.hero.boneGroup) return;
+      this.hero.isDragging = true;
+      const targets = {
+        alchy: { x: 0.1, y: 0.0 },               // Алчы (Dorsal Spine Ridge)
+        taa: { x: 0.1, y: Math.PI },             // Таа (Plantar Saddle Spool)
+        bok: { x: 0.0, y: Math.PI * 0.5 },       // Бөк (Convex Belly)
+        chik: { x: 0.0, y: -Math.PI * 0.5 },     // Чик (Medial Hollow Notch)
+        onbashy: { x: Math.PI * 0.5, y: 0.0 }    // Оңбашы (Head End)
+      };
+
+      const target = targets[viewName] || targets.alchy;
+      this.hero.boneGroup.rotation.x = target.x;
+      this.hero.boneGroup.rotation.y = target.y;
+      this.hero.rotVelocity = { x: 0, y: 0.005 };
+      setTimeout(() => { this.hero.isDragging = false; }, 300);
+      if (window.playBoneSound) window.playBoneSound('hit', 0.4);
+    },
+
     // Material generator for Saka skins
     getSakaMaterial(skinId) {
       switch (skinId) {
         case 'gold':
         case 'golden_saka':
           return new THREE.MeshStandardMaterial({
-            color: 0xfbbf24,
-            roughness: 0.22,
-            metalness: 0.88,
-            envMapIntensity: 1.5
+            color: 0xfbbf24, // Royal Imperial Gold
+            roughness: 0.26,
+            metalness: 0.88
           });
         case 'cyberpunk':
         case 'cyber_saka':
+        case 'cyber':
+        case 'nomad':
           return new THREE.MeshStandardMaterial({
-            color: 0x0f172a,
-            roughness: 0.3,
-            metalness: 0.7,
+            color: 0x090d16,
+            roughness: 0.24,
+            metalness: 0.65,
             emissive: 0x06b6d4,
-            emissiveIntensity: 0.35
+            emissiveIntensity: 0.45
           });
-        case 'horn':
+        case 'obsidian':
+        case 'obsidian_manas':
+          return new THREE.MeshStandardMaterial({
+            color: 0x0a0f1d,
+            roughness: 0.16,
+            metalness: 0.48,
+            emissive: 0x7c3aed,
+            emissiveIntensity: 0.28
+          });
+        case 'batyr':
         case 'argali_horn':
+        case 'horn':
           return new THREE.MeshStandardMaterial({
-            color: 0xd97706,
-            roughness: 0.45,
-            metalness: 0.15
-          });
-        case 'suusamyr_skin':
-          return new THREE.MeshStandardMaterial({
-            color: 0x059669,
-            roughness: 0.25,
-            metalness: 0.3,
-            emissive: 0x10b981,
-            emissiveIntensity: 0.2
+            color: 0xe5dac9, // Heavy weathered steppe fossil bone
+            roughness: 0.58,
+            metalness: 0.02
           });
         case 'lead':
         default:
           return new THREE.MeshStandardMaterial({
-            color: 0xfef3c7,
-            roughness: 0.38,
-            metalness: 0.25
+            color: 0xf4ece1, // Authentic Natural Sheep Astragalus Ivory Bone
+            roughness: 0.52,
+            metalness: 0.0
           });
       }
     },
@@ -338,6 +409,23 @@
       const newMat = this.getSakaMaterial(skinId);
       this.hero.mesh.material = newMat;
       this.hero.material = newMat;
+
+      // Update lead plug styling
+      if (this.hero.leadPlug) {
+        if (skinId === 'gold') {
+          this.hero.leadPlug.material.color.setHex(0xd97706);
+          this.hero.leadPlug.material.metalness = 0.95;
+        } else if (skinId === 'cyber' || skinId === 'nomad') {
+          this.hero.leadPlug.material.color.setHex(0x22d3ee);
+          this.hero.leadPlug.material.emissive = new THREE.Color(0x06b6d4);
+        } else if (skinId === 'obsidian') {
+          this.hero.leadPlug.material.color.setHex(0xa855f7);
+          this.hero.leadPlug.material.emissive = new THREE.Color(0x6b21a8);
+        } else {
+          this.hero.leadPlug.material.color.setHex(0x334155);
+          this.hero.leadPlug.material.emissive = new THREE.Color(0x000000);
+        }
+      }
     },
 
     // =================================================================
@@ -354,7 +442,7 @@
       // Renderer
       const renderer = new THREE.WebGLRenderer({
         canvas,
-        alpha: true,
+        alpha: false,
         antialias: true,
         powerPreference: 'high-performance'
       });
@@ -362,42 +450,47 @@
       renderer.setSize(width, height);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      if (THREE.ACESFilmicToneMapping) {
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+      }
       this.village.renderer = renderer;
 
-      // Scene
+      // Scene with lush mountain atmosphere
       const scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x061e1b, 0.025);
+      scene.background = new THREE.Color(0x0c1d2e); // Mountain Twilight Sky
+      scene.fog = new THREE.FogExp2(0x0c1d2e, 0.022);
       this.village.scene = scene;
 
-      // Camera: Classic Isometric Orthographic View
+      // Camera: Crisp Orthographic View focused tightly on village
       const aspect = width / height;
-      const d = 11;
+      const d = 8.5; // Closer, larger view of buildings
       const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 100);
-      camera.position.set(16, 20, 16);
-      camera.lookAt(0, 0, 0);
+      camera.position.set(15, 18, 15);
+      camera.lookAt(0, 0.2, 0);
       this.village.camera = camera;
 
-      // Lighting: Sunlight on Tien Shan highlands
-      const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.4);
-      sunLight.position.set(14, 22, 10);
+      // Lighting: Warm golden sunlight on Tien Shan mountain valley
+      const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.25);
+      sunLight.position.set(12, 20, 10);
       sunLight.castShadow = true;
       sunLight.shadow.mapSize.width = 1024;
       sunLight.shadow.mapSize.height = 1024;
       scene.add(sunLight);
 
-      const hemiLight = new THREE.HemisphereLight(0x67e8f9, 0x14532d, 0.65);
+      const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x166534, 0.6);
       scene.add(hemiLight);
 
       // Cozy Forge Fire light
-      const fireLight = new THREE.PointLight(0xf97316, 1.8, 8);
-      fireLight.position.set(4, 1.5, -3.5);
+      const fireLight = new THREE.PointLight(0xf97316, 2.0, 9);
+      fireLight.position.set(3.8, 1.4, -2.8);
       scene.add(fireLight);
       this.village.fireLight = fireLight;
 
       // 1. Terrain: High mountain pasture (Жайлоо) meadow
       this.buildVillageTerrain(scene);
 
-      // 2. Background: Snowy Tien Shan mountain peaks
+      // 2. Background: Majestic snowy Tien Shan mountain ridges
       this.buildTienShanBackdrop(scene);
 
       // 3. Buildings: 4 Core Interactive Nomadic Structures
@@ -407,16 +500,16 @@
       this.buildWatchtower(scene);
 
       // 4. Selection Ring indicator
-      const ringGeom = new THREE.RingGeometry(2.0, 2.3, 32);
+      const ringGeom = new THREE.RingGeometry(2.0, 2.35, 36);
       const ringMat = new THREE.MeshBasicMaterial({
-        color: 0xfacc15,
+        color: 0xfbbf24,
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0
       });
       const ringMesh = new THREE.Mesh(ringGeom, ringMat);
       ringMesh.rotation.x = -Math.PI / 2;
-      ringMesh.position.y = 0.08;
+      ringMesh.position.y = 0.09;
       scene.add(ringMesh);
       this.village.selectionRing = ringMesh;
 
@@ -431,12 +524,10 @@
 
         const time = performance.now() * 0.001;
 
-        // Forge fire flickering
         if (this.village.fireLight) {
-          this.village.fireLight.intensity = 1.6 + Math.sin(time * 12) * 0.4 + Math.cos(time * 7) * 0.2;
+          this.village.fireLight.intensity = 1.8 + Math.sin(time * 10) * 0.4 + Math.cos(time * 6) * 0.2;
         }
 
-        // Animate smoke particles
         this.updateVillageParticles(time);
 
         renderer.render(scene, camera);
@@ -459,47 +550,84 @@
     },
 
     // -----------------------------------------------------------------
-    // C1. TERRAIN & BACKGROUND
+    // C1. TERRAIN & ENVIRONMENT
     // -----------------------------------------------------------------
     buildVillageTerrain(scene) {
-      // Main green grassy island
-      const islandGeom = new THREE.CylinderGeometry(13.5, 12, 1.8, 36);
+      // Main emerald pasture island
+      const islandGeom = new THREE.CylinderGeometry(12.5, 11, 1.8, 40);
       const islandMat = new THREE.MeshStandardMaterial({
-        color: 0x15803d, // Lush Emerald Tien Shan Grass
-        roughness: 0.75,
-        metalness: 0.1
+        color: 0x166534, // Lush Tien Shan Mountain Grass
+        roughness: 0.78,
+        metalness: 0.05
       });
       const island = new THREE.Mesh(islandGeom, islandMat);
       island.position.y = -0.9;
       island.receiveShadow = true;
       scene.add(island);
 
-      // Stylized meandering glacial stream (Issyk-Kul mountain runoff)
-      const riverGeom = new THREE.PlaneGeometry(16, 2.4, 16, 4);
+      // Meandering glacial stream (Issyk-Kul runoff)
+      const riverGeom = new THREE.PlaneGeometry(16, 2.6, 20, 6);
       const riverPos = riverGeom.attributes.position;
       for (let i = 0; i < riverPos.count; i++) {
         const u = riverPos.getX(i);
-        riverPos.setY(i, riverPos.getY(i) + Math.sin(u * 0.4) * 0.8);
+        riverPos.setY(i, riverPos.getY(i) + Math.sin(u * 0.45) * 0.9);
       }
       riverGeom.computeVertexNormals();
       const riverMat = new THREE.MeshStandardMaterial({
-        color: 0x06b6d4, // Cyan glacial water
-        roughness: 0.1,
-        metalness: 0.6,
+        color: 0x0284c7,
+        roughness: 0.12,
+        metalness: 0.65,
         transparent: true,
-        opacity: 0.85
+        opacity: 0.9
       });
       const river = new THREE.Mesh(riverGeom, riverMat);
       river.rotation.x = -Math.PI / 2;
-      river.position.set(0, 0.05, 1.5);
+      river.position.set(0, 0.05, 1.2);
       scene.add(river);
 
-      // Low-poly nomad rocks / boulders
-      const rockMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
+      // Wooden bridge over the glacial stream
+      const bridgeGeom = new THREE.BoxGeometry(1.6, 0.12, 3.2);
+      const bridgeMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.75 });
+      const bridge = new THREE.Mesh(bridgeGeom, bridgeMat);
+      bridge.position.set(0.2, 0.14, 1.2);
+      scene.add(bridge);
+
+      // Mountain Pine / Juniper Trees (Арча)
+      const treeMat = new THREE.MeshStandardMaterial({ color: 0x064e3b, roughness: 0.6 });
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 });
+      const treePositions = [
+        [-6.5, 0, -4.5],
+        [-7.2, 0, 1.5],
+        [6.8, 0, 1.8],
+        [6.2, 0, -4.2],
+        [-2.5, 0, -5.5]
+      ];
+
+      treePositions.forEach(([x, y, z]) => {
+        const treeGroup = new THREE.Group();
+        treeGroup.position.set(x, y, z);
+
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 0.7, 8), trunkMat);
+        trunk.position.y = 0.35;
+        treeGroup.add(trunk);
+
+        const foliage1 = new THREE.Mesh(new THREE.ConeGeometry(0.85, 1.4, 8), treeMat);
+        foliage1.position.y = 1.2;
+        treeGroup.add(foliage1);
+
+        const foliage2 = new THREE.Mesh(new THREE.ConeGeometry(0.65, 1.1, 8), treeMat);
+        foliage2.position.y = 1.8;
+        treeGroup.add(foliage2);
+
+        scene.add(treeGroup);
+      });
+
+      // Low-poly nomad boulders
+      const rockMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.85 });
       [
-        [-6, 0.4, 2, 0.6],
-        [7, 0.4, -1, 0.75],
-        [-2, 0.3, 5, 0.5]
+        [-5.5, 0.35, 3.2, 0.55],
+        [5.8, 0.35, -1.2, 0.65],
+        [-1.5, 0.25, 4.2, 0.45]
       ].forEach(([x, y, z, s]) => {
         const rockGeom = new THREE.DodecahedronGeometry(s, 1);
         const rock = new THREE.Mesh(rockGeom, rockMat);
@@ -510,12 +638,12 @@
     },
 
     buildTienShanBackdrop(scene) {
-      // Majestic low-poly mountain range with snowy peaks
+      // Layered Tien Shan mountain ridges with snow caps
       const peaks = [
-        [-14, 4, -15, 6, 12],
-        [-6, 5.5, -18, 8, 15],
-        [3, 6, -17, 9, 16],
-        [12, 4.5, -15, 7, 13]
+        [-13, 2, -12, 6, 11],
+        [-6, 3.5, -14, 7.5, 13],
+        [2, 4.0, -13, 8.5, 14],
+        [10, 2.5, -12, 7, 11]
       ];
 
       peaks.forEach(([x, y, z, r, h]) => {
@@ -528,11 +656,11 @@
         peak.position.set(x, y, z);
         scene.add(peak);
 
-        // Snow cap
+        // Snowy peak cap
         const snowGeom = new THREE.ConeGeometry(r * 0.45, h * 0.4, 6);
         const snowMat = new THREE.MeshStandardMaterial({
           color: 0xffffff,
-          roughness: 0.3
+          roughness: 0.25
         });
         const snow = new THREE.Mesh(snowGeom, snowMat);
         snow.position.set(x, y + h * 0.3, z);
@@ -546,54 +674,54 @@
     // 1. ХАНСКАЯ ЮРТА (Khan's Yurt)
     buildNomadYurt(scene) {
       const yurtGroup = new THREE.Group();
-      yurtGroup.position.set(-3.8, 0, -2.5);
+      yurtGroup.position.set(-3.5, 0, -2.2);
       yurtGroup.userData = { buildingKey: 'yurt', name: 'Ханская Юрта' };
 
-      // Base cylinder (кереге)
-      const baseGeom = new THREE.CylinderGeometry(2.2, 2.3, 1.2, 24);
+      // Base felt cylinder (кереге)
+      const baseGeom = new THREE.CylinderGeometry(2.1, 2.2, 1.2, 24);
       const baseMat = new THREE.MeshStandardMaterial({
-        color: 0xfef3c7, // White/Ivory Felt
-        roughness: 0.6
+        color: 0xfef3c7, // Ivory felt
+        roughness: 0.62
       });
       const base = new THREE.Mesh(baseGeom, baseMat);
       base.position.y = 0.6;
       base.castShadow = true;
       yurtGroup.add(base);
 
-      // Red/Gold embroidered patterned belt (терме / тегирич)
-      const bandGeom = new THREE.CylinderGeometry(2.22, 2.22, 0.22, 24);
+      // Red/Gold embroidered ornament belt (терме)
+      const bandGeom = new THREE.CylinderGeometry(2.12, 2.12, 0.22, 24);
       const bandMat = new THREE.MeshStandardMaterial({
-        color: 0xd97706, // Gold & Crimson Nomad Ornament
-        roughness: 0.4
+        color: 0xd97706,
+        roughness: 0.35
       });
       const band = new THREE.Mesh(bandGeom, bandMat);
       band.position.y = 0.7;
       yurtGroup.add(band);
 
       // Conical dome roof
-      const domeGeom = new THREE.ConeGeometry(2.35, 1.1, 24);
+      const domeGeom = new THREE.ConeGeometry(2.25, 1.15, 24);
       const dome = new THREE.Mesh(domeGeom, baseMat);
       dome.position.y = 1.75;
       dome.castShadow = true;
       yurtGroup.add(dome);
 
       // Golden Skylight Crown (Түндүк)
-      const tundukGeom = new THREE.TorusGeometry(0.35, 0.08, 8, 20);
+      const tundukGeom = new THREE.TorusGeometry(0.38, 0.08, 8, 24);
       const tundukMat = new THREE.MeshStandardMaterial({
         color: 0xfbbf24,
-        metalness: 0.85,
-        roughness: 0.2
+        metalness: 0.88,
+        roughness: 0.18
       });
       const tunduk = new THREE.Mesh(tundukGeom, tundukMat);
       tunduk.rotation.x = Math.PI / 2;
-      tunduk.position.y = 2.32;
+      tunduk.position.y = 2.35;
       yurtGroup.add(tunduk);
 
       // Wooden entrance door
       const doorGeom = new THREE.BoxGeometry(0.7, 0.9, 0.15);
       const doorMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 });
       const door = new THREE.Mesh(doorGeom, doorMat);
-      door.position.set(0, 0.5, 2.25);
+      door.position.set(0, 0.5, 2.15);
       yurtGroup.add(door);
 
       scene.add(yurtGroup);
@@ -603,12 +731,12 @@
     // 2. КУЗНИЦА САКА (Forge)
     buildSakaForge(scene) {
       const forgeGroup = new THREE.Group();
-      forgeGroup.position.set(4.2, 0, -3.2);
+      forgeGroup.position.set(3.8, 0, -2.8);
       forgeGroup.userData = { buildingKey: 'forge', name: 'Кузница Сака' };
 
-      // Stone hearth building
+      // Stone hearth
       const hearthGeom = new THREE.BoxGeometry(2.4, 1.4, 2.2);
-      const stoneMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9 });
+      const stoneMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.88 });
       const hearth = new THREE.Mesh(hearthGeom, stoneMat);
       hearth.position.y = 0.7;
       hearth.castShadow = true;
@@ -617,80 +745,91 @@
       // Stone chimney
       const chimneyGeom = new THREE.BoxGeometry(0.7, 2.2, 0.7);
       const chimney = new THREE.Mesh(chimneyGeom, stoneMat);
-      chimney.position.set(0.6, 1.8, -0.5);
+      chimney.position.set(0.6, 1.8, -0.6);
       chimney.castShadow = true;
       forgeGroup.add(chimney);
 
-      // Anvil outside
-      const anvilGeom = new THREE.BoxGeometry(0.6, 0.5, 0.9);
-      const anvilMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.85, roughness: 0.3 });
-      const anvil = new THREE.Mesh(anvilGeom, anvilMat);
-      anvil.position.set(-0.6, 0.3, 1.5);
+      // Open forge furnace opening with glowing coals
+      const fireboxGeom = new THREE.BoxGeometry(1.0, 0.8, 0.9);
+      const coalsMat = new THREE.MeshStandardMaterial({
+        color: 0xea580c,
+        emissive: 0xf97316,
+        emissiveIntensity: 0.85,
+        roughness: 0.4
+      });
+      const firebox = new THREE.Mesh(fireboxGeom, coalsMat);
+      firebox.position.set(-0.4, 0.5, 0.7);
+      forgeGroup.add(firebox);
+
+      // Heavy Iron Anvil
+      const anvilGeom = new THREE.BoxGeometry(0.8, 0.6, 0.45);
+      const ironMat = new THREE.MeshStandardMaterial({
+        color: 0x1e293b,
+        metalness: 0.85,
+        roughness: 0.35
+      });
+      const anvil = new THREE.Mesh(anvilGeom, ironMat);
+      anvil.position.set(0.9, 0.3, 1.4);
       anvil.castShadow = true;
       forgeGroup.add(anvil);
-
-      // Glowing furnace mouth
-      const furnaceGeom = new THREE.PlaneGeometry(0.9, 0.7);
-      const furnaceMat = new THREE.MeshBasicMaterial({ color: 0xff5722 });
-      const furnace = new THREE.Mesh(furnaceGeom, furnaceMat);
-      furnace.position.set(0, 0.55, 1.11);
-      forgeGroup.add(furnace);
 
       scene.add(forgeGroup);
       this.village.buildings['forge'] = forgeGroup;
     },
 
-    // 3. ЗАГОН АРГАМАКОВ (Horse Stable)
+    // 3. ЗАГОН АРГАМАКОВ (Stables)
     buildHorseStable(scene) {
       const stableGroup = new THREE.Group();
-      stableGroup.position.set(-4.5, 0, 4.0);
+      stableGroup.position.set(-3.8, 0, 3.2);
       stableGroup.userData = { buildingKey: 'stable', name: 'Загон Аргамаков' };
 
-      const woodMat = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.8 });
+      const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.75 });
 
-      // Wooden split-rail fence posts
-      const posts = [
-        [-1.6, -1.6], [1.6, -1.6], [1.6, 1.6], [-1.6, 1.6],
-        [0, -1.6], [1.6, 0], [0, 1.6], [-1.6, 0]
+      // Wooden fence posts
+      const postGeom = new THREE.CylinderGeometry(0.08, 0.08, 1.1, 8);
+      const corners = [
+        [-1.8, 0.55, -1.4],
+        [1.8, 0.55, -1.4],
+        [1.8, 0.55, 1.4],
+        [-1.8, 0.55, 1.4],
+        [-1.8, 0.55, 0],
+        [1.8, 0.55, 0]
       ];
-      posts.forEach(([px, pz]) => {
-        const postGeom = new THREE.CylinderGeometry(0.08, 0.08, 0.9, 8);
+      corners.forEach(([px, py, pz]) => {
         const post = new THREE.Mesh(postGeom, woodMat);
-        post.position.set(px, 0.45, pz);
+        post.position.set(px, py, pz);
         post.castShadow = true;
         stableGroup.add(post);
       });
 
-      // Horizontal rails
-      const railGeom = new THREE.BoxGeometry(3.2, 0.08, 0.05);
-      const rail1 = new THREE.Mesh(railGeom, woodMat);
-      rail1.position.set(0, 0.6, -1.6);
-      stableGroup.add(rail1);
+      // Horizontal fence rails
+      const railGeomLong = new THREE.BoxGeometry(3.6, 0.08, 0.08);
+      const railGeomShort = new THREE.BoxGeometry(0.08, 0.08, 2.8);
 
-      const rail2 = new THREE.Mesh(railGeom, woodMat);
-      rail2.position.set(0, 0.6, 1.6);
-      stableGroup.add(rail2);
+      const r1 = new THREE.Mesh(railGeomLong, woodMat);
+      r1.position.set(0, 0.8, -1.4);
+      stableGroup.add(r1);
 
-      // Thatched shelter roof
-      const shelterGeom = new THREE.ConeGeometry(1.6, 0.7, 4);
-      const thatchMat = new THREE.MeshStandardMaterial({ color: 0xa16207, roughness: 0.9 });
-      const shelter = new THREE.Mesh(shelterGeom, thatchMat);
-      shelter.position.set(-0.8, 1.4, -0.8);
-      shelter.rotation.y = Math.PI / 4;
-      shelter.castShadow = true;
-      stableGroup.add(shelter);
+      const r2 = new THREE.Mesh(railGeomLong, woodMat);
+      r2.position.set(0, 0.4, -1.4);
+      stableGroup.add(r2);
 
-      // Horse Flag / Banner Pole
-      const poleGeom = new THREE.CylinderGeometry(0.05, 0.05, 2.6, 8);
-      const pole = new THREE.Mesh(poleGeom, woodMat);
-      pole.position.set(1.6, 1.3, -1.6);
-      stableGroup.add(pole);
+      const r3 = new THREE.Mesh(railGeomShort, woodMat);
+      r3.position.set(-1.8, 0.6, 0);
+      stableGroup.add(r3);
 
-      const flagGeom = new THREE.PlaneGeometry(0.7, 0.4);
-      const flagMat = new THREE.MeshStandardMaterial({ color: 0x10b981, side: THREE.DoubleSide });
-      const flag = new THREE.Mesh(flagGeom, flagMat);
-      flag.position.set(1.95, 2.2, -1.6);
-      stableGroup.add(flag);
+      const r4 = new THREE.Mesh(railGeomShort, woodMat);
+      r4.position.set(1.8, 0.6, 0);
+      stableGroup.add(r4);
+
+      // Hay canopy shelter
+      const roofGeom = new THREE.ConeGeometry(1.6, 0.8, 4);
+      const hayMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.9 });
+      const roof = new THREE.Mesh(roofGeom, hayMat);
+      roof.rotation.y = Math.PI / 4;
+      roof.position.set(0.6, 1.7, -0.6);
+      roof.castShadow = true;
+      stableGroup.add(roof);
 
       scene.add(stableGroup);
       this.village.buildings['stable'] = stableGroup;
@@ -699,48 +838,49 @@
     // 4. ДОЗОРНАЯ БАШНЯ (Watchtower)
     buildWatchtower(scene) {
       const towerGroup = new THREE.Group();
-      towerGroup.position.set(4.5, 0, 3.8);
+      towerGroup.position.set(4.2, 0, 3.2);
       towerGroup.userData = { buildingKey: 'tower', name: 'Дозорная Башня' };
 
-      const timberMat = new THREE.MeshStandardMaterial({ color: 0x57361a, roughness: 0.85 });
+      const woodMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 });
 
-      // 4 heavy upright timber legs
-      [[-0.9, -0.9], [0.9, -0.9], [0.9, 0.9], [-0.9, 0.9]].forEach(([lx, lz]) => {
-        const legGeom = new THREE.CylinderGeometry(0.09, 0.12, 3.8, 8);
-        const leg = new THREE.Mesh(legGeom, timberMat);
-        leg.position.set(lx, 1.9, lz);
-        leg.castShadow = true;
-        towerGroup.add(leg);
+      // 4 Main wooden support stilts
+      const stiltGeom = new THREE.CylinderGeometry(0.1, 0.12, 3.4, 8);
+      [
+        [-0.7, 1.7, -0.7],
+        [0.7, 1.7, -0.7],
+        [0.7, 1.7, 0.7],
+        [-0.7, 1.7, 0.7]
+      ].forEach(([sx, sy, sz]) => {
+        const stilt = new THREE.Mesh(stiltGeom, woodMat);
+        stilt.position.set(sx, sy, sz);
+        stilt.castShadow = true;
+        towerGroup.add(stilt);
       });
 
-      // Elevated observation platform
-      const platGeom = new THREE.BoxGeometry(2.3, 0.18, 2.3);
-      const plat = new THREE.Mesh(platGeom, timberMat);
-      plat.position.y = 3.6;
-      plat.castShadow = true;
-      towerGroup.add(plat);
+      // Lookout observation deck
+      const platformGeom = new THREE.BoxGeometry(2.0, 0.15, 2.0);
+      const platform = new THREE.Mesh(platformGeom, woodMat);
+      platform.position.y = 3.35;
+      towerGroup.add(platform);
 
-      // Lookout pyramid roof
-      const roofGeom = new THREE.ConeGeometry(1.8, 1.1, 4);
-      const roofMat = new THREE.MeshStandardMaterial({ color: 0x0e7490, roughness: 0.5 });
-      const roof = new THREE.Mesh(roofGeom, roofMat);
-      roof.position.y = 4.8;
+      // Protective canopy roof
+      const roofGeom = new THREE.ConeGeometry(1.8, 0.9, 4);
+      const canvasMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.6 });
+      const roof = new THREE.Mesh(roofGeom, canvasMat);
       roof.rotation.y = Math.PI / 4;
+      roof.position.y = 4.4;
       roof.castShadow = true;
       towerGroup.add(roof);
 
-      // Flaming Beacon Brazier
-      const brazierGeom = new THREE.CylinderGeometry(0.3, 0.2, 0.35, 12);
-      const ironMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9 });
-      const brazier = new THREE.Mesh(brazierGeom, ironMat);
-      brazier.position.set(0, 3.85, 0);
-      towerGroup.add(brazier);
-
-      const beaconFlameGeom = new THREE.SphereGeometry(0.18, 8, 8);
-      const beaconFlameMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-      const beaconFlame = new THREE.Mesh(beaconFlameGeom, beaconFlameMat);
-      beaconFlame.position.set(0, 4.15, 0);
-      towerGroup.add(beaconFlame);
+      // Fluttering Red Kyrgyz Battle Pennant
+      const flagGeom = new THREE.PlaneGeometry(0.7, 0.45);
+      const flagMat = new THREE.MeshBasicMaterial({
+        color: 0xdc2626,
+        side: THREE.DoubleSide
+      });
+      const flag = new THREE.Mesh(flagGeom, flagMat);
+      flag.position.set(0.35, 4.85, 0);
+      towerGroup.add(flag);
 
       scene.add(towerGroup);
       this.village.buildings['tower'] = towerGroup;
@@ -760,7 +900,6 @@
         const intersects = this.village.raycaster.intersectObjects(intersectObjects, true);
 
         if (intersects.length > 0) {
-          // Find topmost building group
           let hitGroup = intersects[0].object;
           while (hitGroup.parent && !hitGroup.userData.buildingKey) {
             hitGroup = hitGroup.parent;
@@ -779,23 +918,19 @@
 
       this.village.selectedBuilding = bKey;
 
-      // Position glowing selection ring underneath
       if (this.village.selectionRing) {
         this.village.selectionRing.position.set(bldg.position.x, 0.08, bldg.position.z);
         this.village.selectionRing.material.opacity = 0.85;
       }
 
-      // Play audio & haptics
       if (window.playBoneSound) window.playBoneSound('hit', 0.5);
       if (window.ChukoHaptics && window.ChukoHaptics.impact) {
         window.ChukoHaptics.impact('medium');
       }
 
-      // Smooth bounce animation
-      bldg.scale.set(1.12, 1.12, 1.12);
-      setTimeout(() => bldg.scale.set(1, 1, 1), 180);
+      bldg.scale.set(1.15, 1.15, 1.15);
+      setTimeout(() => bldg.scale.set(1, 1, 1), 200);
 
-      // Scroll to corresponding building card in Village Tab
       const cardId = `bldg-${bKey}-btn`;
       const btn = document.getElementById(cardId);
       if (btn) {
@@ -806,18 +941,16 @@
     },
 
     // -----------------------------------------------------------------
-    // C4. UPGRADE CELEBRATION EFFECT (FIREWORKS / GOLD STARS)
+    // C4. UPGRADE CELEBRATION EFFECT (GOLD STAR PARTICLES)
     // -----------------------------------------------------------------
     triggerUpgradeCelebration(bKey) {
       const bldg = this.village.buildings[bKey];
       if (!bldg) return;
 
-      // Big triumphant scale bounce
       bldg.scale.set(1.3, 1.3, 1.3);
       setTimeout(() => bldg.scale.set(1, 1, 1), 320);
 
-      // Spawn 3D golden star particles
-      const starGeom = new THREE.DodecahedronGeometry(0.16, 0);
+      const starGeom = new THREE.DodecahedronGeometry(0.18, 0);
       const starMat = new THREE.MeshStandardMaterial({
         color: 0xfacc15,
         emissive: 0xf59e0b,
@@ -844,13 +977,12 @@
     },
 
     updateVillageParticles(time) {
-      // Upgrade particles
       for (let i = this.village.particles.length - 1; i >= 0; i--) {
         const p = this.village.particles[i];
         p.position.x += p.userData.vx;
         p.position.y += p.userData.vy;
         p.position.z += p.userData.vz;
-        p.userData.vy -= 0.003; // gravity
+        p.userData.vy -= 0.003;
         p.userData.life -= 0.02;
 
         p.rotation.x += 0.1;
@@ -867,7 +999,6 @@
 
   global.Chuko3DEngine = Chuko3DEngine;
 
-  // Auto-init on DOMContentLoaded
   if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => Chuko3DEngine.init());

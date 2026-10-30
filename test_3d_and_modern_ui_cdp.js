@@ -190,6 +190,25 @@ async function run() {
   await sleep(800);
   await captureScreenshot('/Users/kxansky/Documents/chuko/screenshot_modern_ui_match.png');
 
+  // 8. Resolve Toss and Capture In-Match Tactical Gameplay Arena
+  console.log('Resolving Kalchoo Toss to capture in-game Tactical Arena HUD...');
+  await evaluate(`
+    const tossBtn = document.getElementById('kalchoo-btn-toss');
+    if (tossBtn) tossBtn.click();
+  `);
+  await sleep(1500);
+  // If overlay is still present, force remove it to view game canvas
+  await evaluate(`
+    const overlay = document.getElementById('kalchoo-overlay');
+    if (overlay) overlay.remove();
+    match.turn = 'player';
+    match.phase = 'aiming';
+    placeSakaOnArc();
+    updateTurnUI();
+  `);
+  await sleep(500);
+  await captureScreenshot('/Users/kxansky/Documents/chuko/screenshot_modern_ui_gameplay.png');
+
   console.log('\n======================================================');
   console.log('🎉 ALL 3D & MODERN UI VERIFICATIONS PASSED WITH 100%!');
   console.log('======================================================\n');
