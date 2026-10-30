@@ -1,0 +1,790 @@
+/* ===================================================================
+   CHUKO ROYAL — TIER-1 MODERN MOBILE GAME UI DESIGN SYSTEM
+   Modern Mobile Game UX (Supercell, Scopely, 8 Ball Pool Standards)
+   Fused with Ethno-Futuristic Kyrgyz Nomad Aesthetics (Кочкор мүйүз, Түндүк)
+   =================================================================== */
+
+:root {
+  /* Core Obsidian & Gold Esports Palette */
+  --c-obsidian-950: #080a10;
+  --c-obsidian-900: #0f121d;
+  --c-obsidian-850: #151a28;
+  --c-obsidian-800: #1c2235;
+  --c-obsidian-border: rgba(255, 255, 255, 0.12);
+
+  /* Nomad Imperial Gold */
+  --c-gold-100: #fef3c7;
+  --c-gold-200: #fde68a;
+  --c-gold-300: #fcd34d;
+  --c-gold-400: #fbbf24;
+  --c-gold-500: #f59e0b;
+  --c-gold-600: #d97706;
+  --c-gold-700: #b45309;
+  --c-gold-800: #92400e;
+  --c-gold-900: #78350f;
+  --c-gold-dark: #451a03;
+
+  /* Victory Green / Battle CTA */
+  --c-lime-300: #bef264;
+  --c-lime-400: #a3e635;
+  --c-lime-500: #84cc16;
+  --c-lime-600: #65a30d;
+  --c-lime-700: #4d7c0f;
+  --c-lime-dark: #365314;
+  --c-lime-bevel: #23370d;
+
+  /* Cyan / Issyk-Kul / Cyber */
+  --c-cyan-300: #67e8f9;
+  --c-cyan-400: #22d3ee;
+  --c-cyan-500: #06b6d4;
+  --c-cyan-600: #0891b2;
+  --c-cyan-700: #0e7490;
+  --c-cyan-dark: #155e75;
+  --c-cyan-bevel: #083344;
+
+  /* Crimson / Chapkyn Raid */
+  --c-rose-400: #fb7185;
+  --c-rose-500: #f43f5e;
+  --c-rose-600: #e11d48;
+  --c-rose-700: #be123c;
+  --c-rose-dark: #881337;
+  --c-rose-bevel: #4c0519;
+
+  /* Rarity Colors */
+  --rarity-common: #94a3b8;
+  --rarity-rare: #38bdf8;
+  --rarity-epic: #c084fc;
+  --rarity-legendary: #fbbf24;
+
+  /* 3D Button Extrusions */
+  --btn-bevel-height: 5px;
+}
+
+/* ===================================================================
+   1. TACTILE 3D BUTTON PHYSICS (SUPERCELL / SCOPELY STANDARD)
+   Deep extruded bottom edge, active press translateY(4px), inner gloss
+   =================================================================== */
+
+.game-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-radius: 18px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  text-decoration: none;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 0.08s cubic-bezier(0.2, 0, 0, 1),
+              filter 0.12s ease;
+  overflow: hidden;
+}
+
+/* Glossy highlight layer on top half of button */
+.game-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  pointer-events: none;
+}
+
+/* Tactile Active Press State */
+.game-btn:active,
+.game-btn.is-active {
+  transform: translateY(4px) !important;
+  filter: brightness(0.96);
+}
+
+/* ===================== GREEN BATTLE BUTTON ===================== */
+.game-btn-green {
+  background: linear-gradient(180deg, #bef264 0%, #84cc16 50%, #65a30d 100%);
+  color: #ffffff !important;
+  border-color: #f7fee7;
+  text-shadow: 0 2px 0 #284c10, 0 3px 0 #284c10, 0 4px 6px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 1px #284c10;
+  box-shadow: 0 var(--btn-bevel-height) 0 var(--c-lime-bevel),
+              0 8px 16px rgba(0, 0, 0, 0.45),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.game-btn-green:active {
+  box-shadow: 0 1px 0 var(--c-lime-bevel),
+              0 3px 6px rgba(0, 0, 0, 0.35),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Pulsing Battle Glow for Primary CTA */
+.pulse-battle-glow {
+  animation: battleGlowPulse 2s infinite ease-in-out;
+}
+@keyframes battleGlowPulse {
+  0%, 100% {
+    box-shadow: 0 6px 0 var(--c-lime-bevel), 0 8px 24px rgba(132, 204, 22, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+  50% {
+    box-shadow: 0 6px 0 var(--c-lime-bevel), 0 10px 32px rgba(163, 230, 53, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  }
+}
+
+/* ===================== GOLD NOMAD BUTTON ===================== */
+.game-btn-gold {
+  background: linear-gradient(180deg, #fef08a 0%, #f59e0b 50%, #d97706 100%);
+  color: #381a02;
+  border-color: #fffbeb;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: 0 var(--btn-bevel-height) 0 var(--c-gold-dark),
+              0 8px 16px rgba(0, 0, 0, 0.45),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.game-btn-gold:active {
+  box-shadow: 0 1px 0 var(--c-gold-dark),
+              0 3px 6px rgba(0, 0, 0, 0.35),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* ===================== CYAN CYBER/WATER BUTTON ===================== */
+.game-btn-cyan {
+  background: linear-gradient(180deg, #a5f3fc 0%, #06b6d4 50%, #0891b2 100%);
+  color: #082f49;
+  border-color: #ecfeff;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: 0 var(--btn-bevel-height) 0 var(--c-cyan-bevel),
+              0 8px 16px rgba(0, 0, 0, 0.45),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.game-btn-cyan:active {
+  box-shadow: 0 1px 0 var(--c-cyan-bevel),
+              0 3px 6px rgba(0, 0, 0, 0.35),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* ===================== CRIMSON RAID BUTTON ===================== */
+.game-btn-rose {
+  background: linear-gradient(180deg, #fecdd3 0%, #f43f5e 50%, #e11d48 100%);
+  color: #4c0519;
+  border-color: #fff1f2;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 var(--btn-bevel-height) 0 var(--c-rose-bevel),
+              0 8px 16px rgba(0, 0, 0, 0.45),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.game-btn-rose:active {
+  box-shadow: 0 1px 0 var(--c-rose-bevel),
+              0 3px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* ===================== OBSIDIAN STONE BUTTON ===================== */
+.game-btn-stone {
+  background: linear-gradient(180deg, #334155 0%, #1e293b 50%, #0f172a 100%);
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.2);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.7);
+  box-shadow: 0 var(--btn-bevel-height) 0 #020617,
+              0 6px 12px rgba(0, 0, 0, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.game-btn-stone:active {
+  box-shadow: 0 1px 0 #020617,
+              0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+/* ===================================================================
+   2. TOP HUD & RESOURCE CAPSULES (3D GLASS/METALLIC PILLS)
+   =================================================================== */
+
+.hud-bar-pro {
+  background: linear-gradient(180deg, rgba(20, 24, 38, 0.95) 0%, rgba(10, 12, 20, 0.98) 100%);
+  border-bottom: 2px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.hud-capsule {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(180deg, rgba(22, 27, 42, 0.9) 0%, rgba(10, 13, 22, 0.95) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  padding: 3px 6px 3px 8px;
+  height: 36px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2),
+              0 3px 8px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform 0.08s ease, filter 0.1s ease;
+  user-select: none;
+}
+.hud-capsule:active {
+  transform: scale(0.95);
+  filter: brightness(1.1);
+}
+
+/* Glowing Resource Borders */
+.hud-capsule-gold {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: inset 0 1px 0 rgba(254, 240, 138, 0.4),
+              0 2px 8px rgba(245, 158, 11, 0.25);
+}
+.hud-capsule-emerald {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: inset 0 1px 0 rgba(167, 243, 208, 0.4),
+              0 2px 8px rgba(16, 185, 129, 0.25);
+}
+.hud-capsule-cyan {
+  border-color: rgba(6, 182, 212, 0.5);
+  box-shadow: inset 0 1px 0 rgba(165, 243, 252, 0.4),
+              0 2px 8px rgba(6, 182, 212, 0.25);
+}
+
+/* 3D Round "+" Button inside capsules */
+.hud-pill-plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  color: #000;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+.hud-plus-green {
+  background: linear-gradient(180deg, #bef264 0%, #84cc16 100%);
+}
+.hud-plus-gold {
+  background: linear-gradient(180deg, #fde68a 0%, #f59e0b 100%);
+}
+
+/* 3D Avatar Profile Box */
+.hud-avatar-frame {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 40%, #78350f 100%);
+  border: 2px solid #fef08a;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hud-level-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 0 4px;
+  border-radius: 6px;
+  border: 1.5px solid #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* ===================================================================
+   3. MODERN SUPERCELL-STYLE BOTTOM NAVIGATION DOCK
+   =================================================================== */
+
+.game-nav-dock {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(180deg, rgba(20, 24, 38, 0.98) 0%, rgba(8, 10, 16, 0.99) 100%);
+  border-top: 2px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.8),
+              inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 6px 4px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  flex-shrink: 0;
+  z-index: 30;
+}
+
+.nav-tab-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 5px 12px;
+  border-radius: 16px;
+  background: transparent;
+  border: 1.5px solid transparent;
+  color: #94a3b8;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.2, 0, 0, 1);
+  user-select: none;
+}
+.nav-tab-btn:active {
+  transform: scale(0.92);
+}
+
+/* Active Glowing Tab Capsule */
+.nav-tab-btn.is-active,
+.nav-tab-btn.active {
+  color: #fff;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.1) 100%);
+  border-color: rgba(251, 191, 36, 0.6);
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.35),
+              inset 0 1px 0 rgba(254, 240, 138, 0.4);
+  transform: translateY(-2px);
+}
+.nav-tab-btn.is-active .nav-tab-icon {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.8));
+}
+.nav-tab-btn.is-active .nav-tab-label {
+  color: #fde68a;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.nav-tab-icon {
+  font-size: 20px;
+  line-height: 1;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+/* ===================================================================
+   4. ETHNO-FUTURISTIC NOMAD CARDS & FRAMES
+   Obsidian panel base, Kochkor Muyuz metallic filigree corners
+   =================================================================== */
+
+.game-card-pro {
+  position: relative;
+  background: linear-gradient(180deg, rgba(26, 32, 50, 0.88) 0%, rgba(13, 16, 26, 0.94) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+/* Gold Frame Ornamentation */
+.game-card-gold {
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6),
+              0 0 15px rgba(245, 158, 11, 0.12),
+              inset 0 1px 0 rgba(254, 240, 138, 0.3);
+}
+
+/* Kyrgyz Ornament Corner Brackets */
+.corner-ornament-tl {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid rgba(245, 158, 11, 0.6);
+  border-left: 2px solid rgba(245, 158, 11, 0.6);
+  border-top-left-radius: 6px;
+  pointer-events: none;
+}
+.corner-ornament-tr {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  border-top: 2px solid rgba(245, 158, 11, 0.6);
+  border-right: 2px solid rgba(245, 158, 11, 0.6);
+  border-top-right-radius: 6px;
+  pointer-events: none;
+}
+
+/* ===================================================================
+   5. RARITY TIERS & ITEM FRAMES
+   =================================================================== */
+
+.rarity-common {
+  border-color: #64748b !important;
+  box-shadow: 0 0 8px rgba(100, 116, 139, 0.3) !important;
+}
+.rarity-rare {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35) !important;
+}
+.rarity-epic {
+  border-color: #c084fc !important;
+  box-shadow: 0 0 16px rgba(192, 132, 252, 0.4) !important;
+}
+.rarity-legendary {
+  border-color: #facc15 !important;
+  box-shadow: 0 0 22px rgba(250, 204, 21, 0.5) !important;
+  background: linear-gradient(180deg, rgba(250, 204, 21, 0.12) 0%, rgba(13, 16, 26, 0.95) 100%) !important;
+}
+
+/* ===================================================================
+   6. 3D ARENA CAROUSEL CARDS
+   =================================================================== */
+
+.arena-card-pro {
+  position: relative;
+  min-width: 245px;
+  border-radius: 22px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(145deg, #182035 0%, #0d1220 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+  user-select: none;
+}
+.arena-card-pro:active {
+  transform: scale(0.97);
+}
+.arena-card-pro.is-selected {
+  border-color: #a3e635;
+  box-shadow: 0 8px 26px rgba(163, 230, 53, 0.35),
+              inset 0 1px 0 rgba(247, 254, 231, 0.4);
+}
+
+/* ===================================================================
+   7. 3D CHEST SLOTS (CLASH ROYALE STYLE PEDESTALS)
+   =================================================================== */
+
+.chest-slot-3d {
+  position: relative;
+  height: 72px;
+  border-radius: 18px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(180deg, rgba(30, 36, 56, 0.9) 0%, rgba(15, 18, 30, 0.95) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+.chest-slot-3d:active {
+  transform: scale(0.93);
+}
+
+.chest-slot-ready {
+  border-color: #a3e635;
+  background: linear-gradient(180deg, rgba(163, 230, 53, 0.18) 0%, rgba(15, 18, 30, 0.95) 100%);
+  box-shadow: 0 4px 14px rgba(163, 230, 53, 0.3),
+              inset 0 1px 0 rgba(247, 254, 231, 0.4);
+}
+
+.chest-slot-unlocking {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 18, 30, 0.95) 100%);
+}
+
+.chest-slot-empty {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(12, 15, 24, 0.4);
+}
+
+/* ===================================================================
+   8. ESPORTS TYPOGRAPHY & TEXT STROKES
+   =================================================================== */
+
+.game-title-gold {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #ffffff 0%, #fde68a 30%, #f59e0b 70%, #b45309 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85));
+}
+
+.game-text-stroke {
+  text-shadow: 0 2px 0 #000,
+               0 -1px 0 #000,
+               1px 0 0 #000,
+               -1px 0 0 #000,
+               0 3px 6px rgba(0, 0, 0, 0.85);
+}
+
+.game-counter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+/* ===================================================================
+   9. TOP-3 LEADERBOARD PODIUM
+   =================================================================== */
+
+.leaderboard-podium-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 4px;
+  margin-bottom: 8px;
+}
+
+.podium-pillar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 18px 18px 12px 12px;
+  padding: 8px 4px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.podium-1st {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.35) 0%, rgba(26, 32, 50, 0.95) 70%);
+  border: 2px solid #fbbf24;
+  height: 120px;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+}
+.podium-2nd {
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.25) 0%, rgba(26, 32, 50, 0.95) 70%);
+  border: 1.5px solid #94a3b8;
+  height: 100px;
+}
+.podium-3rd {
+  background: linear-gradient(180deg, rgba(180, 83, 9, 0.25) 0%, rgba(26, 32, 50, 0.95) 70%);
+  border: 1.5px solid #d97706;
+  height: 90px;
+}
+
+/* ===================================================================
+   10. SHOP CARDS & RIBBON BANNERS
+   =================================================================== */
+
+.shop-card-3d {
+  position: relative;
+  border-radius: 20px;
+  padding: 12px;
+  background: linear-gradient(180deg, #1c2338 0%, #0f1322 100%);
+  border: 2px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+.shop-card-3d:active {
+  transform: scale(0.95);
+}
+
+.badge-ribbon {
+  position: absolute;
+  top: 8px;
+  right: -24px;
+  transform: rotate(45deg);
+  background: linear-gradient(180deg, #f43f5e 0%, #e11d48 100%);
+  color: #fff;
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  padding: 2px 24px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* ===================================================================
+   11. IN-GAME MATCH HUD & POWER TACTICAL CONTROLS
+   =================================================================== */
+
+.match-score-capsule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(20, 26, 42, 0.92) 0%, rgba(10, 14, 24, 0.96) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.match-active-turn {
+  border-color: #a3e635 !important;
+  box-shadow: 0 0 16px rgba(163, 230, 53, 0.45) !important;
+  background: linear-gradient(180deg, rgba(163, 230, 53, 0.2) 0%, rgba(10, 14, 24, 0.95) 100%) !important;
+}
+
+/* Stance Buttons */
+.stance-pill-3d {
+  flex: 1;
+  padding: 6px 4px;
+  border-radius: 14px;
+  font-size: 10px;
+  font-weight: 900;
+  font-family: 'Rubik', sans-serif;
+  cursor: pointer;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(180deg, #242c44 0%, #151a2a 100%);
+  color: #94a3b8;
+  box-shadow: 0 3px 0 #090c15, 0 4px 8px rgba(0, 0, 0, 0.4);
+  transition: all 0.08s ease;
+}
+.stance-pill-3d:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #090c15;
+}
+.stance-pill-3d.is-active {
+  background: linear-gradient(180deg, #fde68a 0%, #f59e0b 100%);
+  color: #381a02;
+  border-color: #fff;
+  box-shadow: 0 3px 0 #78350f, 0 4px 10px rgba(245, 158, 11, 0.4);
+}
+
+/* Cardinal 360 Buttons */
+.cardinal-btn-3d {
+  padding: 6px 2px;
+  border-radius: 10px;
+  font-size: 9px;
+  font-weight: 800;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #182033;
+  color: #cbd5e1;
+  box-shadow: 0 2px 0 #090c15;
+  cursor: pointer;
+  transition: all 0.08s ease;
+}
+.cardinal-btn-3d:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #090c15;
+}
+.cardinal-btn-3d.is-active {
+  background: linear-gradient(180deg, #fde68a 0%, #f59e0b 100%);
+  color: #381a02;
+  border-color: #fff;
+  box-shadow: 0 2px 0 #78350f;
+}
+
+/* ===================================================================
+   12. 3D VILLAGE (АЙЫЛ) & 3D CHUKO CANVAS CONTAINERS
+   =================================================================== */
+
+.ayyl-3d-wrapper {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #091220 0%, #062a26 60%, #021a16 100%);
+  border: 2px solid rgba(16, 185, 129, 0.4);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+#ayyl-3d-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.hero-chuko-3d-wrapper {
+  position: relative;
+  width: 180px;
+  height: 140px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+.hero-chuko-3d-wrapper:active {
+  cursor: grabbing;
+}
+
+#hero-chuko-3d-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+/* 3D Floating Building Badge */
+.building-3d-badge {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1.5px solid #a3e635;
+  border-radius: 12px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+  transform: translate(-50%, -100%);
+  transition: opacity 0.2s ease;
+}
+
+/* ===================================================================
+   13. ESPORTS VICTORY & DEFEAT MODAL CELEBRATION
+   =================================================================== */
+
+@keyframes victorySunburstRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.victory-sunburst-bg {
+  position: absolute;
+  inset: -50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(245, 158, 11, 0.15) 0deg 15deg,
+    transparent 15deg 30deg
+  );
+  animation: victorySunburstRotate 20s linear infinite;
+  pointer-events: none;
+}
+
+.victory-trophy-pop {
+  animation: trophyPop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes trophyPop {
+  0% { transform: scale(0.2) rotate(-15deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}

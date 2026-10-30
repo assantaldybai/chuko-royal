@@ -9,9 +9,12 @@
   <title>Chuko Royal — Full Pro MVP</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/three.min.js"></script>
   <script src="js/phase2_mechanics.js?v=20261029_360"></script>
   <script src="js/monopolygo_meta.js?v=20261029_p4"></script>
   <script src="js/ethno_av_engine.js?v=20261029_phase3"></script>
+  <script src="js/chuko_3d_engine.js?v=20261030_pro3d"></script>
+  <link rel="stylesheet" href="css/modern_game_ui.css">
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -168,12 +171,12 @@
     <div id="screen-lobby" class="hidden relative flex-1 w-full h-full flex flex-col justify-between overflow-hidden select-none bg-stone-950">
 
       <!-- ВЕРХНИЙ ПОСТОЯННЫЙ БАР: Профиль, Лига, Кубки, Щиты, Баксы, Монеты -->
-      <header class="z-30 w-full flex items-center justify-between gap-1 px-2.5 py-2 bg-stone-900/90 backdrop-blur-md border-b border-amber-500/25 shrink-0">
+      <header class="hud-bar-pro z-30 w-full flex items-center justify-between gap-1 px-2.5 py-2 shrink-0">
         <!-- Профиль игрока -->
-        <div onclick="openFeatureModal('profile')" class="btn-tap flex items-center gap-2 bg-stone-950/80 pl-1 pr-2.5 py-1 rounded-2xl border border-white/10 active:scale-95 shadow cursor-pointer">
-          <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 via-amber-600 to-red-900 border-2 border-amber-300 flex items-center justify-center text-xl shadow overflow-hidden">
+        <div onclick="openFeatureModal('profile')" class="hud-capsule flex items-center gap-2 pl-1 pr-2.5 py-1" title="Профиль батыра">
+          <div class="hud-avatar-frame">
             <span id="hud-avatar">🥷</span>
-            <span id="hud-level" class="absolute -bottom-1 -right-1 bg-sky-500 text-[9px] font-black px-1 rounded-md border border-white">1</span>
+            <span id="hud-level" class="hud-level-badge">1</span>
           </div>
           <div class="text-left">
             <div class="flex items-center gap-1">
@@ -189,27 +192,27 @@
         <!-- Валюты, Щиты и Копилка (Monopoly GO) -->
         <div class="flex items-center gap-1">
           <!-- Щиты защиты -->
-          <div onclick="switchLobbyTab('village')" class="btn-tap h-9 flex items-center gap-1 bg-stone-950/80 px-2 py-1 rounded-xl border border-cyan-500/40 active:scale-95 shadow cursor-pointer" title="Щиты защиты от набегов">
+          <div onclick="switchLobbyTab('village')" class="hud-capsule hud-capsule-cyan" title="Щиты защиты от набегов">
             <span class="text-xs">🛡️</span>
             <span id="hud-shields" class="text-[11px] font-black text-cyan-300">3/3</span>
           </div>
           <!-- Ханская Копилка -->
-          <div onclick="MonopolyGoMeta.openPiggyModal()" class="btn-tap h-9 flex items-center gap-1 bg-stone-950/80 px-2 py-1 rounded-xl border border-amber-500/40 active:scale-95 shadow cursor-pointer relative" title="Ханская Копилка (+15% с матчей)">
+          <div onclick="MonopolyGoMeta.openPiggyModal()" class="hud-capsule hud-capsule-gold relative" title="Ханская Копилка (+15% с матчей)">
             <span class="text-xs">🏺</span>
             <span id="piggy-amount" class="text-[11px] font-black text-amber-300">0 🪙</span>
             <span id="piggy-widget-badge" class="hidden absolute -top-1 -right-1 px-1 py-0.2 rounded-full bg-lime-400 text-stone-950 font-black text-[7px] animate-bounce">ГОТОВА!</span>
           </div>
           <!-- Баксы -->
-          <div onclick="switchLobbyTab('shop')" class="btn-tap h-9 flex items-center gap-1 bg-stone-950/80 px-2 py-1 rounded-xl border border-emerald-500/40 active:scale-95 shadow cursor-pointer">
+          <div onclick="switchLobbyTab('shop')" class="hud-capsule hud-capsule-emerald" title="Ханские Баксы">
             <span class="text-xs">💵</span>
             <span id="hud-bucks" class="text-[11px] font-black text-emerald-300">85</span>
-            <span class="w-4 h-4 rounded-md bg-emerald-500 text-stone-950 font-black text-[10px] flex items-center justify-center ml-0.5">+</span>
+            <span class="hud-pill-plus hud-plus-green">+</span>
           </div>
           <!-- Монеты -->
-          <div onclick="switchLobbyTab('shop')" class="btn-tap h-9 flex items-center gap-1 bg-stone-950/80 px-2.5 py-1 rounded-xl border border-amber-500/40 active:scale-95 shadow cursor-pointer">
+          <div onclick="switchLobbyTab('shop')" class="hud-capsule hud-capsule-gold" title="Золотые Монеты">
             <span class="text-xs">🪙</span>
             <span id="hud-coins" class="text-[11px] font-black text-amber-300">192,280</span>
-            <span class="w-4 h-4 rounded-md bg-amber-400 text-stone-950 font-black text-[10px] flex items-center justify-center ml-0.5">+</span>
+            <span class="hud-pill-plus hud-plus-gold">+</span>
           </div>
         </div>
       </header>
@@ -232,29 +235,18 @@
             </div>
           </div>
 
-          <!-- Центральный интерактивный 3D Альчик с эффектом левитации -->
-          <div onclick="switchLobbyTab('saka')" class="btn-tap relative flex flex-col items-center justify-center py-2 cursor-pointer group">
-            <div class="chuko-float relative w-32 h-24 flex items-center justify-center filter drop-shadow-[0_15px_20px_rgba(245,158,11,0.25)]">
-              <svg id="hero-chuko-svg" viewBox="0 0 160 130" class="w-full h-full">
-                <defs>
-                  <linearGradient id="chukoGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#fffbeb"/>
-                    <stop offset="55%" stop-color="#fde68a"/>
-                    <stop offset="100%" stop-color="#d97706"/>
-                  </linearGradient>
-                </defs>
-                <path id="hero-chuko-path" d="M32,28 C20,24 18,45 25,62 C18,80 20,104 38,108 C54,111 66,98 78,99 C92,100 105,112 124,107 C142,102 142,78 134,62 C142,44 138,22 120,24 C102,26 94,37 78,36 C62,35 48,32 32,28 Z"
-                  fill="url(#chukoGrad)" stroke="#451a03" stroke-width="5" stroke-linejoin="round"/>
-                <ellipse cx="48" cy="44" rx="16" ry="9" fill="rgba(255,255,255,0.45)" />
-                <ellipse cx="112" cy="42" rx="18" ry="10" fill="rgba(255,255,255,0.45)" />
-                <path d="M52,72 Q80,60 108,74" stroke="rgba(120,53,15,0.35)" stroke-width="4" fill="none" stroke-linecap="round"/>
-              </svg>
+          <!-- Центральный интерактивный 3D Альчик (Чүкө) с PBR освещением и свободным вращением -->
+          <div class="relative flex flex-col items-center justify-center py-1 group">
+            <div class="hero-chuko-3d-wrapper">
+              <canvas id="hero-chuko-3d-canvas"></canvas>
             </div>
-            <div class="mt-1 px-3 py-1 rounded-full bg-stone-900/90 border border-amber-400/40 text-[11px] font-black text-stone-200 flex items-center gap-1.5 shadow">
-              <span>Биток:</span>
+            <!-- Информационная плашка смены Сака -->
+            <div onclick="switchLobbyTab('saka')" class="game-btn game-btn-stone mt-1 px-3 py-1 rounded-full text-[11px] font-black text-stone-200 flex items-center gap-1.5 shadow cursor-pointer">
+              <span>🦴 Биток:</span>
               <span id="lobby-equipped-saka" class="text-amber-300">Ханский Свинец</span>
-              <span class="text-[9px] text-lime-400 font-bold">⚙ Изменить</span>
+              <span class="text-[9px] text-lime-400 font-bold ml-0.5">⚙ Сменить</span>
             </div>
+            <span class="text-[9px] text-stone-400 mt-0.5 font-bold tracking-wide">👆 Вращайте Сака свайпом в 3D</span>
           </div>
 
           <!-- ГОРИЗОНТАЛЬНАЯ КАРУСЕЛЬ АРЕН ОРДО С ПЛАВНЫМ SNAP-СКРОЛЛОМ -->
@@ -267,69 +259,69 @@
             <div id="arena-carousel" class="flex gap-2.5 overflow-x-auto pb-1 snap-x snap-mandatory no-scrollbar">
               
               <!-- Арена 1: Жаштык -->
-              <div onclick="selectCarouselArena(0, 'Жаштык Арена', 100, 200, 0)" id="arena-card-0" class="btn-tap shrink-0 w-[240px] snap-center p-3 rounded-2xl border-2 border-lime-400 bg-gradient-to-br from-stone-900 via-lime-950/40 to-stone-900 flex flex-col justify-between shadow-lg cursor-pointer">
+              <div onclick="selectCarouselArena(0, 'Жаштык Арена', 100, 200, 0)" id="arena-card-0" class="arena-card-pro is-selected shrink-0 w-[240px] snap-center">
                 <div class="flex justify-between items-start">
-                  <span class="px-2 py-0.5 rounded-md bg-lime-400 text-stone-950 text-[9px] font-black uppercase">Новичкам</span>
-                  <span class="text-base">🏟️</span>
+                  <span class="px-2 py-0.5 rounded-lg bg-lime-400 text-stone-950 text-[9px] font-black uppercase shadow">Новичкам</span>
+                  <span class="text-xl">🏟️</span>
                 </div>
                 <div class="my-2 text-left">
                   <h4 class="text-base font-black text-white">Жаштык Арена</h4>
-                  <p class="text-[11px] text-stone-300">Взнос: <b class="text-amber-300">100 🪙</b></p>
-                  <p class="text-[11px] text-lime-300 font-black">Банк арены: 200 🪙</p>
+                  <p class="text-[11px] text-stone-300 font-bold">Взнос: <b class="text-amber-300 font-black">100 🪙</b></p>
+                  <p class="text-[11px] text-lime-400 font-black">Банк арены: 200 🪙</p>
                 </div>
                 <div class="flex justify-between items-center text-[10px] text-stone-400 border-t border-white/10 pt-1.5">
-                  <span>Формат: 5/9 костей</span>
-                  <span id="arena-status-0" class="text-lime-400 font-bold">✓ Выбрано</span>
+                  <span class="font-bold">Формат: 5/9 костей</span>
+                  <span id="arena-status-0" class="text-lime-400 font-black">✓ Выбрано</span>
                 </div>
               </div>
 
               <!-- Арена 2: Бишкек -->
-              <div onclick="selectCarouselArena(1, 'Бишкек Арена', 1000, 2000, 100)" id="arena-card-1" class="btn-tap shrink-0 w-[240px] snap-center p-3 rounded-2xl border border-stone-700 bg-gradient-to-br from-stone-900 via-amber-950/30 to-stone-900 flex flex-col justify-between shadow-lg cursor-pointer opacity-90">
+              <div onclick="selectCarouselArena(1, 'Бишкек Арена', 1000, 2000, 100)" id="arena-card-1" class="arena-card-pro shrink-0 w-[240px] snap-center opacity-90">
                 <div class="flex justify-between items-start">
-                  <span class="px-2 py-0.5 rounded-md bg-amber-500 text-stone-950 text-[9px] font-black uppercase">Популярно</span>
-                  <span class="text-base">🏛️</span>
+                  <span class="px-2 py-0.5 rounded-lg bg-amber-500 text-stone-950 text-[9px] font-black uppercase shadow">Популярно</span>
+                  <span class="text-xl">🏛️</span>
                 </div>
                 <div class="my-2 text-left">
                   <h4 class="text-base font-black text-white">Бишкек Арена</h4>
-                  <p class="text-[11px] text-stone-300">Взнос: <b class="text-amber-300">1,000 🪙</b></p>
-                  <p class="text-[11px] text-lime-300 font-black">Банк арены: 2,000 🪙</p>
+                  <p class="text-[11px] text-stone-300 font-bold">Взнос: <b class="text-amber-300 font-black">1,000 🪙</b></p>
+                  <p class="text-[11px] text-lime-400 font-black">Банк арены: 2,000 🪙</p>
                 </div>
                 <div class="flex justify-between items-center text-[10px] text-stone-400 border-t border-white/10 pt-1.5">
-                  <span>Формат: 5/9 костей</span>
+                  <span class="font-bold">Формат: 5/9 костей</span>
                   <span id="arena-status-1" class="text-amber-300 font-bold">От 100 🏆</span>
                 </div>
               </div>
 
               <!-- Арена 3: Иссык-Куль -->
-              <div onclick="selectCarouselArena(2, 'Иссык-Куль Ордо', 5000, 10000, 400)" id="arena-card-2" class="btn-tap shrink-0 w-[240px] snap-center p-3 rounded-2xl border border-stone-700 bg-gradient-to-br from-stone-900 via-cyan-950/30 to-stone-900 flex flex-col justify-between shadow-lg cursor-pointer opacity-90">
+              <div onclick="selectCarouselArena(2, 'Иссык-Куль Ордо', 5000, 10000, 400)" id="arena-card-2" class="arena-card-pro shrink-0 w-[240px] snap-center opacity-90">
                 <div class="flex justify-between items-start">
-                  <span class="px-2 py-0.5 rounded-md bg-cyan-400 text-stone-950 text-[9px] font-black uppercase">Профи</span>
-                  <span class="text-base">🌊</span>
+                  <span class="px-2 py-0.5 rounded-lg bg-cyan-400 text-stone-950 text-[9px] font-black uppercase shadow">Профи</span>
+                  <span class="text-xl">🌊</span>
                 </div>
                 <div class="my-2 text-left">
                   <h4 class="text-base font-black text-white">Иссык-Куль Ордо</h4>
-                  <p class="text-[11px] text-stone-300">Взнос: <b class="text-amber-300">5,000 🪙</b></p>
+                  <p class="text-[11px] text-stone-300 font-bold">Взнос: <b class="text-amber-300 font-black">5,000 🪙</b></p>
                   <p class="text-[11px] text-cyan-300 font-black">Банк арены: 10,000 🪙</p>
                 </div>
                 <div class="flex justify-between items-center text-[10px] text-stone-400 border-t border-white/10 pt-1.5">
-                  <span>Формат: 9 костей</span>
+                  <span class="font-bold">Формат: 9 костей</span>
                   <span id="arena-status-2" class="text-cyan-300 font-bold">От 400 🏆</span>
                 </div>
               </div>
 
               <!-- Арена 4: Хан-Теңири -->
-              <div onclick="selectCarouselArena(3, 'Хан-Теңири', 25000, 50000, 1000)" id="arena-card-3" class="btn-tap shrink-0 w-[240px] snap-center p-3 rounded-2xl border border-stone-700 bg-gradient-to-br from-stone-900 via-purple-950/30 to-stone-900 flex flex-col justify-between shadow-lg cursor-pointer opacity-90">
+              <div onclick="selectCarouselArena(3, 'Хан-Теңири', 25000, 50000, 1000)" id="arena-card-3" class="arena-card-pro shrink-0 w-[240px] snap-center opacity-90">
                 <div class="flex justify-between items-start">
-                  <span class="px-2 py-0.5 rounded-md bg-purple-400 text-stone-950 text-[9px] font-black uppercase">Элита</span>
-                  <span class="text-base">🏔️</span>
+                  <span class="px-2 py-0.5 rounded-lg bg-purple-400 text-stone-950 text-[9px] font-black uppercase shadow">Элита</span>
+                  <span class="text-xl">🏔️</span>
                 </div>
                 <div class="my-2 text-left">
                   <h4 class="text-base font-black text-white">Хан-Теңири</h4>
-                  <p class="text-[11px] text-stone-300">Взнос: <b class="text-amber-300">25,000 🪙</b></p>
+                  <p class="text-[11px] text-stone-300 font-bold">Взнос: <b class="text-amber-300 font-black">25,000 🪙</b></p>
                   <p class="text-[11px] text-purple-300 font-black">Банк арены: 50,000 🪙</p>
                 </div>
                 <div class="flex justify-between items-center text-[10px] text-stone-400 border-t border-white/10 pt-1.5">
-                  <span>Формат: 9 костей</span>
+                  <span class="font-bold">Формат: 9 костей</span>
                   <span id="arena-status-3" class="text-purple-300 font-bold">От 1,000 🏆</span>
                 </div>
               </div>
@@ -339,18 +331,18 @@
 
           <!-- ГЛАВНАЯ КНОПКА CTA: В БОЙ (КИБЕРСПОРТИВНЫЙ ПУЛЬС) -->
           <div class="w-full flex flex-col gap-2 mt-1">
-            <button onclick="launchSelectedArena()" id="btn-primary-battle" class="btn-tap w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-lime-400 via-yellow-400 to-lime-500 text-stone-950 font-black text-base uppercase tracking-wider shadow-[0_8px_25px_rgba(132,204,22,0.45)] border-2 border-white flex items-center justify-between active:scale-95 transition-all cursor-pointer">
-              <span class="text-2xl">⚔️</span>
-              <span id="primary-battle-label" class="font-black text-sm">В БОЙ • Жаштык Арена</span>
-              <span id="primary-battle-fee" class="text-xs bg-stone-950 text-lime-400 px-2.5 py-1 rounded-lg font-black">100 🪙</span>
+            <button onclick="launchSelectedArena()" id="btn-primary-battle" class="game-btn game-btn-green pulse-battle-glow w-full py-3.5 px-4 rounded-2xl flex items-center justify-between cursor-pointer">
+              <span class="text-2xl filter drop-shadow">⚔️</span>
+              <span id="primary-battle-label" class="font-black text-sm tracking-wide text-white">В БОЙ • Жаштык Арена</span>
+              <span id="primary-battle-fee" class="text-xs bg-stone-950 text-lime-400 px-2.5 py-1 rounded-xl font-black border border-lime-400/40">100 🪙</span>
             </button>
 
             <!-- Быстрые альтернативные режимы: Тренировка и Игра с другом -->
             <div class="grid grid-cols-2 gap-2">
-              <button onclick="startTrainingMode()" class="btn-tap py-2 px-3 rounded-xl bg-stone-900/90 border border-amber-500/30 text-amber-300 font-extrabold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow cursor-pointer">
+              <button onclick="startTrainingMode()" class="game-btn game-btn-stone py-2.5 px-3 rounded-xl text-amber-300 font-extrabold text-xs flex items-center justify-center gap-1.5 cursor-pointer">
                 <span>🎯</span> <span>Офлайн Тренировка</span>
               </button>
-              <button onclick="openFriendLobbyModal()" class="btn-tap py-2 px-3 rounded-xl bg-stone-900/90 border border-emerald-500/30 text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow cursor-pointer">
+              <button onclick="openFriendLobbyModal()" class="game-btn game-btn-stone py-2.5 px-3 rounded-xl text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5 cursor-pointer">
                 <span>👥</span> <span>Игра с другом</span>
               </button>
             </div>
@@ -372,8 +364,25 @@
         <!-- ==================== ТАБ 2: МОЯ ОРДА (MONOPOLY GO BUILD & RAID META) ==================== -->
         <div id="tab-view-village" class="hidden flex flex-col p-3 gap-2.5 min-h-full">
           
+          <!-- 3D ИЗОМЕТРИЧЕСКОЕ КОЧЕВЬЕ (NOMADIC VILLAGE 3D SCENE) -->
+          <div class="ayyl-3d-wrapper relative w-full mb-1">
+            <canvas id="ayyl-3d-canvas"></canvas>
+            <!-- Информационные оверлеи 3D Аила -->
+            <div class="absolute top-2 left-2 z-10 flex items-center gap-1.5 bg-black/65 backdrop-blur-md px-2.5 py-1 rounded-xl border border-emerald-400/50 shadow">
+              <span class="text-xs">🏕️</span>
+              <span class="text-[10px] font-black uppercase text-emerald-300">3D Айл: Суусамыр</span>
+            </div>
+            <div class="absolute top-2 right-2 z-10 flex items-center gap-1 bg-black/65 backdrop-blur-md px-2 py-1 rounded-xl border border-amber-400/40 shadow">
+              <span class="text-[9px] font-black text-amber-300">Интерактивно 3D</span>
+            </div>
+            <div class="absolute bottom-2 inset-x-2 z-10 flex items-center justify-between text-[9px] font-bold text-stone-200 bg-black/70 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 shadow">
+              <span>👆 Нажмите на Юрту, Кузницу, Загон или Башню для выбора</span>
+              <span class="text-lime-400 font-black">4 Здания</span>
+            </div>
+          </div>
+
           <!-- Шапка поселения / Региональный прогресс кочевья -->
-          <div id="village-region-card" onclick="openRegionRoadmapModal()" class="btn-tap hud-card rounded-2xl p-3 border border-amber-500/40 bg-gradient-to-r from-emerald-950/70 via-stone-900 to-amber-950/40 flex justify-between items-center shadow-lg cursor-pointer active:scale-95" title="Нажмите, чтобы открыть карту регионов">
+          <div id="village-region-card" onclick="openRegionRoadmapModal()" class="game-card-pro p-3 flex justify-between items-center shadow-lg cursor-pointer active:scale-95" title="Нажмите, чтобы открыть карту регионов">
             <div class="flex-1 pr-2">
               <div class="flex items-center gap-1.5 mb-0.5">
                 <span class="text-[9px] font-black uppercase text-amber-400 tracking-wider">Регион Кочевья</span>
@@ -399,7 +408,7 @@
           </div>
 
           <!-- БАННЕР СБОРА ДАНИ (ХАНСКАЯ ЮРТА) -->
-          <div id="village-tribute-banner" class="hud-card rounded-2xl p-2.5 border border-yellow-500/40 bg-gradient-to-r from-amber-950/50 via-stone-900 to-amber-950/30 flex items-center justify-between shadow-md">
+          <div id="village-tribute-banner" class="game-card-pro game-card-gold p-2.5 flex items-center justify-between shadow-md">
             <div class="flex items-center gap-2">
               <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/50 flex items-center justify-center text-xl shadow">
                 🛖
@@ -413,14 +422,14 @@
                 <div class="text-[9px] text-stone-400">Скорость: <b id="tribute-rate-label" class="text-lime-300">+200 🪙/час</b></div>
               </div>
             </div>
-            <button onclick="MonopolyGoMeta.claimTribute()" id="tribute-claim-btn" class="btn-tap px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 cursor-pointer">
+            <button onclick="MonopolyGoMeta.claimTribute()" id="tribute-claim-btn" class="game-btn game-btn-gold px-3.5 py-1.5 text-xs">
               Собрать
             </button>
           </div>
 
           <!-- Индикатор Щитов и Кнопка НАБЕГА (Чапкын) -->
           <div class="grid grid-cols-2 gap-2">
-            <div onclick="openShieldsModal()" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border-cyan-500/40 bg-cyan-950/20 cursor-pointer active:scale-95" title="Управление щитами">
+            <div onclick="openShieldsModal()" class="game-card-pro p-2.5 flex items-center justify-between border-cyan-500/40 bg-cyan-950/20 cursor-pointer active:scale-95" title="Управление щитами">
               <div class="text-left">
                 <div class="text-[10px] font-bold text-stone-300">Щиты от набегов:</div>
                 <div id="village-shields-display" class="text-sm font-black text-cyan-300 mt-0.5">🛡️ 🛡️ 🛡️</div>
@@ -429,7 +438,7 @@
               <span class="text-[9px] font-bold text-cyan-400 bg-cyan-500/20 px-1.5 py-0.5 rounded border border-cyan-400/30">Активны</span>
             </div>
 
-            <button onclick="launchVillageRaid()" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border-rose-500/50 bg-gradient-to-r from-red-950/50 to-stone-900 active:scale-95 shadow cursor-pointer">
+            <button onclick="launchVillageRaid()" class="game-card-pro p-2.5 flex items-center justify-between border-rose-500/50 bg-gradient-to-r from-red-950/50 to-stone-900 active:scale-95 shadow cursor-pointer">
               <div class="text-left">
                 <div class="text-[10px] font-black text-rose-300 uppercase">Набег (Чапкын)</div>
                 <div class="text-[10px] text-stone-300">Грабеж аулов врагов</div>
@@ -443,73 +452,73 @@
           <div class="flex flex-col gap-2">
             
             <!-- Здание 1: Ханская Юрта -->
-            <div class="hud-card rounded-2xl p-2.5 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
-              <div class="flex items-center gap-2.5">
-                <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl shadow">🛖</div>
+            <div class="game-card-pro p-3 flex items-center justify-between border-amber-400/40">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border-2 border-amber-400/50 flex items-center justify-center text-2xl shadow">🛖</div>
                 <div class="text-left">
                   <div class="flex items-center gap-1.5">
                     <h4 class="text-xs font-black text-white">Ханская Юрта</h4>
-                    <span id="bldg-yurt-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded">Ур. 1/5</span>
+                    <span id="bldg-yurt-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded-md">Ур. 1/5</span>
                   </div>
                   <p id="bldg-yurt-perk" class="text-[10px] text-amber-300 font-bold">+200 🪙/час (дань)</p>
                   <p id="bldg-yurt-next-perk" class="text-[9px] text-stone-400">След: +450 🪙/час</p>
                 </div>
               </div>
-              <button onclick="upgradeVillageBuilding('yurt')" id="bldg-yurt-btn" class="btn-tap px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 cursor-pointer">
+              <button onclick="upgradeVillageBuilding('yurt')" id="bldg-yurt-btn" class="game-btn game-btn-gold px-3.5 py-1.5 text-xs">
                 1,500 🪙
               </button>
             </div>
 
             <!-- Здание 2: Кузница Сака -->
-            <div class="hud-card rounded-2xl p-2.5 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
-              <div class="flex items-center gap-2.5">
-                <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl shadow">🔨</div>
+            <div class="game-card-pro p-3 flex items-center justify-between border-amber-400/40">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border-2 border-amber-400/50 flex items-center justify-center text-2xl shadow">🔨</div>
                 <div class="text-left">
                   <div class="flex items-center gap-1.5">
                     <h4 class="text-xs font-black text-white">Кузница Сака</h4>
-                    <span id="bldg-forge-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded">Ур. 1/5</span>
+                    <span id="bldg-forge-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded-md">Ур. 1/5</span>
                   </div>
                   <p id="bldg-forge-perk" class="text-[10px] text-lime-300 font-bold">-10% цена прокачки Сака</p>
                   <p id="bldg-forge-next-perk" class="text-[9px] text-stone-400">След: -15% на прокачку</p>
                 </div>
               </div>
-              <button onclick="upgradeVillageBuilding('forge')" id="bldg-forge-btn" class="btn-tap px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 cursor-pointer">
+              <button onclick="upgradeVillageBuilding('forge')" id="bldg-forge-btn" class="game-btn game-btn-gold px-3.5 py-1.5 text-xs">
                 2,000 🪙
               </button>
             </div>
 
             <!-- Здание 3: Загон Аргамаков -->
-            <div class="hud-card rounded-2xl p-2.5 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
-              <div class="flex items-center gap-2.5">
-                <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl shadow">🐎</div>
+            <div class="game-card-pro p-3 flex items-center justify-between border-amber-400/40">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border-2 border-amber-400/50 flex items-center justify-center text-2xl shadow">🐎</div>
                 <div class="text-left">
                   <div class="flex items-center gap-1.5">
                     <h4 class="text-xs font-black text-white">Загон Аргамаков</h4>
-                    <span id="bldg-stable-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded">Ур. 1/5</span>
+                    <span id="bldg-stable-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded-md">Ур. 1/5</span>
                   </div>
                   <p id="bldg-stable-perk" class="text-[10px] text-cyan-300 font-bold">-15% время сундуков</p>
                   <p id="bldg-stable-next-perk" class="text-[9px] text-stone-400">След: -25% времени</p>
                 </div>
               </div>
-              <button onclick="upgradeVillageBuilding('stable')" id="bldg-stable-btn" class="btn-tap px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 cursor-pointer">
+              <button onclick="upgradeVillageBuilding('stable')" id="bldg-stable-btn" class="game-btn game-btn-gold px-3.5 py-1.5 text-xs">
                 2,500 🪙
               </button>
             </div>
 
             <!-- Здание 4: Дозорная Башня -->
-            <div class="hud-card rounded-2xl p-2.5 border border-amber-400/30 flex items-center justify-between bg-stone-900/90 shadow">
-              <div class="flex items-center gap-2.5">
-                <div class="w-11 h-11 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-2xl shadow">🏰</div>
+            <div class="game-card-pro p-3 flex items-center justify-between border-cyan-400/40">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-cyan-500/20 border-2 border-cyan-400/50 flex items-center justify-center text-2xl shadow">🏰</div>
                 <div class="text-left">
                   <div class="flex items-center gap-1.5">
                     <h4 class="text-xs font-black text-white">Дозорная Башня</h4>
-                    <span id="bldg-tower-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-cyan-400 text-stone-950 rounded">Ур. 1/5</span>
+                    <span id="bldg-tower-lvl" class="text-[9px] font-black px-1.5 py-0.2 bg-cyan-400 text-stone-950 rounded-md">Ур. 1/5</span>
                   </div>
                   <p id="bldg-tower-perk" class="text-[10px] text-cyan-300 font-bold">Макс. 3 щита (+1 каждые 8ч)</p>
                   <p id="bldg-tower-next-perk" class="text-[9px] text-stone-400">След: 3 щита (+1 щит)</p>
                 </div>
               </div>
-              <button onclick="upgradeVillageBuilding('tower')" id="bldg-tower-btn" class="btn-tap px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-stone-950 font-black text-xs uppercase shadow active:scale-95 cursor-pointer">
+              <button onclick="upgradeVillageBuilding('tower')" id="bldg-tower-btn" class="game-btn game-btn-cyan px-3.5 py-1.5 text-xs">
                 3,000 🪙
               </button>
             </div>
@@ -550,13 +559,41 @@
 
         <!-- ==================== ТАБ 4: ЛИГА (LEADERBOARD) ==================== -->
         <div id="tab-view-leagues" class="hidden flex flex-col p-3 gap-3 min-h-full">
-          <div onclick="openDivisionsModal()" class="btn-tap hud-card rounded-2xl p-3 border border-amber-400/40 flex items-center justify-between bg-gradient-to-r from-stone-900 to-amber-950/40 shadow cursor-pointer active:scale-95" title="Награды и дивизионы лиги">
+          <div onclick="openDivisionsModal()" class="game-card-pro game-card-gold p-3 flex items-center justify-between cursor-pointer active:scale-95" title="Награды и дивизионы лиги">
             <div>
               <span class="text-[9px] font-black uppercase text-amber-300">Ваш Дивизион</span>
               <h3 class="text-base font-black text-white">⭐ Золотое Ханство</h3>
               <p class="text-[11px] text-stone-300">Топ-3 переходят в Лигу Манаса в конце сезона</p>
             </div>
-            <span class="text-3xl">🏆</span>
+            <span class="text-3xl filter drop-shadow">🏆</span>
+          </div>
+
+          <!-- ТОП-3 КИБЕРСПОРТИВНЫЙ ПОДИУМ -->
+          <div class="leaderboard-podium-wrap">
+            <!-- 2 Место -->
+            <div class="podium-pillar podium-2nd">
+              <span class="text-xl">🥈</span>
+              <span class="text-lg">🐺</span>
+              <span class="text-xs font-black text-white truncate max-w-[80px]">Арстан_Ош</span>
+              <span class="text-[10px] font-black text-amber-300 mt-auto">2,850 🏆</span>
+              <span class="text-[8px] font-bold text-stone-400 uppercase">2 Место</span>
+            </div>
+            <!-- 1 Место (Центр, самое высокое) -->
+            <div class="podium-pillar podium-1st">
+              <span class="text-2xl animate-bounce">👑</span>
+              <span class="text-xl">🦅</span>
+              <span class="text-xs font-black text-amber-200 truncate max-w-[90px]">Манас_Бишкек</span>
+              <span class="text-xs font-black text-amber-300 mt-auto">3,420 🏆</span>
+              <span class="text-[9px] font-black text-amber-400 uppercase tracking-wide">Чемпион</span>
+            </div>
+            <!-- 3 Место -->
+            <div class="podium-pillar podium-3rd">
+              <span class="text-xl">🥉</span>
+              <span class="text-lg">🐯</span>
+              <span class="text-xs font-black text-white truncate max-w-[80px]">Темир_Беркут</span>
+              <span class="text-[10px] font-black text-amber-300 mt-auto">2,610 🏆</span>
+              <span class="text-[8px] font-bold text-stone-400 uppercase">3 Место</span>
+            </div>
           </div>
 
           <div class="flex flex-col gap-1.5">
@@ -580,32 +617,33 @@
           </div>
 
           <!-- Бесплатный ежедневный подарок -->
-          <div onclick="claimDailyReward()" class="btn-tap hud-card rounded-2xl p-3 border-2 border-lime-400 flex items-center justify-between bg-lime-950/20 active:scale-95 shadow cursor-pointer">
-            <div class="flex items-center gap-2.5">
-              <span class="text-3xl">🎁</span>
-              <div class="text-left">
-                <span class="text-[9px] font-black uppercase text-lime-400">Ежедневно</span>
+          <div onclick="claimDailyReward()" class="shop-card-3d border-2 border-lime-400 bg-lime-950/20 w-full flex-row justify-between text-left p-3.5">
+            <div class="flex items-center gap-3">
+              <span class="text-3xl animate-bounce">🎁</span>
+              <div>
+                <span class="text-[9px] font-black uppercase text-lime-400 tracking-wider">Ежедневно</span>
                 <h4 class="text-sm font-black text-white">Бесплатный подарок кочевника</h4>
                 <p class="text-[10px] text-stone-300">+500 🪙 монет и +2 💵 бакса</p>
               </div>
             </div>
-            <span class="px-3 py-1.5 rounded-xl bg-lime-400 text-stone-950 font-black text-xs uppercase">Забрать</span>
+            <button class="game-btn game-btn-green px-3.5 py-1.5 text-xs">Забрать</button>
           </div>
 
           <!-- Сундуки -->
           <div class="grid grid-cols-2 gap-2">
-            <div onclick="buyShopItem('chest_silver')" class="btn-tap hud-card rounded-xl p-3 flex flex-col items-center gap-1 border-amber-400/40 cursor-pointer shadow">
-              <span class="text-2xl">🧰</span>
-              <span class="text-xs font-black text-white">Серебряный Сундук</span>
+            <div onclick="buyShopItem('chest_silver')" class="shop-card-3d">
+              <span class="text-3xl filter drop-shadow">🧰</span>
+              <span class="text-xs font-black text-white mt-1">Серебряный Сундук</span>
               <span class="text-[10px] text-stone-300">Сака + 2,000 🪙</span>
-              <span class="mt-1 px-3 py-1 rounded-lg bg-amber-400 text-stone-950 text-xs font-black">20 💵</span>
+              <button class="game-btn game-btn-stone mt-2 px-3 py-1 text-xs">20 💵</button>
             </div>
 
-            <div onclick="buyShopItem('chest_khan')" class="btn-tap hud-card rounded-xl p-3 flex flex-col items-center gap-1 border-yellow-400/60 bg-amber-500/10 cursor-pointer shadow">
-              <span class="text-2xl">👑</span>
-              <span class="text-xs font-black text-amber-300">Ханский Сундук</span>
+            <div onclick="buyShopItem('chest_khan')" class="shop-card-3d border-amber-400/70 bg-amber-500/10">
+              <span class="badge-ribbon">ХИТ</span>
+              <span class="text-3xl filter drop-shadow">👑</span>
+              <span class="text-xs font-black text-amber-300 mt-1">Ханский Сундук</span>
               <span class="text-[10px] text-stone-300">Легендарный Сака</span>
-              <span class="mt-1 px-3 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 text-xs font-black">50 💵</span>
+              <button class="game-btn game-btn-gold mt-2 px-3 py-1 text-xs">50 💵</button>
             </div>
           </div>
           <!-- Пакеты Монет за Баксы -->
@@ -615,20 +653,21 @@
               <span class="text-[9px] text-stone-400">Мгновенное зачисление</span>
             </div>
             <div class="grid grid-cols-3 gap-2">
-              <div onclick="buyShopCoins(5000, 20)" class="btn-tap hud-card rounded-xl p-2 flex flex-col items-center gap-1 border-amber-500/40 cursor-pointer shadow active:scale-95 bg-stone-900/90">
-                <span class="text-xl">💰</span>
-                <span class="text-[10px] font-black text-white">+5,000 🪙</span>
-                <span class="px-2 py-0.5 rounded-lg bg-emerald-500 text-stone-950 text-[10px] font-black">20 💵</span>
+              <div onclick="buyShopCoins(5000, 20)" class="shop-card-3d p-2">
+                <span class="text-2xl">💰</span>
+                <span class="text-[10px] font-black text-white mt-1">+5,000 🪙</span>
+                <button class="game-btn game-btn-green mt-1 px-2 py-0.5 text-[10px]">20 💵</button>
               </div>
-              <div onclick="buyShopCoins(25000, 80)" class="btn-tap hud-card rounded-xl p-2 flex flex-col items-center gap-1 border-yellow-500/50 cursor-pointer shadow active:scale-95 bg-amber-500/10">
-                <span class="text-xl">🏺</span>
-                <span class="text-[10px] font-black text-amber-300">+25,000 🪙</span>
-                <span class="px-2 py-0.5 rounded-lg bg-emerald-500 text-stone-950 text-[10px] font-black">80 💵</span>
+              <div onclick="buyShopCoins(25000, 80)" class="shop-card-3d p-2 border-yellow-500/50 bg-amber-500/10">
+                <span class="badge-ribbon">ТОП</span>
+                <span class="text-2xl">🏺</span>
+                <span class="text-[10px] font-black text-amber-300 mt-1">+25,000 🪙</span>
+                <button class="game-btn game-btn-green mt-1 px-2 py-0.5 text-[10px]">80 💵</button>
               </div>
-              <div onclick="buyShopCoins(100000, 250)" class="btn-tap hud-card rounded-xl p-2 flex flex-col items-center gap-1 border-yellow-400/70 cursor-pointer shadow active:scale-95 bg-yellow-500/15">
-                <span class="text-xl">👑</span>
-                <span class="text-[10px] font-black text-yellow-300">+100,000 🪙</span>
-                <span class="px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 text-[10px] font-black">250 💵</span>
+              <div onclick="buyShopCoins(100000, 250)" class="shop-card-3d p-2 border-yellow-400/70 bg-yellow-500/15">
+                <span class="text-2xl">👑</span>
+                <span class="text-[10px] font-black text-yellow-300 mt-1">+100,000 🪙</span>
+                <button class="game-btn game-btn-gold mt-1 px-2 py-0.5 text-[10px]">250 💵</button>
               </div>
             </div>
           </div>
@@ -640,7 +679,7 @@
               <span class="text-[9px] text-stone-400">Элитная валюта</span>
             </div>
             <div class="grid grid-cols-2 gap-2">
-              <div onclick="claimFreeDemoBucks()" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border-emerald-500/40 cursor-pointer shadow active:scale-95 bg-emerald-950/20">
+              <div onclick="claimFreeDemoBucks()" class="shop-card-3d p-2.5 flex-row justify-between w-full">
                 <div class="flex items-center gap-2">
                   <span class="text-2xl">🎁</span>
                   <div class="text-left">
@@ -648,9 +687,9 @@
                     <div class="text-xs font-black text-white">+50 💵 Баксов</div>
                   </div>
                 </div>
-                <span class="px-2.5 py-1 rounded-lg bg-emerald-500 text-stone-950 text-[10px] font-black uppercase">Забрать</span>
+                <button class="game-btn game-btn-green px-2.5 py-1 text-[10px]">Забрать</button>
               </div>
-              <div onclick="claimBigBucksPack()" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border-emerald-400/60 cursor-pointer shadow active:scale-95 bg-emerald-950/30">
+              <div onclick="claimBigBucksPack()" class="shop-card-3d p-2.5 flex-row justify-between w-full border-emerald-400/60 bg-emerald-950/30">
                 <div class="flex items-center gap-2">
                   <span class="text-2xl">💎</span>
                   <div class="text-left">
@@ -658,7 +697,7 @@
                     <div class="text-xs font-black text-white">+200 💵 Баксов</div>
                   </div>
                 </div>
-                <span class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-400 to-lime-400 text-stone-950 text-[10px] font-black uppercase">Получить</span>
+                <button class="game-btn game-btn-green px-2.5 py-1 text-[10px]">Получить</button>
               </div>
             </div>
           </div>
@@ -667,26 +706,26 @@
       </main>
 
       <!-- ФИКСИРОВАННЫЙ НИЖНИЙ НАВИГАЦИОННЫЙ БАР (5 ТАБОВ) -->
-      <nav class="z-30 w-full bg-stone-950/95 backdrop-blur-md border-t border-amber-500/30 flex items-center justify-around py-1 px-1 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] shrink-0">
-        <button onclick="switchLobbyTab('play')" id="nav-btn-play" class="btn-tap flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl text-amber-400 font-black bg-amber-500/15 border border-amber-400/40 cursor-pointer">
-          <span class="text-lg">⚔️</span>
-          <span class="text-[10px]">Арена</span>
+      <nav class="game-nav-dock">
+        <button onclick="switchLobbyTab('play')" id="nav-btn-play" class="nav-tab-btn is-active">
+          <span class="nav-tab-icon">⚔️</span>
+          <span class="nav-tab-label">Арена</span>
         </button>
-        <button onclick="switchLobbyTab('village')" id="nav-btn-village" class="btn-tap flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl text-stone-400 font-bold border border-transparent cursor-pointer">
-          <span class="text-lg">⛺</span>
-          <span class="text-[10px]">Моя Орда</span>
+        <button onclick="switchLobbyTab('village')" id="nav-btn-village" class="nav-tab-btn">
+          <span class="nav-tab-icon">⛺</span>
+          <span class="nav-tab-label">Моя Орда</span>
         </button>
-        <button onclick="switchLobbyTab('saka')" id="nav-btn-saka" class="btn-tap flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl text-stone-400 font-bold border border-transparent cursor-pointer">
-          <span class="text-lg">🦴</span>
-          <span class="text-[10px]">Сака</span>
+        <button onclick="switchLobbyTab('saka')" id="nav-btn-saka" class="nav-tab-btn">
+          <span class="nav-tab-icon">🦴</span>
+          <span class="nav-tab-label">Сака</span>
         </button>
-        <button onclick="switchLobbyTab('leagues')" id="nav-btn-leagues" class="btn-tap flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl text-stone-400 font-bold border border-transparent cursor-pointer">
-          <span class="text-lg">🏆</span>
-          <span class="text-[10px]">Лига</span>
+        <button onclick="switchLobbyTab('leagues')" id="nav-btn-leagues" class="nav-tab-btn">
+          <span class="nav-tab-icon">🏆</span>
+          <span class="nav-tab-label">Лига</span>
         </button>
-        <button onclick="switchLobbyTab('shop')" id="nav-btn-shop" class="btn-tap flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl text-stone-400 font-bold border border-transparent cursor-pointer">
-          <span class="text-lg">🛒</span>
-          <span class="text-[10px]">Лавка</span>
+        <button onclick="switchLobbyTab('shop')" id="nav-btn-shop" class="nav-tab-btn">
+          <span class="nav-tab-icon">🛒</span>
+          <span class="nav-tab-label">Лавка</span>
         </button>
       </nav>
 
@@ -758,10 +797,10 @@
     <div id="screen-game" class="hidden absolute inset-0 z-40 flex flex-col justify-between bg-stone-950 select-none">
 
       <!-- Верхний HUD матча -->
-      <div class="flex items-center justify-between p-2 bg-stone-900/95 border-b border-amber-500/30 z-20">
+      <div class="hud-bar-pro flex items-center justify-between p-2 z-20">
         <!-- Игрок -->
-        <div id="player-turn-box" class="flex items-center gap-2 px-2.5 py-1 rounded-xl border-2 border-lime-400 bg-lime-950/40 transition-all">
-          <div class="w-8 h-8 rounded-lg bg-amber-600 flex items-center justify-center text-base">🥷</div>
+        <div id="player-turn-box" class="match-score-capsule match-active-turn transition-all">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-lime-500 to-emerald-700 flex items-center justify-center text-base border border-lime-300 shadow">🥷</div>
           <div>
             <div class="text-[11px] font-black text-white leading-none">Nomad_kg</div>
             <div class="text-xs font-black text-lime-300 mt-0.5">🦴 <span id="score-player">0</span>/<span id="score-target">3</span></div>
@@ -770,18 +809,18 @@
 
         <!-- Центр: Банк арены и статус хода -->
         <div class="flex flex-col items-center">
-          <div id="match-arena-title" class="text-[10px] font-extrabold uppercase text-amber-300">Бишкек Арена</div>
-          <div id="turn-status-badge" class="text-[10px] font-black px-2 py-0.5 rounded bg-lime-400 text-stone-950 mt-0.5">Ваш ход • Тяните Сака</div>
-          <div class="text-[9px] text-stone-400 mt-0.5">Банк: <b id="match-prize-pool" class="text-amber-300">2,000 🪙</b></div>
+          <div id="match-arena-title" class="text-[10px] font-black uppercase text-amber-300 tracking-wider">Бишкек Арена</div>
+          <div id="turn-status-badge" class="game-btn game-btn-green text-[9px] px-2 py-0.5 mt-0.5 cursor-default">Ваш ход • Тяните Сака</div>
+          <div class="text-[9px] text-stone-300 mt-0.5">Банк: <b id="match-prize-pool" class="text-amber-300 font-black">2,000 🪙</b></div>
         </div>
 
         <!-- Соперник -->
-        <div id="bot-turn-box" class="flex items-center gap-2 px-2.5 py-1 rounded-xl border-2 border-transparent bg-stone-800/75 transition-all">
+        <div id="bot-turn-box" class="match-score-capsule border-transparent bg-stone-900/80 transition-all">
           <div class="text-right">
             <div class="text-[11px] font-black text-white leading-none">Bot_Batyr</div>
             <div class="text-xs font-black text-amber-300 mt-0.5"><span id="score-bot">0</span>/<span id="score-target-b">3</span> 🦴</div>
           </div>
-          <div class="w-8 h-8 rounded-lg bg-red-800 flex items-center justify-center text-base">🐺</div>
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-red-600 to-rose-900 flex items-center justify-center text-base border border-rose-400 shadow">🐺</div>
         </div>
       </div>
 
@@ -790,17 +829,17 @@
         <canvas id="ordo-canvas" class="w-full h-full"></canvas>
 
         <!-- Кнопка выхода в левом верхнем углу поля -->
-        <button onclick="leaveMatch()" class="btn-tap absolute top-2.5 left-2.5 z-20 px-2.5 py-1.5 rounded-xl bg-black/70 border border-white/20 text-[10px] font-bold text-stone-200">
+        <button onclick="leaveMatch()" class="game-btn game-btn-stone absolute top-2.5 left-2.5 z-20 px-3 py-1 text-[10px]">
           ✕ Выйти
         </button>
 
         <!-- Подсказка бонусного хода / выбивания -->
-        <div id="match-toast" class="pointer-events-none opacity-0 transition-opacity duration-300 absolute top-12 inset-x-8 z-20 text-center py-1.5 px-3 rounded-xl bg-black/80 border border-amber-400 text-xs font-black text-amber-300">
+        <div id="match-toast" class="pointer-events-none opacity-0 transition-opacity duration-300 absolute top-12 inset-x-8 z-20 text-center py-1.5 px-3 rounded-xl bg-black/85 border border-amber-400 text-xs font-black text-amber-300 shadow-xl">
           Отличный удар! Бонусный ход!
         </div>
 
         <!-- Кнопка Подкрутки (Spin / English) в правом верхнем углу поля -->
-        <button onclick="toggleSpinPopover()" class="btn-tap absolute top-2.5 right-2.5 z-20 w-12 h-12 rounded-2xl hud-card border-2 border-amber-400 flex flex-col items-center justify-center">
+        <button onclick="toggleSpinPopover()" class="game-btn game-btn-stone absolute top-2.5 right-2.5 z-20 w-12 h-12 rounded-2xl flex flex-col items-center justify-center border-amber-400/60">
           <div class="relative w-6 h-6 rounded-full bg-amber-100 border-2 border-amber-900 flex items-center justify-center">
             <div id="spin-mini-dot" class="w-2 h-2 rounded-full bg-red-600 transition-transform"></div>
           </div>
@@ -809,7 +848,7 @@
 
         <!-- Всплывающее окно настройки Подкрутки (Topspin / Backspin / Sidespin) -->
         <div id="spin-popover" class="hidden absolute inset-0 z-30 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div class="hud-card rounded-3xl p-4 w-72 border-2 border-amber-400 text-center flex flex-col items-center">
+          <div class="game-card-pro game-card-gold rounded-3xl p-4 w-72 text-center flex flex-col items-center">
             <h4 class="text-sm font-black uppercase text-amber-300">Точка удара по Сака (Подкрутка)</h4>
             <p class="text-[10px] text-stone-300 mt-0.5 mb-3">Сместите красную точку: верх — накат вперед, низ — оттяжка назад, бока — дуга.</p>
 
@@ -821,51 +860,51 @@
             </div>
 
             <div class="flex gap-2 w-full mt-4">
-              <button onclick="resetSpin()" class="btn-tap flex-1 py-2 rounded-xl bg-stone-800 text-xs font-bold text-stone-300 border border-stone-600">По центру</button>
-              <button onclick="toggleSpinPopover()" class="btn-tap flex-1 py-2 rounded-xl bg-amber-400 text-xs font-black text-stone-950">Готово</button>
+              <button onclick="resetSpin()" class="game-btn game-btn-stone flex-1 py-2 text-xs">По центру</button>
+              <button onclick="toggleSpinPopover()" class="game-btn game-btn-gold flex-1 py-2 text-xs">Готово</button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Нижняя тактическая панель: Стойки и Выбор позиции со всех 360° Ордо -->
-      <div class="p-2.5 bg-stone-900/95 border-t border-amber-500/30 flex flex-col gap-2 z-20">
+      <div class="p-2.5 bg-stone-950/95 border-t-2 border-amber-500/30 flex flex-col gap-2 z-20">
         <!-- 3 Стойки игрока (влияют на 2.5D наклон камеры и физику разлета) -->
-        <div class="flex items-center justify-between gap-1">
-          <button onclick="setStance('standing')" id="stance-standing" class="btn-tap flex-1 py-1.5 px-1 rounded-xl text-[10px] font-black bg-stone-800 border border-stone-600 text-stone-300">
+        <div class="flex items-center justify-between gap-1.5">
+          <button onclick="setStance('standing')" id="stance-standing" class="stance-pill-3d">
             🧍 Стоя
           </button>
-          <button onclick="setStance('half')" id="stance-half" class="btn-tap flex-1 py-1.5 px-1 rounded-xl text-[10px] font-black bg-amber-500 text-stone-950 border border-white">
+          <button onclick="setStance('half')" id="stance-half" class="stance-pill-3d is-active">
             🥋 Полусогнут
           </button>
-          <button onclick="setStance('crouch')" id="stance-crouch" class="btn-tap flex-1 py-1.5 px-1 rounded-xl text-[10px] font-black bg-stone-800 border border-stone-600 text-stone-300">
+          <button onclick="setStance('crouch')" id="stance-crouch" class="stance-pill-3d">
             🧎 Корточки
           </button>
         </div>
 
         <!-- Позиция на чеке Ордо: 360° свободный выбор угла броска -->
-        <div class="flex flex-col gap-1.5 bg-stone-950/80 p-2 rounded-2xl border border-amber-500/25">
+        <div class="flex flex-col gap-1.5 bg-stone-900/90 p-2.5 rounded-2xl border border-amber-500/25 shadow-inner">
           <div class="flex items-center justify-between text-[10px]">
             <span class="font-extrabold text-amber-300 flex items-center gap-1">
               <span>🎯</span> <span>Ордонун чеги (Стойка):</span>
             </span>
-            <span id="saka-angle-badge" class="font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
+            <span id="saka-angle-badge" class="font-black px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1 shadow-sm">
               <span>⬇️</span> <span>90° Түштүк (Юг)</span>
             </span>
           </div>
 
           <!-- Быстрые кардинальные стороны: Юг, Запад, Север, Восток -->
           <div class="grid grid-cols-4 gap-1">
-            <button onclick="setSakaCardinal('south')" id="btn-cardinal-south" class="btn-tap py-1 rounded-lg text-[9px] font-bold bg-amber-500 text-stone-950 border border-white flex items-center justify-center gap-0.5">
+            <button onclick="setSakaCardinal('south')" id="btn-cardinal-south" class="cardinal-btn-3d is-active flex items-center justify-center gap-0.5">
               <span>⬇️</span> <span>Түштүк</span>
             </button>
-            <button onclick="setSakaCardinal('west')" id="btn-cardinal-west" class="btn-tap py-1 rounded-lg text-[9px] font-bold bg-stone-800 text-stone-300 border border-stone-700 flex items-center justify-center gap-0.5">
+            <button onclick="setSakaCardinal('west')" id="btn-cardinal-west" class="cardinal-btn-3d flex items-center justify-center gap-0.5">
               <span>⬅️</span> <span>Батыш</span>
             </button>
-            <button onclick="setSakaCardinal('north')" id="btn-cardinal-north" class="btn-tap py-1 rounded-lg text-[9px] font-bold bg-stone-800 text-stone-300 border border-stone-700 flex items-center justify-center gap-0.5">
+            <button onclick="setSakaCardinal('north')" id="btn-cardinal-north" class="cardinal-btn-3d flex items-center justify-center gap-0.5">
               <span>⬆️</span> <span>Түндүк</span>
             </button>
-            <button onclick="setSakaCardinal('east')" id="btn-cardinal-east" class="btn-tap py-1 rounded-lg text-[9px] font-bold bg-stone-800 text-stone-300 border border-stone-700 flex items-center justify-center gap-0.5">
+            <button onclick="setSakaCardinal('east')" id="btn-cardinal-east" class="cardinal-btn-3d flex items-center justify-center gap-0.5">
               <span>➡️</span> <span>Чыгыш</span>
             </button>
           </div>
@@ -897,13 +936,14 @@
     </div>
 
     <!-- ==================== 6. УНИВЕРСАЛЬНОЕ МОДАЛЬНОЕ ОКНО (Клубы, Pool Pass, Итог матча) ==================== -->
-    <div id="modal-generic" onclick="if(event.target === this) closeGenericModal();" class="hidden absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain">
-      <div class="hud-card w-full max-w-sm rounded-3xl p-5 border-2 border-amber-400 text-center flex flex-col gap-3" onclick="event.stopPropagation();">
-        <div id="modal-icon" class="text-4xl mx-auto">🏆</div>
-        <h3 id="modal-title" class="text-lg font-black uppercase text-amber-300">Раздел</h3>
-        <p id="modal-body" class="text-xs text-stone-200 leading-relaxed"></p>
-        <div id="modal-actions" class="flex gap-2 mt-1">
-          <button onclick="closeGenericModal()" class="btn-tap flex-1 min-h-[44px] py-2.5 rounded-xl bg-amber-400 text-stone-950 font-black uppercase text-xs shadow active:scale-95">Понятно</button>
+    <div id="modal-generic" onclick="if(event.target === this) closeGenericModal();" class="hidden absolute inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overscroll-contain">
+      <div class="game-card-pro game-card-gold w-full max-w-sm rounded-3xl p-6 text-center flex flex-col gap-3 relative overflow-hidden shadow-2xl" onclick="event.stopPropagation();">
+        <div id="modal-sunburst" class="victory-sunburst-bg hidden"></div>
+        <div id="modal-icon" class="text-5xl mx-auto victory-trophy-pop filter drop-shadow">🏆</div>
+        <h3 id="modal-title" class="game-title-gold text-xl font-black">Раздел</h3>
+        <div id="modal-body" class="text-xs text-stone-200 leading-relaxed z-10"></div>
+        <div id="modal-actions" class="flex gap-2 mt-2 z-10">
+          <button onclick="closeGenericModal()" class="game-btn game-btn-gold flex-1 py-3 text-xs">Понятно</button>
         </div>
       </div>
     </div>
@@ -1647,8 +1687,14 @@
       document.getElementById('modal-icon').textContent = icon;
       document.getElementById('modal-title').textContent = title;
       document.getElementById('modal-body').innerHTML = body;
+
+      const sunburst = document.getElementById('modal-sunburst');
+      if (sunburst) {
+        sunburst.classList.toggle('hidden', !(icon === '🏆' || icon === '👑' || title.includes('Победа') || title.includes('Покорение')));
+      }
+
       document.getElementById('modal-actions').innerHTML = actionsHtml || `
-        <button onclick="closeGenericModal()" class="btn-tap flex-1 py-2.5 rounded-xl bg-amber-400 text-stone-950 font-black uppercase text-xs">Закрыть</button>
+        <button onclick="closeGenericModal()" class="game-btn game-btn-gold flex-1 py-3 text-xs">Закрыть</button>
       `;
       document.getElementById('modal-generic').classList.remove('hidden');
     }
@@ -1807,15 +1853,36 @@
         if (view) view.classList.toggle('hidden', t !== tabName);
         if (btn) {
           if (t === tabName) {
-            btn.className = 'btn-tap flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl text-amber-400 font-black bg-amber-500/15 border border-amber-400/40 cursor-pointer shadow';
+            btn.className = 'nav-tab-btn is-active';
           } else {
-            btn.className = 'btn-tap flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl text-stone-400 font-bold border border-transparent cursor-pointer';
+            btn.className = 'nav-tab-btn';
           }
         }
       });
 
       if (tabName === 'saka') {
         renderSakaShowroom();
+      }
+
+      if (tabName === 'village' && window.Chuko3DEngine && window.Chuko3DEngine.village && window.Chuko3DEngine.village.renderer) {
+        setTimeout(() => {
+          const canvas = document.getElementById('ayyl-3d-canvas');
+          if (canvas && canvas.parentElement) {
+            const w = canvas.parentElement.clientWidth || 390;
+            const h = canvas.parentElement.clientHeight || 240;
+            const cam = window.Chuko3DEngine.village.camera;
+            if (cam) {
+              const d = 11;
+              const asp = w / h;
+              cam.left = -d * asp;
+              cam.right = d * asp;
+              cam.top = d;
+              cam.bottom = -d;
+              cam.updateProjectionMatrix();
+            }
+            window.Chuko3DEngine.village.renderer.setSize(w, h);
+          }
+        }, 40);
       }
 
       playBoneSound('hit', 0.6);
@@ -1840,13 +1907,13 @@
         const st = document.getElementById('arena-status-' + i);
         if (card) {
           if (i === index) {
-            card.className = 'btn-tap shrink-0 w-[240px] snap-center p-3 rounded-2xl border-2 border-lime-400 bg-gradient-to-br from-stone-900 via-lime-950/40 to-stone-900 flex flex-col justify-between shadow-xl cursor-pointer';
+            card.className = 'arena-card-pro is-selected shrink-0 w-[240px] snap-center';
             if (st) {
               st.textContent = '✓ Выбрано';
-              st.className = 'text-lime-400 font-bold';
+              st.className = 'text-lime-400 font-black';
             }
           } else {
-            card.className = 'btn-tap shrink-0 w-[240px] snap-center p-3 rounded-2xl border border-stone-700 bg-gradient-to-br from-stone-900 via-amber-950/20 to-stone-900 flex flex-col justify-between shadow-lg cursor-pointer opacity-85';
+            card.className = 'arena-card-pro shrink-0 w-[240px] snap-center opacity-85';
             if (st && st.textContent === '✓ Выбрано') {
               st.textContent = 'Доступно';
               st.className = 'text-stone-400 font-bold';
@@ -1875,7 +1942,9 @@
     function upgradeVillageBuilding(bKey) {
       if (window.MonopolyGoMeta && typeof window.MonopolyGoMeta.upgradeBuilding === 'function') {
         window.MonopolyGoMeta.upgradeBuilding(bKey);
-        return;
+      }
+      if (window.Chuko3DEngine && typeof window.Chuko3DEngine.triggerUpgradeCelebration === 'function') {
+        window.Chuko3DEngine.triggerUpgradeCelebration(bKey);
       }
     }
 
@@ -1899,74 +1968,82 @@
         const baseUpgradeCost = (saka.upgradeCost || 800) * (saka.level || 1);
         const upgradeCost = Math.round(baseUpgradeCost * (1 - discount));
 
+        const tierName = saka.tier || saka.rarity || 'Стандартный Сака';
+        let rarityClass = 'rarity-common';
+        if (tierName.includes('Легендар') || tierName.includes('Эксклюзив')) rarityClass = 'rarity-legendary';
+        else if (tierName.includes('Элит') || tierName.includes('Профи')) rarityClass = 'rarity-epic';
+        else if (tierName.includes('Мастер') || tierName.includes('Стандарт')) rarityClass = 'rarity-rare';
+
         return `
-          <div class="hud-card rounded-2xl p-3 border ` + (isEquipped ? 'border-amber-400 bg-amber-500/10' : 'border-stone-700 bg-stone-900/90') + ` flex flex-col gap-2.5 shadow">
+          <div class="game-card-pro p-3.5 flex flex-col gap-2.5 ${rarityClass} ${isEquipped ? 'ring-2 ring-amber-400' : ''}">
+            <div class="corner-ornament-tl"></div>
+            <div class="corner-ornament-tr"></div>
             <div class="flex justify-between items-start">
-              <div class="flex items-center gap-2">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow border" style="background-color: ` + saka.color + `; border-color: ` + saka.border + `">
+              <div class="flex items-center gap-2.5">
+                <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-2xl shadow-lg border-2" style="background-color: ${saka.color}; border-color: ${saka.border}">
                   🦴
                 </div>
                 <div>
                   <div class="flex items-center gap-1.5">
-                    <h4 class="text-sm font-black text-white">` + saka.name + `</h4>
-                    <span class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded">Ур. ` + saka.level + `</span>
+                    <h4 class="text-sm font-black text-white">${saka.name}</h4>
+                    <span class="text-[9px] font-black px-1.5 py-0.2 bg-amber-400 text-stone-950 rounded-md shadow">Ур. ${saka.level}</span>
                   </div>
-                  <span class="text-[10px] text-stone-400 font-bold">` + saka.tier + `</span>
+                  <span class="text-[10px] text-amber-300 font-extrabold uppercase tracking-wide">${tierName}</span>
                 </div>
               </div>
 
-              ` + (isEquipped 
-                ? '<span class="px-2 py-0.5 rounded-lg bg-lime-400 text-stone-950 text-[10px] font-black uppercase">Экипирован</span>'
-                : `<button onclick="equipSaka('` + saka.id + `')" class="btn-tap px-2.5 py-1 rounded-lg bg-stone-800 text-stone-200 border border-stone-600 text-[10px] font-bold active:scale-95">Выбрать</button>`
-              ) + `
+              ${isEquipped 
+                ? '<span class="px-2.5 py-1 rounded-xl bg-lime-400 text-stone-950 text-[10px] font-black uppercase shadow">Экипирован</span>'
+                : `<button onclick="equipSaka('${saka.id}')" class="game-btn game-btn-stone px-3 py-1 rounded-xl text-[10px] font-black">Выбрать</button>`
+              }
             </div>
 
-            <div class="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] border-t border-white/10 pt-2">
+            <div class="grid grid-cols-2 gap-x-3 gap-y-2 text-[10px] border-t border-white/10 pt-2">
               <div>
                 <div class="flex justify-between text-stone-300 font-bold mb-0.5">
                   <span>💥 Сила (Power):</span>
-                  <span class="text-amber-300 font-black">` + saka.massStat + `</span>
+                  <span class="text-amber-300 font-black">${saka.massStat}</span>
                 </div>
-                <div class="w-full h-1.5 bg-stone-800 rounded-full overflow-hidden">
-                  <div class="h-full bg-amber-400" style="width: ` + saka.massStat + `%"></div>
+                <div class="w-full h-2 bg-stone-950 rounded-full overflow-hidden p-0.5 border border-white/10">
+                  <div class="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full" style="width: ${saka.massStat}%"></div>
                 </div>
               </div>
 
               <div>
                 <div class="flex justify-between text-stone-300 font-bold mb-0.5">
                   <span>🎯 Прицел (Aim):</span>
-                  <span class="text-lime-300 font-black">` + (saka.aimStat || 60) + `</span>
+                  <span class="text-lime-300 font-black">${saka.aimStat || 60}</span>
                 </div>
-                <div class="w-full h-1.5 bg-stone-800 rounded-full overflow-hidden">
-                  <div class="h-full bg-lime-400" style="width: ` + (saka.aimStat || 60) + `%"></div>
+                <div class="w-full h-2 bg-stone-950 rounded-full overflow-hidden p-0.5 border border-white/10">
+                  <div class="h-full bg-gradient-to-r from-lime-500 to-emerald-400 rounded-full" style="width: ${saka.aimStat || 60}%"></div>
                 </div>
               </div>
 
               <div>
                 <div class="flex justify-between text-stone-300 font-bold mb-0.5">
                   <span>⚖️ Масса (Weight):</span>
-                  <span class="text-cyan-300 font-black">` + saka.stabilityStat + `</span>
+                  <span class="text-cyan-300 font-black">${saka.stabilityStat}</span>
                 </div>
-                <div class="w-full h-1.5 bg-stone-800 rounded-full overflow-hidden">
-                  <div class="h-full bg-cyan-400" style="width: ` + saka.stabilityStat + `%"></div>
+                <div class="w-full h-2 bg-stone-950 rounded-full overflow-hidden p-0.5 border border-white/10">
+                  <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-400 rounded-full" style="width: ${saka.stabilityStat}%"></div>
                 </div>
               </div>
 
               <div>
                 <div class="flex justify-between text-stone-300 font-bold mb-0.5">
                   <span>🌀 Спин (Spin):</span>
-                  <span class="text-purple-300 font-black">` + (saka.spinStat || 50) + `</span>
+                  <span class="text-purple-300 font-black">${saka.spinStat || 50}</span>
                 </div>
-                <div class="w-full h-1.5 bg-stone-800 rounded-full overflow-hidden">
-                  <div class="h-full bg-purple-400" style="width: ` + (saka.spinStat || 50) + `%"></div>
+                <div class="w-full h-2 bg-stone-950 rounded-full overflow-hidden p-0.5 border border-white/10">
+                  <div class="h-full bg-gradient-to-r from-purple-500 to-pink-400 rounded-full" style="width: ${saka.spinStat || 50}%"></div>
                 </div>
               </div>
             </div>
 
             <div class="flex justify-between items-center border-t border-white/10 pt-2">
               <span class="text-[10px] text-lime-400 font-bold">+15 к характеристикам</span>
-              <button onclick="upgradeSakaCue('` + saka.id + `')" class="btn-tap px-3 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 text-xs font-black uppercase active:scale-95 shadow cursor-pointer">
-                Улучшить (` + upgradeCost.toLocaleString('ru-RU') + ` 🪙` + (discount > 0 ? ` -` + Math.round(discount * 100) + `% 🔨` : ``) + `)
+              <button onclick="upgradeSakaCue('${saka.id}')" class="game-btn game-btn-gold px-3.5 py-1.5 text-xs">
+                Улучшить (${upgradeCost.toLocaleString('ru-RU')} 🪙${discount > 0 ? ` -${Math.round(discount * 100)}% 🔨` : ''})
               </button>
             </div>
           </div>
@@ -1976,6 +2053,9 @@
 
     function equipSaka(sakaId) {
       state.equippedSakaId = sakaId;
+      if (window.Chuko3DEngine && typeof window.Chuko3DEngine.setHeroSkin === 'function') {
+        window.Chuko3DEngine.setHeroSkin(sakaId);
+      }
       updateHUD();
       renderSakaShowroom();
       showMatchToast('✓ Сака экипирован!');
@@ -3191,23 +3271,23 @@
       container.innerHTML = state.chests.map((ch, idx) => {
         if (ch.status === 'ready') {
           return `
-            <div onclick="openChestSlot(${idx})" class="btn-tap hud-card rounded-xl p-1.5 h-16 flex flex-col items-center justify-between border-2 border-lime-400 bg-lime-950/30 cursor-pointer shadow active:scale-95 transition-all">
-              <span class="text-[8px] font-black text-lime-400 uppercase animate-pulse">Готов!</span>
-              <span class="text-lg">📦</span>
-              <span class="text-[9px] font-black text-stone-950 bg-lime-400 px-1.5 py-0.2 rounded shadow">Открыть</span>
+            <div onclick="openChestSlot(${idx})" class="chest-slot-3d chest-slot-ready">
+              <span class="text-[8px] font-black text-lime-400 uppercase tracking-wider animate-pulse">Готов!</span>
+              <span class="text-xl filter drop-shadow">📦</span>
+              <span class="game-btn game-btn-green text-[8px] px-2 py-0.5 rounded-lg">Открыть</span>
             </div>
           `;
         } else if (ch.status === 'unlocking') {
           return `
-            <div onclick="openChestSlot(${idx})" class="btn-tap hud-card rounded-xl p-1.5 h-16 flex flex-col items-center justify-between border border-amber-500/40 bg-stone-900/90 cursor-pointer shadow active:scale-95 transition-all">
-              <span class="text-[8px] font-bold text-stone-400 truncate w-full text-center">${ch.name}</span>
-              <span class="text-lg">🧰</span>
-              <span class="text-[9px] font-black text-amber-300 font-mono">${formatTimer(ch.timerSec)}</span>
+            <div onclick="openChestSlot(${idx})" class="chest-slot-3d chest-slot-unlocking">
+              <span class="text-[8px] font-bold text-stone-300 truncate w-full text-center">${ch.name}</span>
+              <span class="text-xl filter drop-shadow">🧰</span>
+              <span class="text-[9px] font-black text-amber-300 font-mono bg-black/60 px-1.5 py-0.5 rounded-md border border-amber-400/30">${formatTimer(ch.timerSec)}</span>
             </div>
           `;
         } else {
           return `
-            <div onclick="openChestSlot(${idx})" class="btn-tap hud-card rounded-xl p-1.5 h-16 flex flex-col items-center justify-center border-dashed border-stone-700 opacity-60 cursor-pointer active:scale-95">
+            <div onclick="openChestSlot(${idx})" class="chest-slot-3d chest-slot-empty">
               <span class="text-xs text-stone-400">Пусто</span>
               <span class="text-[8px] text-stone-500 mt-0.5">Слот ${idx + 1}</span>
             </div>
@@ -3636,31 +3716,33 @@
       if (!container) return;
 
       let html = LEADERBOARD_DATA.map(p => `
-        <div onclick="inspectLeaderboardRival('${p.name}', ${p.trophies}, '${p.avatar}', '${p.saka}', ${p.power}, ${p.aim})" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border border-stone-800 bg-stone-900/90 shadow cursor-pointer active:scale-95 transition-all hover:border-amber-400/60">
-          <div class="flex items-center gap-2">
+        <div onclick="inspectLeaderboardRival('${p.name}', ${p.trophies}, '${p.avatar}', '${p.saka}', ${p.power}, ${p.aim})" class="game-card-pro p-2.5 flex items-center justify-between cursor-pointer active:scale-95 transition-all hover:border-amber-400/60">
+          <div class="flex items-center gap-2.5">
             <span class="font-black text-amber-300 text-xs w-5 text-center">${p.medal}</span>
-            <span class="text-base">${p.avatar}</span>
+            <div class="w-8 h-8 rounded-xl bg-stone-800 border border-white/10 flex items-center justify-center text-lg shadow">
+              ${p.avatar}
+            </div>
             <div class="text-left">
               <span class="font-black text-xs text-white">${p.name}</span>
-              <div class="text-[9px] text-stone-400 font-normal">${p.saka}</div>
+              <div class="text-[9px] text-amber-300/80 font-bold">${p.saka}</div>
             </div>
           </div>
           <div class="text-right">
             <div class="font-black text-amber-400 text-xs">${p.trophies.toLocaleString('ru-RU')} 🏆</div>
-            <span class="text-[8px] text-stone-500 uppercase font-bold">Осмотр ➔</span>
+            <span class="text-[8px] text-stone-400 uppercase font-bold">Осмотр ➔</span>
           </div>
         </div>
       `).join('');
 
       // Карточка самого игрока
       html += `
-        <div onclick="openProfileModal()" class="btn-tap hud-card rounded-xl p-2.5 flex items-center justify-between border-2 border-lime-400 bg-lime-950/30 my-1 shadow cursor-pointer active:scale-95">
-          <div class="flex items-center gap-2">
+        <div onclick="openProfileModal()" class="game-card-pro p-2.5 flex items-center justify-between border-2 border-lime-400 bg-lime-950/40 my-1 shadow-lg cursor-pointer active:scale-95">
+          <div class="flex items-center gap-2.5">
             <span class="font-black text-lime-400 text-xs w-5 text-center">14.</span>
-            <span class="text-base">🥷</span>
+            <div class="w-8 h-8 rounded-xl bg-lime-900 border border-lime-400 flex items-center justify-center text-lg shadow">🥷</div>
             <div class="text-left">
               <span class="font-black text-xs text-white">Вы (${state.username})</span>
-              <div class="text-[9px] text-lime-300 font-normal">Ваш дивизион: Золотое Ханство</div>
+              <div class="text-[9px] text-lime-300 font-bold">Ваш дивизион: Золотое Ханство</div>
             </div>
           </div>
           <span class="font-black text-lime-400 text-xs">${state.trophies.toLocaleString('ru-RU')} 🏆</span>
