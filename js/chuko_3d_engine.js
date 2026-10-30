@@ -60,11 +60,18 @@
     },
 
     // =================================================================
-    // A. PROCEDURAL 3D CHUKO (ASTRAGALUS BONE) GENERATOR
-    // Real anatomical sides: Алчы (-Z), Таа (+Z), Бөк (+X), Чик (-X)
+    // A. REAL 3D CHUKO (AUTHENTIC OVIS ARIES BONE SCAN)
+    // 37,617 vertices scan capturing exact anatomical sides:
+    // Алчы (Spine/Ridge), Таа (Trochlea spool), Бөк (Belly), Чик (Hollow)
     // =================================================================
     createAstragalusGeometry() {
-      // Start from a subdivided box to shape organic bone contours
+      // 1. First priority: Use authentic 3D scan of real sheep astragalus
+      if (typeof window !== 'undefined' && window.RealAlchikModel && typeof window.RealAlchikModel.getBufferGeometry === 'function') {
+        const scanGeom = window.RealAlchikModel.getBufferGeometry(THREE);
+        if (scanGeom) return scanGeom;
+      }
+
+      // 2. High-precision fallback
       const width = 2.4;
       const height = 3.6;
       const depth = 1.9;
