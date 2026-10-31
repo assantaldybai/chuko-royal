@@ -1482,12 +1482,45 @@
             window.EthnoAudio.playBoneImpact(intensity);
             return;
           } else if (type === 'out') {
-            window.EthnoAudio.playDobulbas(false);
+            if (typeof window.EthnoAudio.playKnockout === 'function') {
+              window.EthnoAudio.playKnockout(false);
+            } else {
+              window.EthnoAudio.playDobulbas(false);
+            }
             return;
           } else if (type === 'khan_triumph') {
-            window.EthnoAudio.playDobulbas(true);
-            window.EthnoAudio.playTemirKomuz('jackpot');
+            if (typeof window.EthnoAudio.playKnockout === 'function') {
+              window.EthnoAudio.playKnockout(true);
+            } else {
+              window.EthnoAudio.playDobulbas(true);
+              window.EthnoAudio.playTemirKomuz('jackpot');
+            }
             return;
+          } else if (type === 'release' || type === 'shot') {
+            if (typeof window.EthnoAudio.playShotRelease === 'function') {
+              window.EthnoAudio.playShotRelease(intensity);
+              return;
+            }
+          } else if (type === 'click' || type === 'tap') {
+            if (typeof window.EthnoAudio.playUIClick === 'function') {
+              window.EthnoAudio.playUIClick();
+              return;
+            }
+          } else if (type === 'tab') {
+            if (typeof window.EthnoAudio.playUITab === 'function') {
+              window.EthnoAudio.playUITab();
+              return;
+            }
+          } else if (type === 'coins') {
+            if (typeof window.EthnoAudio.playCoins === 'function') {
+              window.EthnoAudio.playCoins();
+              return;
+            }
+          } else if (type === 'win') {
+            if (typeof window.EthnoAudio.playWinJingle === 'function') {
+              window.EthnoAudio.playWinJingle();
+              return;
+            }
           }
         }
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1513,6 +1546,22 @@
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.19);
           osc.start(now);
           osc.stop(now + 0.2);
+        } else if (type === 'click' || type === 'tab') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(650, now);
+          osc.frequency.exponentialRampToValueAtTime(320, now + 0.02);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+          osc.start(now);
+          osc.stop(now + 0.022);
+        } else if (type === 'release' || type === 'shot') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(120, now + 0.05);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.055);
         }
       } catch (e) {}
     }
@@ -1994,7 +2043,7 @@
         }, 40);
       }
 
-      playBoneSound('hit', 0.6);
+      playBoneSound('tab');
       if (window.ChukoHaptics && typeof window.ChukoHaptics.selection === 'function') {
         window.ChukoHaptics.selection();
       }
@@ -2033,7 +2082,7 @@
       state.selectedArena = { index, name, fee, prize, reqTrophies };
       updateLobbyArenaCapsule();
 
-      playBoneSound('hit', 0.8);
+      playBoneSound('click');
       if (window.ChukoHaptics && typeof window.ChukoHaptics.selection === 'function') {
         window.ChukoHaptics.selection();
       }
@@ -2105,7 +2154,7 @@
       if (window.GameIcons && typeof window.GameIcons.renderAll === 'function') {
         window.GameIcons.renderAll(document.getElementById('custom-cat-bone')?.parentElement);
       }
-      playBoneSound('hit', 0.5);
+      playBoneSound('click');
     }
 
     function applyCustomizerOption(cat, itemId) {
@@ -2115,7 +2164,7 @@
 
       applyCustomizerTo3D();
       renderCustomizerUI();
-      playBoneSound('hit', 0.9);
+      playBoneSound('click');
       if (window.ChukoHaptics && typeof window.ChukoHaptics.selection === 'function') {
         window.ChukoHaptics.selection();
       }
@@ -2384,10 +2433,10 @@
       updateHUD();
       updateShopRewardState();
 
-      if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
-        window.EthnoAudio.playTemirKomuz('jackpot');
+      if (window.EthnoAudio && typeof window.EthnoAudio.playCoins === 'function') {
+        window.EthnoAudio.playCoins();
       } else {
-        playBoneSound('out', 1.5);
+        playBoneSound('coins');
       }
       showModal('gift', 'ЕЖЕДНЕВНЫЙ ПОДАРОК КОЧЕВНИКА!', 'Вам начислено: <b class="text-amber-300">+500 монет</b> и <b class="text-emerald-300">+2 бакса</b>!<br>Следующая награда будет доступна завтра!');
     }
@@ -2458,7 +2507,7 @@
         state.bucks -= 20;
         state.coins += 2000;
         updateHUD();
-        playBoneSound('out', 1.3);
+        playBoneSound('coins');
         showModal('chest', 'Серебряный сундук открыт!', 'Вам начислено: <b class="text-amber-300">+2,000 монет</b> и карточки прокачки битков!');
       } else if (itemKey === 'chest_khan') {
         if (state.bucks < 50) {
@@ -2468,7 +2517,7 @@
         state.bucks -= 50;
         state.coins += 6000;
         updateHUD();
-        playBoneSound('out', 1.8);
+        playBoneSound('coins');
         showModal('avatar', 'ХАНСКИЙ СУНДУК ОТКРЫТ!', 'Королевская награда: <b class="text-amber-300">+6,000 монет</b> и легендарные материалы Сака!');
       }
     }
@@ -2980,6 +3029,10 @@
       match.saka.vy = Math.sin(baseAngle) * speed;
       match.knockedThisShot = 0;
       match.phase = 'moving';
+      playBoneSound('release', powerRatio);
+      if (window.ChukoHaptics && typeof window.ChukoHaptics.onRelease === 'function') {
+        window.ChukoHaptics.onRelease(powerRatio);
+      }
       updateTurnUI();
     }
 
@@ -3689,10 +3742,10 @@
         updateHUD();
         renderChestSlots();
 
-        if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
-          window.EthnoAudio.playTemirKomuz('jackpot');
+        if (window.EthnoAudio && typeof window.EthnoAudio.playCoins === 'function') {
+          window.EthnoAudio.playCoins();
         } else {
-          playBoneSound('out', 1.6);
+          playBoneSound('coins');
         }
 
         const coinSvg = window.GameIcons ? window.GameIcons.coin(14) : '';
@@ -4229,10 +4282,10 @@
       state.bucks -= bucksCost;
       state.coins += coinsAmt;
       updateHUD();
-      if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
-        window.EthnoAudio.playTemirKomuz('jackpot');
+      if (window.EthnoAudio && typeof window.EthnoAudio.playCoins === 'function') {
+        window.EthnoAudio.playCoins();
       } else {
-        playBoneSound('out', 1.5);
+        playBoneSound('coins');
       }
       showMatchToast(`Куплено +${coinsAmt.toLocaleString('ru-RU')} монет!`);
     }

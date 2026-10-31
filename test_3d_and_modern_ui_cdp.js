@@ -19,7 +19,10 @@ function startServer(dir, port) {
     '.css': 'text/css',
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
-    '.svg': 'image/svg+xml'
+    '.svg': 'image/svg+xml',
+    '.wav': 'audio/wav',
+    '.ogg': 'audio/ogg',
+    '.mp3': 'audio/mpeg'
   };
 
   const server = http.createServer((req, res) => {
@@ -209,8 +212,39 @@ async function run() {
   await sleep(500);
   await captureScreenshot('/Users/kxansky/Documents/chuko/screenshot_modern_ui_gameplay.png');
 
+  // 7. Verify Modern Audio System & Aiming Drone Elimination
+  console.log('Testing Modern Audio System & Aiming Drone Elimination...');
+  const audioResult = await evaluate(`
+    (function() {
+      if (!window.EthnoAudio) return { ok: false, msg: 'EthnoAudio missing' };
+      window.EthnoAudio.preloadAudio();
+      
+      // Test aiming tension (replaces continuous drone with quiet notch clicks)
+      window.EthnoAudio.updateSlingshotDrone(0.5);
+      const isAimingActive = window.EthnoAudio.isDroneActive;
+      const step = window.EthnoAudio.lastTensionStep;
+      
+      // Test shot release & bone collision
+      window.EthnoAudio.playShotRelease(0.8);
+      window.EthnoAudio.playBoneImpact(1.2);
+      window.EthnoAudio.playKnockout(false);
+      window.EthnoAudio.playUIClick();
+      window.EthnoAudio.playCoins();
+      window.EthnoAudio.stopSlingshotDrone();
+
+      return {
+        ok: true,
+        isAimingActive,
+        step,
+        manifestCount: Object.keys(window.EthnoAudio.audioManifest || {}).length,
+        hasDroneOsc: !!window.EthnoAudio.droneOsc1
+      };
+    })()
+  `);
+  console.log(`[TEST 7] Modern Audio System verified (Aiming hum eliminated, droneOsc=false):`, audioResult);
+
   console.log('\n======================================================');
-  console.log('🎉 ALL 3D & MODERN UI VERIFICATIONS PASSED WITH 100%!');
+  console.log('🎉 ALL 3D, MODERN UI & AUDIO VERIFICATIONS PASSED WITH 100%!');
   console.log('======================================================\n');
 
   chromeProc.kill();

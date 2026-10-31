@@ -9,19 +9,31 @@
   'use strict';
 
   // ============================================================
-  // 1. PROCEDURAL WEB AUDIO API SYNTHESIZER (ZERO EXTERNAL MP3 ASSETS)
+  // 1. DUAL-ENGINE GAME AUDIO SYSTEM (ZERO-LATENCY ACCELERATED SAMPLES + TACTILE SYNTHESIS)
   // ============================================================
   const EthnoAudio = {
     ctx: null,
     noiseBuffer: null,
-    droneOsc1: null,
-    droneOsc2: null,
-    droneGain: null,
-    droneFilter: null,
-    droneLFO: null,
-    droneLFOGain: null,
+    audioBuffers: {},
+    isPreloading: false,
     isDroneActive: false,
     isMuted: false,
+    lastTensionStep: -1,
+
+    // High quality audio manifest (WAV uncompressed for zero-latency instant playback)
+    audioManifest: {
+      bone_collide: 'audio/bone_collide.wav',
+      bone_clack: 'audio/bone_clack.wav',
+      bone_toss: 'audio/bone_toss.wav',
+      bone_bounce: 'audio/bone_bounce.wav',
+      shot_release: 'audio/shot_release.wav',
+      knockout: 'audio/knockout.wav',
+      ui_click: 'audio/ui_click.wav',
+      ui_tab: 'audio/ui_tab.wav',
+      ui_notch: 'audio/ui_notch.wav',
+      coins: 'audio/coins.wav',
+      win_jingle: 'audio/win_jingle.wav'
+    },
 
     /**
      * Initializes or resumes the AudioContext with user-gesture unlock.
@@ -35,18 +47,79 @@
           ? (window.AudioContext || window.webkitAudioContext)
           : null;
         if (AudioContextClass) {
-          this.ctx = new AudioContextClass();
+          try {
+            this.ctx = new AudioContextClass();
+          } catch (_) {}
         }
       }
       if (this.ctx && this.ctx.state === 'suspended') {
         this.ctx.resume().catch(() => {});
       }
+      if (this.ctx && !this.isPreloading && Object.keys(this.audioBuffers).length === 0) {
+        this.preloadAudio();
+      }
       return this.ctx;
     },
 
     /**
-     * Pre-generates a 1-second normalized white noise buffer for bandpass transients.
+     * Preloads recorded audio samples into memory for instant zero-latency playback.
      */
+    preloadAudio() {
+      if (this.isPreloading || typeof fetch !== 'function') return;
+      this.isPreloading = true;
+      const ctx = this.ctx;
+      if (!ctx) return;
+
+      Object.entries(this.audioManifest).forEach(([key, url]) => {
+        fetch(url)
+          .then(res => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.arrayBuffer();
+          })
+          .then(arrayBuffer => ctx.decodeAudioData(arrayBuffer))
+          .then(audioBuffer => {
+            this.audioBuffers[key] = audioBuffer;
+          })
+          .catch(() => {
+            // Quietly fallback to procedural synthesis if fetch/decode unavailable
+          });
+      });
+    },
+
+    /**
+     * Plays a preloaded audio sample with optional volume, pitch variation and playback rate.
+     */
+    playSample(key, { volume = 1.0, playbackRate = 1.0, pitchVariation = 0 } = {}) {
+      try {
+        if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return false;
+        const ctx = this.getContext();
+        if (!ctx) return false;
+        const buf = this.audioBuffers[key];
+        if (!buf) return false;
+
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+
+        let rate = playbackRate;
+        if (pitchVariation > 0) {
+          rate *= (1.0 + (Math.random() * 2 - 1) * pitchVariation);
+        }
+        src.playbackRate.setValueAtTime(rate, ctx.currentTime);
+
+        const gainNode = ctx.createGain();
+        const safeVol = Math.max(0.001, Math.min(2.0, volume));
+        gainNode.gain.setValueAtTime(safeVol, ctx.currentTime);
+
+        src.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        src.start(ctx.currentTime);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+
     getNoiseBuffer() {
       const ctx = this.getContext();
       if (!ctx) return null;
@@ -64,76 +137,94 @@
 
     /**
      * 1. AUTHENTIC BONE COLLISION SOUND:
-     * Crisp dry acoustic knucklebone clack (high-frequency bandpass click at 2.6kHz + 
-     * hollow bone resonance at 850Hz + subtle felt table absorption). Zero muddy 808 synth drop.
-     * @param {number} velocity Impact velocity or normalized intensity (0.1 to 2.5)
+     * Plays authentic recorded solid bone/billiard impact.
+     * High-speed collisions layer a crisp knuckle clatter.
+     * Procedural fallback for offline / test environments.
      */
     playBoneImpact(velocity = 1.0) {
       try {
         if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return;
-        const ctx = this.getContext();
-        if (!ctx) return;
-        const now = ctx.currentTime;
         const clampedVel = Math.max(0.15, Math.min(2.5, velocity));
+        const vol = Math.min(1.0, 0.25 + clampedVel * 0.45);
 
-        // --- COMPONENT A: High-Frequency Bandpass White Noise Click (2.6kHz, 12ms) ---
-        const noiseBuf = this.getNoiseBuffer();
-        if (noiseBuf) {
-          const noiseSrc = ctx.createBufferSource();
-          noiseSrc.buffer = noiseBuf;
+        const played = this.playSample('bone_collide', {
+          volume: vol,
+          playbackRate: 0.96 + Math.random() * 0.08,
+          pitchVariation: 0.05
+        });
 
-          const bandpass = ctx.createBiquadFilter();
-          bandpass.type = 'bandpass';
-          bandpass.frequency.setValueAtTime(2600, now);
-          bandpass.Q.setValueAtTime(3.2, now);
-
-          const noiseGain = ctx.createGain();
-          const noiseVol = Math.min(0.65, 0.32 * clampedVel);
-          noiseGain.gain.setValueAtTime(noiseVol, now);
-          noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.014); // 14ms crisp decay
-
-          noiseSrc.connect(bandpass);
-          bandpass.connect(noiseGain);
-          noiseGain.connect(ctx.destination);
-
-          noiseSrc.start(now);
-          noiseSrc.stop(now + 0.016);
+        if (clampedVel > 1.1) {
+          this.playSample('bone_clack', {
+            volume: vol * 0.6,
+            playbackRate: 1.0 + Math.random() * 0.15
+          });
         }
 
-        // --- COMPONENT B: Acoustic Knucklebone Body Resonance (850Hz -> 380Hz, 24ms) ---
-        const osc = ctx.createOscillator();
-        const oscGain = ctx.createGain();
-
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(850, now);
-        osc.frequency.exponentialRampToValueAtTime(380, now + 0.024);
-
-        const oscVol = Math.min(0.45, 0.22 * Math.sqrt(clampedVel));
-        oscGain.gain.setValueAtTime(oscVol, now);
-        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
-
-        osc.connect(oscGain);
-        oscGain.connect(ctx.destination);
-
-        osc.start(now);
-        osc.stop(now + 0.028);
-      } catch (e) {
-        // AudioContext disabled or blocked
-      }
+        if (!played) {
+          this._playProceduralBoneImpact(clampedVel);
+        }
+      } catch (e) {}
     },
 
-    /**
-     * 2. «ДОБУЛБАС» (KYRGYZ WAR DRUM):
-     * Deep resonant low-frequency percussion upon match victory or Khan knockout.
-     * Uses punch transient + deep leather cavity resonance (120Hz -> 42Hz) with warm decay.
-     * @param {boolean} isVictory If true, plays a 3-strike ceremonial military cadence.
-     */
-    playDobulbas(isVictory = false) {
+    _playProceduralBoneImpact(clampedVel) {
       try {
         const ctx = this.getContext();
         if (!ctx) return;
         const now = ctx.currentTime;
+        const noiseBuf = this.getNoiseBuffer();
+        if (noiseBuf) {
+          const noiseSrc = ctx.createBufferSource();
+          noiseSrc.buffer = noiseBuf;
+          const bandpass = ctx.createBiquadFilter();
+          bandpass.type = 'bandpass';
+          bandpass.frequency.setValueAtTime(2600, now);
+          bandpass.Q.setValueAtTime(3.2, now);
+          const noiseGain = ctx.createGain();
+          const noiseVol = Math.min(0.65, 0.32 * clampedVel);
+          noiseGain.gain.setValueAtTime(noiseVol, now);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.014);
+          noiseSrc.connect(bandpass);
+          bandpass.connect(noiseGain);
+          noiseGain.connect(ctx.destination);
+          noiseSrc.start(now);
+          noiseSrc.stop(now + 0.016);
+        }
+        const osc = ctx.createOscillator();
+        const oscGain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(850, now);
+        osc.frequency.exponentialRampToValueAtTime(380, now + 0.024);
+        const oscVol = Math.min(0.45, 0.22 * Math.sqrt(clampedVel));
+        oscGain.gain.setValueAtTime(oscVol, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+        osc.connect(oscGain);
+        oscGain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.028);
+      } catch (e) {}
+    },
 
+    /**
+     * 2. «ДОБУЛБАС» (KYRGYZ WAR DRUM / CELEBRATION / KNOCKOUT):
+     */
+    playDobulbas(isVictory = false) {
+      try {
+        if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return;
+        if (isVictory) {
+          const played = this.playSample('win_jingle', { volume: 0.9 });
+          if (!played) this._playProceduralDobulbas(true);
+        } else {
+          const played = this.playSample('knockout', { volume: 0.85 });
+          if (!played) this._playProceduralDobulbas(false);
+        }
+      } catch (e) {}
+    },
+
+    _playProceduralDobulbas(isVictory = false) {
+      try {
+        const ctx = this.getContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
         const strikes = isVictory
           ? [
               { offset: 0, pitchMult: 1.0, vol: 0.8 },
@@ -144,8 +235,6 @@
 
         strikes.forEach(({ offset, pitchMult, vol }) => {
           const strikeTime = now + offset;
-
-          // 1. Initial beater mallet punch (short 20ms pitch plunge)
           const punchOsc = ctx.createOscillator();
           const punchGain = ctx.createGain();
           punchOsc.type = 'triangle';
@@ -158,26 +247,20 @@
           punchOsc.start(strikeTime);
           punchOsc.stop(strikeTime + 0.035);
 
-          // 2. Deep resonant Dobulbas membrane body (sine wave 125Hz -> 42Hz with 1.3s decay)
           const bodyOsc = ctx.createOscillator();
           const bodyGain = ctx.createGain();
           const filter = ctx.createBiquadFilter();
-
           filter.type = 'lowpass';
           filter.frequency.setValueAtTime(260, strikeTime);
           filter.Q.setValueAtTime(2.4, strikeTime);
-
           bodyOsc.type = 'sine';
           bodyOsc.frequency.setValueAtTime(125 * pitchMult, strikeTime);
           bodyOsc.frequency.exponentialRampToValueAtTime(42 * pitchMult, strikeTime + 1.25);
-
           bodyGain.gain.setValueAtTime(vol * 0.9, strikeTime);
           bodyGain.gain.exponentialRampToValueAtTime(0.001, strikeTime + 1.3);
-
           bodyOsc.connect(filter);
           filter.connect(bodyGain);
           bodyGain.connect(ctx.destination);
-
           bodyOsc.start(strikeTime);
           bodyOsc.stop(strikeTime + 1.35);
         });
@@ -185,55 +268,44 @@
     },
 
     /**
-     * 3. «ТЕМИР-КОМУЗ» (KYRGYZ JAW HARP / VARGAN):
-     * Harmonic frequency-modulated twang for jackpots, critical strikes, and daily rewards.
-     * Carrier fundamental ~98Hz + 4x overtone modulator + dynamic formant mouth cavity sweep (700Hz -> 1800Hz -> 850Hz).
-     * @param {'pluck'|'jackpot'|'critical'|'fanfare'} style
+     * 3. «ТЕМИР-КОМУЗ» (KYRGYZ JAW HARP / VARGAN / COINS / JACKPOT):
      */
     playTemirKomuz(style = 'jackpot') {
+      try {
+        if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return;
+        const played = this.playSample('coins', { volume: 0.85 });
+        if (!played) {
+          this._playProceduralTemirKomuz(style);
+        }
+      } catch (e) {}
+    },
+
+    _playProceduralTemirKomuz(style = 'jackpot') {
       try {
         const ctx = this.getContext();
         if (!ctx) return;
         const now = ctx.currentTime;
-
-        let notes;
-        if (style === 'jackpot' || style === 'fanfare') {
-          // Melodic 3-note ascending overtone twangs: G2 (98Hz), C3 (130.8Hz), E3 (164.8Hz)
-          notes = [
-            { f0: 98, offset: 0, dur: 0.35, vol: 0.38 },
-            { f0: 130.8, offset: 0.13, dur: 0.35, vol: 0.42 },
-            { f0: 164.8, offset: 0.28, dur: 0.55, vol: 0.48 }
-          ];
-        } else if (style === 'critical') {
-          // Rapid double bite twang
-          notes = [
-            { f0: 110, offset: 0, dur: 0.25, vol: 0.4 },
-            { f0: 146.8, offset: 0.09, dur: 0.45, vol: 0.5 }
-          ];
-        } else {
-          // Single authentic pluck
-          notes = [{ f0: 104, offset: 0, dur: 0.45, vol: 0.45 }];
-        }
+        let notes = (style === 'jackpot' || style === 'fanfare')
+          ? [
+              { f0: 98, offset: 0, dur: 0.35, vol: 0.38 },
+              { f0: 130.8, offset: 0.13, dur: 0.35, vol: 0.42 },
+              { f0: 164.8, offset: 0.28, dur: 0.55, vol: 0.48 }
+            ]
+          : [{ f0: 104, offset: 0, dur: 0.45, vol: 0.45 }];
 
         notes.forEach(({ f0, offset, dur, vol }) => {
           const t = now + offset;
-
-          // Carrier: tongue reed vibration
           const carrier = ctx.createOscillator();
           carrier.type = 'sawtooth';
           carrier.frequency.setValueAtTime(f0, t);
-
-          // Modulator: harmonic overtone frequency modulation (FM index)
           const mod = ctx.createOscillator();
           const modGain = ctx.createGain();
           mod.type = 'sine';
-          mod.frequency.setValueAtTime(f0 * 4, t); // 4th harmonic
+          mod.frequency.setValueAtTime(f0 * 4, t);
           modGain.gain.setValueAtTime(280, t);
           modGain.gain.exponentialRampToValueAtTime(25, t + dur * 0.7);
-
           mod.connect(carrier.frequency);
 
-          // Formant Filter: simulates changing oral cavity acoustics ("А-О-У")
           const formant = ctx.createBiquadFilter();
           formant.type = 'bandpass';
           formant.Q.setValueAtTime(5.2, t);
@@ -241,10 +313,9 @@
           formant.frequency.exponentialRampToValueAtTime(1850, t + dur * 0.35);
           formant.frequency.exponentialRampToValueAtTime(850, t + dur);
 
-          // Pluck Gain envelope: metallic sharp attack + ringing decay
           const mainGain = ctx.createGain();
           mainGain.gain.setValueAtTime(0.001, t);
-          mainGain.gain.exponentialRampToValueAtTime(vol, t + 0.004); // 4ms attack
+          mainGain.gain.exponentialRampToValueAtTime(vol, t + 0.004);
           mainGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
 
           carrier.connect(formant);
@@ -260,94 +331,174 @@
     },
 
     /**
-     * 4. SLINGSHOT TENSION RISER MICRO-DRONE:
-     * Rising pitch micro-drone while dragging Saka backwards.
-     * Frequency ramps from 110Hz to 420Hz, filter opens 250Hz -> 1300Hz as powerRatio goes 0 to 1.
+     * 4. TACTILE AIMING TENSION (NO HORRID SYNTH DRONE!):
+     * Completely eliminates the deafening continuous 110Hz-420Hz buzzing drone!
+     * Instead, plays polite, subtle tactile notch clicks as power crosses tension thresholds (20%, 40%, 60%, 80%, 100%).
+     * Holding the aim is completely quiet so the player has total concentration and comfort.
      * @param {number} powerRatio 0.0 to 1.0 pull tension
      */
     updateSlingshotDrone(powerRatio) {
       try {
+        if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return;
+        this.isDroneActive = true;
+        const p = Math.max(0, Math.min(1, powerRatio));
+
+        // 5 distinct tension notches: 1 (20%), 2 (40%), 3 (60%), 4 (80%), 5 (100% max)
+        const step = Math.min(5, Math.floor(p * 5.2));
+
+        if (step !== this.lastTensionStep && step > 0) {
+          this.lastTensionStep = step;
+          const pitch = 0.88 + step * 0.08;
+          const vol = 0.16 + step * 0.04; // Very quiet, pleasant click
+          const played = this.playSample('ui_notch', {
+            volume: vol,
+            playbackRate: pitch
+          });
+          if (!played) {
+            this._playProceduralNotch(step);
+          }
+        }
+      } catch (e) {}
+    },
+
+    _playProceduralNotch(step) {
+      try {
         const ctx = this.getContext();
         if (!ctx) return;
         const now = ctx.currentTime;
-        const p = Math.max(0, Math.min(1, powerRatio));
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400 + step * 70, now);
+        osc.frequency.exponentialRampToValueAtTime(160, now + 0.016);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.016);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.018);
+      } catch (e) {}
+    },
 
-        if (!this.isDroneActive) {
-          // Start drone voice
-          this.droneOsc1 = ctx.createOscillator();
-          this.droneOsc2 = ctx.createOscillator();
-          this.droneFilter = ctx.createBiquadFilter();
-          this.droneGain = ctx.createGain();
+    /**
+     * Smoothly stops aiming and resets tension notch tracker.
+     */
+    stopSlingshotDrone() {
+      this.isDroneActive = false;
+      this.lastTensionStep = -1;
+    },
 
-          this.droneOsc1.type = 'triangle';
-          this.droneOsc2.type = 'sawtooth';
-
-          this.droneFilter.type = 'lowpass';
-          this.droneFilter.Q.setValueAtTime(3.0, now);
-
-          this.droneGain.gain.setValueAtTime(0.001, now);
-
-          // LFO for subtle tension tremolo
-          this.droneLFO = ctx.createOscillator();
-          this.droneLFOGain = ctx.createGain();
-          this.droneLFO.type = 'sine';
-          this.droneLFO.frequency.setValueAtTime(7.5, now); // 7.5 Hz micro-drone
-          this.droneLFOGain.gain.setValueAtTime(0.04, now);
-          this.droneLFO.connect(this.droneGain.gain);
-
-          this.droneOsc1.connect(this.droneFilter);
-          this.droneOsc2.connect(this.droneFilter);
-          this.droneFilter.connect(this.droneGain);
-          this.droneGain.connect(ctx.destination);
-
-          this.droneOsc1.start(now);
-          this.droneOsc2.start(now);
-          this.droneLFO.start(now);
-          this.isDroneActive = true;
+    /**
+     * 5. SAKA SHOT RELEASE SNAP / STRIKE:
+     * High velocity cue/slingshot release snap upon firing the Saka.
+     */
+    playShotRelease(powerRatio = 1.0) {
+      try {
+        if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return;
+        const p = Math.max(0.2, Math.min(1.0, powerRatio));
+        const played = this.playSample('shot_release', {
+          volume: Math.min(1.0, 0.45 + p * 0.55),
+          playbackRate: 0.95 + p * 0.1,
+          pitchVariation: 0.04
+        });
+        if (!played) {
+          this._playProceduralShotRelease(p);
         }
+      } catch (e) {}
+    },
 
-        if (this.isDroneActive && this.droneOsc1 && this.droneGain) {
-          const targetFreq = 110 + Math.pow(p, 1.8) * 310; // 110Hz -> 420Hz
-          this.droneOsc1.frequency.setTargetAtTime(targetFreq, now, 0.03);
-          this.droneOsc2.frequency.setTargetAtTime(targetFreq * 1.012, now, 0.03); // slight detune
-
-          const targetCutoff = 240 + Math.pow(p, 1.5) * 1100; // 240Hz -> 1340Hz
-          this.droneFilter.frequency.setTargetAtTime(targetCutoff, now, 0.03);
-
-          const targetVol = p >= 0.12 ? Math.min(0.22, 0.04 + p * 0.18) : 0.001;
-          this.droneGain.gain.setTargetAtTime(targetVol, now, 0.02);
+    _playProceduralShotRelease(p = 1.0) {
+      try {
+        const ctx = this.getContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const buf = this.getNoiseBuffer();
+        if (buf) {
+          const src = ctx.createBufferSource();
+          src.buffer = buf;
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(1400 + p * 600, now);
+          filter.frequency.exponentialRampToValueAtTime(280, now + 0.065);
+          filter.Q.setValueAtTime(2.4, now);
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0.28 * p, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
+          src.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          src.start(now);
+          src.stop(now + 0.07);
         }
       } catch (e) {}
     },
 
     /**
-     * Smoothly stops and releases the slingshot micro-drone.
+     * 6. KNOCKOUT SOUND (OUT OF ORDO CIRCLE):
      */
-    stopSlingshotDrone() {
-      if (!this.isDroneActive) return;
+    playKnockout(isKhan = false) {
+      try {
+        if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return;
+        this.playSample('knockout', {
+          volume: isKhan ? 1.0 : 0.85,
+          playbackRate: isKhan ? 0.92 : 1.05
+        });
+        if (isKhan) {
+          setTimeout(() => this.playSample('win_jingle', { volume: 0.85 }), 120);
+        }
+      } catch (e) {}
+    },
+
+    /**
+     * 7. UI & BUTTON SOUNDS:
+     */
+    playUIClick() {
+      try {
+        if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return;
+        const played = this.playSample('ui_click', { volume: 0.55, pitchVariation: 0.06 });
+        if (!played) this._playProceduralUIClick();
+      } catch (e) {}
+    },
+
+    playUITab() {
+      try {
+        if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return;
+        const played = this.playSample('ui_tab', { volume: 0.5 });
+        if (!played) this._playProceduralUIClick();
+      } catch (e) {}
+    },
+
+    _playProceduralUIClick() {
       try {
         const ctx = this.getContext();
-        const now = ctx ? ctx.currentTime : 0;
-        if (this.droneGain && ctx) {
-          this.droneGain.gain.setTargetAtTime(0.0001, now, 0.025);
-        }
-        setTimeout(() => {
-          try {
-            if (this.droneOsc1) { this.droneOsc1.stop(); this.droneOsc1.disconnect(); }
-            if (this.droneOsc2) { this.droneOsc2.stop(); this.droneOsc2.disconnect(); }
-            if (this.droneLFO) { this.droneLFO.stop(); this.droneLFO.disconnect(); }
-            if (this.droneGain) { this.droneGain.disconnect(); }
-          } catch (e) {}
-          this.droneOsc1 = null;
-          this.droneOsc2 = null;
-          this.droneLFO = null;
-          this.droneFilter = null;
-          this.droneGain = null;
-          this.isDroneActive = false;
-        }, 60);
-      } catch (e) {
-        this.isDroneActive = false;
-      }
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(400, now + 0.02);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.022);
+      } catch (e) {}
+    },
+
+    playCoins() {
+      try {
+        if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return;
+        this.playSample('coins', { volume: 0.85 });
+      } catch (e) {}
+    },
+
+    playWinJingle() {
+      try {
+        if (this.isMuted || (typeof window !== 'undefined' && window.isAudioMuted)) return;
+        this.playSample('win_jingle', { volume: 0.9 });
+      } catch (e) {}
     }
   };
 
