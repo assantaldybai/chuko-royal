@@ -627,17 +627,17 @@
             <span class="text-xs text-stone-400">Обновление через 14ч</span>
           </div>
 
-          <!-- Бесплатный ежедневный подарок -->
-          <div onclick="claimDailyReward()" class="shop-card-3d border-2 border-lime-400 bg-lime-950/20 w-full flex-row justify-between text-left p-3.5">
+          <!-- Бесплатный ежедневный подарок с защитой от накрутки -->
+          <div onclick="claimDailyReward()" id="shop-daily-gift-card" class="shop-card-3d border-2 border-lime-400 bg-lime-950/20 w-full flex-row justify-between text-left p-3.5 cursor-pointer">
             <div class="flex items-center gap-3">
               <span data-game-icon="gift:28"></span>
               <div>
-                <span class="text-[9px] font-black uppercase text-lime-400 tracking-wider">Ежедневно</span>
+                <span class="text-[9px] font-black uppercase text-lime-400 tracking-wider">Ежедневно (раз в 24ч)</span>
                 <h4 class="text-sm font-black text-white">Бесплатный подарок кочевника</h4>
-                <p class="text-[10px] text-stone-300 flex items-center gap-1">+500 <span data-game-icon="coin:11"></span> монет и +2 <span data-game-icon="buck:11"></span> бакса</p>
+                <p id="shop-daily-gift-desc" class="text-[10px] text-stone-300 flex items-center gap-1">+500 <span data-game-icon="coin:11"></span> монет и +2 <span data-game-icon="buck:11"></span> бакса</p>
               </div>
             </div>
-            <button class="game-btn game-btn-green px-3.5 py-1.5 text-xs">Забрать</button>
+            <button id="shop-daily-gift-btn" class="game-btn game-btn-green px-3.5 py-1.5 text-xs">Забрать</button>
           </div>
 
           <!-- Сундуки -->
@@ -690,17 +690,17 @@
               <span class="text-[9px] text-stone-400">Элитная валюта</span>
             </div>
             <div class="grid grid-cols-2 gap-2">
-              <div onclick="claimFreeDemoBucks()" class="shop-card-3d p-2.5 flex-row justify-between w-full">
+              <div onclick="claimFreeDemoBucks()" id="shop-starter-bucks-card" class="shop-card-3d p-2.5 flex-row justify-between w-full cursor-pointer">
                 <div class="flex items-center gap-2">
                   <span data-game-icon="gift:22"></span>
                   <div class="text-left">
-                    <span class="text-[8px] font-black text-emerald-400 uppercase">Бесплатно</span>
+                    <span class="text-[8px] font-black text-emerald-400 uppercase">Стартовый набор</span>
                     <div class="text-xs font-black text-white flex items-center gap-1">+50 <span data-game-icon="buck:11"></span> Баксов</div>
                   </div>
                 </div>
-                <button class="game-btn game-btn-green px-2.5 py-1 text-[10px]">Забрать</button>
+                <button id="shop-starter-bucks-btn" class="game-btn game-btn-green px-2.5 py-1 text-[10px]">Забрать</button>
               </div>
-              <div onclick="claimBigBucksPack()" class="shop-card-3d p-2.5 flex-row justify-between w-full border-emerald-400/60 bg-emerald-950/30">
+              <div onclick="claimBigBucksPack()" id="shop-vip-bucks-card" class="shop-card-3d p-2.5 flex-row justify-between w-full border-emerald-400/60 bg-emerald-950/30 cursor-pointer">
                 <div class="flex items-center gap-2">
                   <span data-game-icon="gem:22"></span>
                   <div class="text-left">
@@ -708,7 +708,7 @@
                     <div class="text-xs font-black text-white flex items-center gap-1">+200 <span data-game-icon="buck:11"></span> Баксов</div>
                   </div>
                 </div>
-                <button class="game-btn game-btn-green px-2.5 py-1 text-[10px]">Получить</button>
+                <button id="shop-vip-bucks-btn" class="game-btn game-btn-green px-2.5 py-1 text-[10px]">Получить</button>
               </div>
             </div>
           </div>
@@ -1854,34 +1854,7 @@
       showModal('trophy', 'Мировой Рейтинг Ордо', html);
     }
 
-    function claimFreeGift() {
-      if (sbClient && currentUser) {
-        sbClient.rpc('claim_daily_bonus').then(({ data, error }) => {
-          if (error) {
-            showModal('⏰', 'Уже получено', error.message);
-          } else if (data) {
-            state.coins = Number(data.new_coins);
-            updateHUD();
-            showModal('gift', 'Бесплатный подарок!', `Вам начислено <b>+${data.bonus} монет</b> ежедневного бонуса!`);
-          }
-        }).catch(() => {});
-      } else {
-        state.coins += 500;
-        document.getElementById('gift-badge').classList.add('hidden');
-        updateHUD();
-        showModal('gift', 'Бесплатный подарок!', 'Вам начислено <b>+500 монет</b> ежедневного бонуса!');
-      }
-    }
-
-    function openChestSlot(idx) {
-      if (idx === 0) {
-        state.coins += 750;
-        updateHUD();
-        showModal('chest', 'Сундук открыт!', 'Награда из сундука: <b>+750 монет</b> и 4 карточки прокачки «Ханский Свинец»!');
-      } else {
-        showModal('chest', 'Сундук открывается', 'До открытия осталось дождаться таймера или ускорить за 15 баксов.');
-      }
-    }
+// [Duplicate functions removed: see openChestSlot at L3388 and claimDailyReward at L2155]
 
     
     // ==================== 5-TAB NAVIGATION & MONOPOLY GO / 8 BALL POOL UX ====================
@@ -1904,6 +1877,9 @@
 
       if (tabName === 'saka') {
         renderSakaShowroom();
+      }
+      if (tabName === 'shop') {
+        updateShopRewardState();
       }
 
       if (tabName === 'village' && window.Chuko3DEngine && window.Chuko3DEngine.village && window.Chuko3DEngine.village.renderer) {
@@ -2153,15 +2129,94 @@
     }
 
     function claimDailyReward() {
+      const now = Date.now();
+      const lastClaim = parseInt(localStorage.getItem('chuko_last_daily_claim') || '0', 10);
+      const cooldownMs = 24 * 60 * 60 * 1000; // 24 hours
+      const elapsed = now - lastClaim;
+
+      if (lastClaim > 0 && elapsed < cooldownMs) {
+        const remainingMs = cooldownMs - elapsed;
+        const hours = Math.floor(remainingMs / (60 * 60 * 1000));
+        const mins = Math.floor((remainingMs % (60 * 60 * 1000)) / (60 * 1000));
+        showModal('chest', 'Награда уже получена!', `
+          <div class="py-2 text-center text-xs">
+            Вы уже забрали ежедневный подарок кочевника сегодня.<br><br>
+            Следующий подарок станет доступен через: <b class="text-amber-300 font-black">${hours} ч ${mins} мин</b>.
+          </div>
+        `);
+        return;
+      }
+
+      // Claim reward with persistent anti-spam timestamp
+      localStorage.setItem('chuko_last_daily_claim', now.toString());
       state.coins += 500;
       state.bucks += 2;
       updateHUD();
+      updateShopRewardState();
+
       if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
         window.EthnoAudio.playTemirKomuz('jackpot');
       } else {
         playBoneSound('out', 1.5);
       }
-      showModal('gift', 'ЕЖЕДНЕВНЫЙ ПОДАРОК КОЧЕВНИКА!', 'Вам начислено: <b class="text-amber-300">+500 монет</b> и <b class="text-emerald-300">+2 бакса</b>!<br>Возвращайтесь завтра за новой порцией наград!');
+      showModal('gift', 'ЕЖЕДНЕВНЫЙ ПОДАРОК КОЧЕВНИКА!', 'Вам начислено: <b class="text-amber-300">+500 монет</b> и <b class="text-emerald-300">+2 бакса</b>!<br>Следующая награда будет доступна завтра!');
+    }
+
+    function updateShopRewardState() {
+      // 1. Daily Gift state (24h cooldown)
+      const now = Date.now();
+      const lastClaim = parseInt(localStorage.getItem('chuko_last_daily_claim') || '0', 10);
+      const cooldownMs = 24 * 60 * 60 * 1000;
+      const elapsed = now - lastClaim;
+      const dailyBtn = document.getElementById('shop-daily-gift-btn');
+      const dailyDesc = document.getElementById('shop-daily-gift-desc');
+
+      if (lastClaim > 0 && elapsed < cooldownMs) {
+        const remainingMs = cooldownMs - elapsed;
+        const hours = Math.floor(remainingMs / (60 * 60 * 1000));
+        const mins = Math.floor((remainingMs % (60 * 60 * 1000)) / (60 * 1000));
+        if (dailyBtn) {
+          dailyBtn.textContent = `${hours}ч ${mins}м`;
+          dailyBtn.className = 'game-btn game-btn-stone px-2.5 py-1 text-[10px] text-stone-400 opacity-75 cursor-not-allowed';
+        }
+        if (dailyDesc) {
+          dailyDesc.innerHTML = `<span class="text-amber-400 font-bold">Получено. Следующий через ${hours}ч ${mins}м</span>`;
+        }
+      } else {
+        if (dailyBtn) {
+          dailyBtn.textContent = 'Забрать';
+          dailyBtn.className = 'game-btn game-btn-green px-3.5 py-1.5 text-xs';
+        }
+        if (dailyDesc) {
+          dailyDesc.innerHTML = `+500 <span data-game-icon="coin:11"></span> монет и +2 <span data-game-icon="buck:11"></span> бакса`;
+        }
+      }
+
+      // 2. Starter Bucks state (strictly 1-time per account/device)
+      const claimedStarter = localStorage.getItem('chuko_claimed_free_bucks') === 'true';
+      const starterBtn = document.getElementById('shop-starter-bucks-btn');
+      if (starterBtn) {
+        if (claimedStarter) {
+          starterBtn.textContent = 'Получено ✓';
+          starterBtn.className = 'game-btn game-btn-stone px-2 py-1 text-[9px] text-stone-400 opacity-60 cursor-not-allowed';
+        } else {
+          starterBtn.textContent = 'Забрать';
+          starterBtn.className = 'game-btn game-btn-green px-2.5 py-1 text-[10px]';
+        }
+      }
+
+      // 3. VIP Bucks state (requires authenticated account)
+      const claimedVip = localStorage.getItem('chuko_claimed_vip_bucks') === 'true';
+      const vipBtn = document.getElementById('shop-vip-bucks-btn');
+      if (vipBtn) {
+        if (claimedVip) {
+          vipBtn.textContent = 'Получено ✓';
+          vipBtn.className = 'game-btn game-btn-stone px-2 py-1 text-[9px] text-stone-400 opacity-60 cursor-not-allowed';
+        } else {
+          vipBtn.textContent = 'Получить';
+          vipBtn.className = 'game-btn game-btn-green px-2.5 py-1 text-[10px]';
+        }
+      }
     }
 
     function buyShopItem(itemKey) {
@@ -3537,7 +3592,10 @@
                   <div class="text-[9px] text-stone-300">+5,000 монет и +10 баксов</div>
                 </div>
               </div>
-              <button onclick="claimPassReward(3)" class="btn-tap px-3 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-[10px] uppercase shadow">Забрать</button>
+              ${JSON.parse(localStorage.getItem('chuko_claimed_pass_tiers') || '[]').includes(3)
+                ? '<span class="text-[10px] font-black text-lime-400 bg-lime-400/20 px-2 py-0.5 rounded">Получено</span>'
+                : '<button onclick="claimPassReward(3)" class="btn-tap px-3 py-1 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-950 font-black text-[10px] uppercase shadow">Забрать</button>'
+              }
             </div>
 
             <div class="flex items-center justify-between p-2 rounded-xl bg-stone-950 border border-stone-800 opacity-60">
@@ -3558,6 +3616,14 @@
     }
 
     function claimPassReward(tier) {
+      const claimedTiers = JSON.parse(localStorage.getItem('chuko_claimed_pass_tiers') || '[]');
+      if (claimedTiers.includes(tier)) {
+        showMatchToast('Награда этого этапа уже получена!');
+        return;
+      }
+      claimedTiers.push(tier);
+      localStorage.setItem('chuko_claimed_pass_tiers', JSON.stringify(claimedTiers));
+
       state.coins += 5000;
       state.bucks += 10;
       updateHUD();
@@ -3942,17 +4008,45 @@
     }
 
     function claimFreeDemoBucks() {
+      const claimed = localStorage.getItem('chuko_claimed_free_bucks') === 'true';
+      if (claimed) {
+        showModal('gift', 'Стартовый набор получен', 'Вы уже забрали бесплатный стартовый набор баксов! Набор выдается один раз.');
+        return;
+      }
+      localStorage.setItem('chuko_claimed_free_bucks', 'true');
       state.bucks += 50;
       updateHUD();
+      updateShopRewardState();
       if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
         window.EthnoAudio.playTemirKomuz('jackpot');
       }
-      showMatchToast('Зачислено +50 бесплатных баксов!');
+      showMatchToast('Зачислено +50 стартовых баксов!');
     }
 
     function claimBigBucksPack() {
+      const isLinked = currentUser && !currentUser.is_anonymous;
+      if (!isLinked) {
+        showModal('gem', 'VIP Набор Спонсора', `
+          <div class="py-2 text-center text-xs">
+            Набор <b>+200 Баксов</b> доступен только зарегистрированным батырам!<br><br>
+            Войдите через Google в Профиле, чтобы получить VIP-статус и бонус спонсора.
+          </div>
+        `, `
+          <button onclick="closeGenericModal(); openProfileModal();" class="game-btn game-btn-gold flex-1 py-2 text-xs">Вход через Google</button>
+        `);
+        return;
+      }
+
+      const claimed = localStorage.getItem('chuko_claimed_vip_bucks') === 'true';
+      if (claimed) {
+        showModal('gem', 'VIP Набор уже получен', 'Вы уже активировали VIP-пакет спонсора на этом аккаунте.');
+        return;
+      }
+
+      localStorage.setItem('chuko_claimed_vip_bucks', 'true');
       state.bucks += 200;
       updateHUD();
+      updateShopRewardState();
       if (window.EthnoAudio && typeof window.EthnoAudio.playTemirKomuz === 'function') {
         window.EthnoAudio.playTemirKomuz('jackpot');
       }

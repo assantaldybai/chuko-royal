@@ -58,6 +58,45 @@
 
   /* 3D Button Extrusions */
   --btn-bevel-height: 5px;
+
+  /* ===================================================================
+     CASUAL BLOCKBUSTER DESIGN TOKENS (COIN MASTER / MONOPOLY GO STYLE)
+     =================================================================== */
+  /* Chunky Cream & Gold Currency Pills */
+  --c-casual-cream-light: #ffffff;
+  --c-casual-cream-mid: #fffcf0;
+  --c-casual-cream-dark: #faedd0;
+  --c-casual-cream-border: #e2c17c;
+  --c-casual-cream-bevel: #8d5b1d;
+  --c-casual-brown-text: #4a1f07;
+
+  /* Juicy Lime Green CTA & Plus Buttons */
+  --c-casual-green-top: #86efac;
+  --c-casual-green-mid: #22c55e;
+  --c-casual-green-deep: #16a34a;
+  --c-casual-green-bevel: #14532d;
+  --c-casual-green-shadow: rgba(20, 83, 45, 0.4);
+
+  /* Royal Purple Milestone Banner */
+  --c-casual-purple-top: #a855f7;
+  --c-casual-purple-mid: #7e22ce;
+  --c-casual-purple-deep: #581c87;
+  --c-casual-purple-bevel: #3b0764;
+  --c-casual-gold-border: #facc15;
+  --c-casual-gold-bevel: #a16207;
+
+  /* Vibrant Oceanic Blue Bottom Dock */
+  --c-casual-dock-blue-light: #38bdf8;
+  --c-casual-dock-blue-top: #0284c7;
+  --c-casual-dock-blue-mid: #0369a1;
+  --c-casual-dock-blue-deep: #075985;
+  --c-casual-dock-bevel: #082f49;
+
+  /* Energy & Heart Red */
+  --c-casual-heart-top: #fb7185;
+  --c-casual-heart-mid: #f43f5e;
+  --c-casual-heart-deep: #e11d48;
+  --c-casual-heart-bevel: #881337;
 }
 
 /* ===================================================================
@@ -788,3 +827,683 @@
   60% { transform: scale(1.15) rotate(5deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+
+/* ===================================================================
+   14. CASUAL BLOCKBUSTER GAME UI (COIN MASTER / MONOPOLY GO STYLE)
+   High-gloss 3D cream capsules, purple milestone bar, juicy green CTA,
+   vibrant curved blue bottom dock, floating event widgets & sunny alpine scene
+   =================================================================== */
+
+/* -------------------------------------------------------------
+   A. CHUNKY CREAM TOP CURRENCY BAR & CAPSULES
+   ------------------------------------------------------------- */
+.casual-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px 10px;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 40;
+  pointer-events: auto;
+}
+
+.casual-capsule {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 2px 6px 2px 8px;
+  background: linear-gradient(180deg, var(--c-casual-cream-light) 0%, var(--c-casual-cream-mid) 55%, var(--c-casual-cream-dark) 100%);
+  border: 2.5px solid var(--c-casual-cream-border);
+  border-radius: 9999px;
+  box-shadow: 0 3.5px 0 var(--c-casual-cream-bevel),
+              0 6px 12px rgba(0, 0, 0, 0.22),
+              inset 0 2px 0 rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+.casual-capsule:active {
+  transform: translateY(2px) scale(0.97);
+  box-shadow: 0 1.5px 0 var(--c-casual-cream-bevel),
+              0 3px 6px rgba(0, 0, 0, 0.18),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* 3D Overlapping Currency Icon */
+.casual-capsule-icon {
+  position: relative;
+  margin-left: -12px;
+  margin-right: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.35));
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+/* Currency Text Value */
+.casual-capsule-value {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  color: var(--c-casual-brown-text);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
+  padding: 0 2px;
+  white-space: nowrap;
+  letter-spacing: -0.3px;
+}
+
+/* Kumys / Energy Timer on Capsule */
+.casual-capsule-timer {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  color: #9f1239;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  border-radius: 9999px;
+  padding: 1px 6px;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+/* Juicy 3D Green Round "+" Button */
+.casual-plus-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--c-casual-green-top) 0%, var(--c-casual-green-mid) 50%, var(--c-casual-green-deep) 100%);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2.5px 0 var(--c-casual-green-bevel),
+              0 3px 6px rgba(0, 0, 0, 0.25),
+              inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  color: #ffffff;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  margin-left: 4px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+
+.casual-plus-btn:active {
+  transform: translateY(1.5px) scale(0.93);
+  box-shadow: 0 1px 0 var(--c-casual-green-bevel),
+              0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Juicy 3D Green Settings Gear */
+.casual-gear-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 13px;
+  background: linear-gradient(180deg, var(--c-casual-green-top) 0%, var(--c-casual-green-mid) 50%, var(--c-casual-green-deep) 100%);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 3.5px 0 var(--c-casual-green-bevel),
+              0 6px 12px rgba(0, 0, 0, 0.25),
+              inset 0 2px 0 rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  user-select: none;
+  flex-shrink: 0;
+  transition: transform 0.08s ease, filter 0.08s ease;
+}
+
+.casual-gear-btn:active {
+  transform: translateY(2.5px) scale(0.95);
+  box-shadow: 0 1px 0 var(--c-casual-green-bevel),
+              0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* -------------------------------------------------------------
+   B. MILESTONE TOURNAMENT BAR (PURPLE / GOLD PILL)
+   ------------------------------------------------------------- */
+.casual-milestone-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 380px;
+  margin: 2px auto 6px auto;
+  padding: 0 10px;
+  z-index: 35;
+  box-sizing: border-box;
+}
+
+.casual-milestone-bar {
+  position: relative;
+  width: 100%;
+  height: 34px;
+  background: linear-gradient(180deg, var(--c-casual-purple-top) 0%, var(--c-casual-purple-mid) 50%, var(--c-casual-purple-deep) 100%);
+  border: 3px solid var(--c-casual-gold-border);
+  border-radius: 9999px;
+  box-shadow: 0 4px 0 var(--c-casual-gold-bevel),
+              0 6px 14px rgba(0, 0, 0, 0.35),
+              inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 4px 2px 36px;
+  box-sizing: border-box;
+}
+
+/* Nomadic 3-Lobed Solar / Tyndyk Emblem Overlapping Left */
+.milestone-emblem {
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fde047 30%, #eab308 70%, #ca8a04 100%);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+}
+
+/* Recessed Golden Track & Progress Fill */
+.milestone-track {
+  position: relative;
+  flex: 1;
+  height: 18px;
+  background: #2e0854;
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 1.5px solid rgba(250, 204, 21, 0.5);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  margin-right: 8px;
+  margin-left: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.milestone-fill {
+  height: 100%;
+  background: linear-gradient(180deg, var(--c-casual-green-top) 0%, var(--c-casual-green-mid) 50%, var(--c-casual-green-deep) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  border-radius: 9999px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.milestone-counter-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  font-size: 11px;
+  color: #ffffff;
+  text-shadow: 0 1.5px 0 #1e053a, 0 2px 4px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+}
+
+/* Reward Badge on the Right (e.g. 300 Coins) */
+.milestone-reward-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: linear-gradient(180deg, var(--c-casual-green-top) 0%, var(--c-casual-green-mid) 50%, var(--c-casual-green-deep) 100%);
+  border: 1.5px solid #ffffff;
+  border-radius: 10px;
+  padding: 2px 6px;
+  box-shadow: 0 2px 0 var(--c-casual-green-bevel),
+              0 3px 6px rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  font-size: 11px;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+/* Hanging Timer Pill Below Milestone Bar ('2д 18ч') */
+.milestone-timer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(180deg, #9333ea 0%, #6b21a8 100%);
+  border: 1.5px solid var(--c-casual-gold-border);
+  border-radius: 9999px;
+  padding: 1px 10px 2px 6px;
+  margin-top: -3px;
+  box-shadow: 0 2.5px 0 #4c1d95,
+              0 4px 8px rgba(0, 0, 0, 0.3);
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  font-size: 10px;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  z-index: 4;
+}
+
+/* -------------------------------------------------------------
+   C. FLOATING EVENT BADGES (LEFT & RIGHT COLUMNS)
+   ------------------------------------------------------------- */
+.casual-event-column-left {
+  position: absolute;
+  top: 108px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 25;
+}
+
+.casual-event-column-right {
+  position: absolute;
+  top: 108px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 25;
+}
+
+.casual-event-btn {
+  position: relative;
+  width: 58px;
+  height: 62px;
+  border-radius: 16px;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.4),
+              0 6px 12px rgba(0, 0, 0, 0.35),
+              inset 0 2px 0 rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 5px;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  transition: transform 0.08s ease, filter 0.08s ease;
+  overflow: visible;
+}
+
+.casual-event-btn:active {
+  transform: translateY(3px) scale(0.95);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4),
+              0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* Event Color Themes */
+.event-btn-safe {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 60%, #0369a1 100%);
+  box-shadow: 0 4px 0 #075985, 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+.event-btn-castle {
+  background: linear-gradient(180deg, #c084fc 0%, #9333ea 60%, #7e22ce 100%);
+  box-shadow: 0 4px 0 #581c87, 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+.event-btn-slot {
+  background: linear-gradient(180deg, #fde047 0%, #eab308 60%, #ca8a04 100%);
+  box-shadow: 0 4px 0 #854d0e, 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.8);
+}
+.event-btn-bomb {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 50%, #1e293b 100%);
+  box-shadow: 0 4px 0 #0f172a, 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+}
+.event-btn-gangster {
+  background: linear-gradient(180deg, #f87171 0%, #ef4444 60%, #dc2626 100%);
+  box-shadow: 0 4px 0 #991b1b, 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+.event-btn-trophy {
+  background: linear-gradient(180deg, #fb7185 0%, #e11d48 60%, #be123c 100%);
+  box-shadow: 0 4px 0 #881337, 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+.event-btn-gem {
+  background: linear-gradient(180deg, #34d399 0%, #059669 60%, #047857 100%);
+  box-shadow: 0 4px 0 #064e3b, 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+.event-btn-mine {
+  background: linear-gradient(180deg, #e879f9 0%, #c026d3 60%, #9333ea 100%);
+  box-shadow: 0 4px 0 #701a75, 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+.event-btn-treasure {
+  background: linear-gradient(180deg, #a855f7 0%, #7e22ce 60%, #6b21a8 100%);
+  box-shadow: 0 4px 0 #4c1d95, 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+.event-btn-piggy {
+  background: linear-gradient(180deg, #2dd4bf 0%, #0d9488 60%, #0f766e 100%);
+  box-shadow: 0 4px 0 #134e4a, 0 6px 12px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Event 3D Popping Icon */
+.event-icon-3d {
+  font-size: 24px;
+  line-height: 1;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.4));
+  transition: transform 0.15s ease;
+}
+
+/* Event Bottom Ribbon / Timer Banner */
+.event-ribbon {
+  position: absolute;
+  bottom: -6px;
+  left: -4px;
+  right: -4px;
+  height: 16px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  font-size: 8px;
+  color: #ffffff;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  padding: 0 2px;
+  z-index: 3;
+}
+.event-ribbon-purple { background: linear-gradient(180deg, #a855f7 0%, #7e22ce 100%); }
+.event-ribbon-gold { background: linear-gradient(180deg, #fde047 0%, #eab308 100%); color: #422006; text-shadow: 0 1px 0 rgba(255,255,255,0.7); }
+.event-ribbon-red { background: linear-gradient(180deg, #f87171 0%, #ef4444 100%); }
+.event-ribbon-green { background: linear-gradient(180deg, #86efac 0%, #22c55e 100%); color: #052e16; text-shadow: 0 1px 0 rgba(255,255,255,0.7); }
+
+/* Corner Count Notification Badge (e.g. '10', '17', '3') */
+.event-corner-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 3px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #fde047 0%, #f59e0b 100%);
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  font-size: 9px;
+  color: #78350f;
+  z-index: 4;
+}
+
+/* -------------------------------------------------------------
+   D. GIANT 3D HERO ACTION BUTTON (JUICY LIME CTA)
+   ------------------------------------------------------------- */
+.giant-hero-cta-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  margin: 8px auto 6px auto;
+  padding: 0 12px;
+  z-index: 30;
+  box-sizing: border-box;
+}
+
+.giant-hero-cta {
+  position: relative;
+  width: 100%;
+  min-height: 62px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, #86efac 0%, #4ade80 18%, #22c55e 52%, #16a34a 82%, #15803d 100%);
+  border: 4px solid #ffffff;
+  box-shadow: 0 8px 0 var(--c-casual-green-bevel),
+              0 14px 28px rgba(0, 0, 0, 0.35),
+              inset 0 3px 0 rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  transition: transform 0.08s cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 0.08s cubic-bezier(0.2, 0, 0, 1),
+              filter 0.12s ease;
+  overflow: visible;
+}
+
+.giant-hero-cta:active {
+  transform: translateY(6px) !important;
+  box-shadow: 0 2px 0 var(--c-casual-green-bevel),
+              0 6px 12px rgba(0, 0, 0, 0.25),
+              inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Popping Accessory / Tool Badge on Top-Left */
+.cta-tool-accessory {
+  position: absolute;
+  top: -16px;
+  left: 6px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.35));
+  z-index: 5;
+}
+
+.cta-tool-icon {
+  font-size: 28px;
+  transform: rotate(-15deg);
+  display: inline-block;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+}
+
+.cta-tool-multiplier {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  color: #ffffff;
+  text-shadow: 0 2px 0 #14532d, 0 3px 6px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 1px #14532d;
+  letter-spacing: -0.5px;
+}
+
+/* Main CTA Typography */
+.cta-title-text {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  font-size: 24px;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-shadow: 0 3px 0 #14532d, 0 4px 0 #14532d, 0 6px 12px rgba(0, 0, 0, 0.6);
+  -webkit-text-stroke: 1.2px #14532d;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Glowing Pulsing Animation */
+.giant-hero-pulse {
+  animation: heroCtaPulse 2.2s infinite ease-in-out;
+}
+@keyframes heroCtaPulse {
+  0%, 100% {
+    box-shadow: 0 8px 0 var(--c-casual-green-bevel),
+                0 14px 28px rgba(0, 0, 0, 0.35),
+                inset 0 3px 0 rgba(255, 255, 255, 0.85);
+  }
+  50% {
+    box-shadow: 0 8px 0 var(--c-casual-green-bevel),
+                0 16px 36px rgba(34, 197, 94, 0.65),
+                inset 0 3px 0 rgba(255, 255, 255, 0.95);
+  }
+}
+
+/* -------------------------------------------------------------
+   E. CURVED ROYAL BLUE BOTTOM DOCK (5 CASUAL TABS)
+   ------------------------------------------------------------- */
+.casual-dock {
+  position: relative;
+  width: 100%;
+  height: 64px;
+  background: linear-gradient(180deg, var(--c-casual-dock-blue-top) 0%, var(--c-casual-dock-blue-mid) 40%, var(--c-casual-dock-blue-deep) 100%);
+  border-top: 3px solid var(--c-casual-dock-blue-light);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -4px 0 var(--c-casual-dock-bevel),
+              0 -8px 24px rgba(0, 0, 0, 0.4),
+              inset 0 2px 0 rgba(255, 255, 255, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 50;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.casual-dock-tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 60px;
+  height: 100%;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  transition: transform 0.1s ease;
+}
+
+.casual-dock-tab:active {
+  transform: scale(0.92);
+}
+
+.casual-dock-tab .dock-icon-3d {
+  font-size: 26px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+  transition: transform 0.15s ease;
+}
+
+.casual-dock-tab .dock-label {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 800;
+  font-size: 10px;
+  color: #bae6fd;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  letter-spacing: -0.2px;
+}
+
+.casual-dock-tab.is-active .dock-label {
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.casual-dock-tab.is-active .dock-icon-3d {
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+}
+
+/* Center Elevated Tab (3D Red Dome / House / Yurt) */
+.dock-center-elevated {
+  position: relative;
+  margin-top: -24px;
+  width: 66px;
+  height: 66px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #f87171 0%, #ef4444 50%, #dc2626 100%);
+  border: 3.5px solid #ffffff;
+  box-shadow: 0 6px 0 #991b1b,
+              0 10px 20px rgba(0, 0, 0, 0.4),
+              inset 0 2px 0 rgba(255, 255, 255, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 55;
+  transition: transform 0.1s cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 0.1s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.dock-center-elevated:active {
+  transform: translateY(4px) scale(0.95) !important;
+  box-shadow: 0 2px 0 #991b1b,
+              0 4px 8px rgba(0, 0, 0, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+}
+
+.dock-center-elevated .dock-icon-3d {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+}
+
+.dock-center-elevated .dock-label {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  font-size: 9px;
+  color: #ffffff;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  margin-top: -1px;
+}
+
+/* Green Notification Badge on Clipboard Tab ('29') */
+.dock-badge-green {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #86efac 0%, #22c55e 100%);
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 900;
+  font-size: 10px;
+  color: #ffffff;
+  text-shadow: 0 1px 1px #14532d;
+  z-index: 52;
+}
+
+/* -------------------------------------------------------------
+   F. SUNNY KYRGYZ ALPINE LANDSCAPE THEME (DAYLIGHT / GRASS)
+   ------------------------------------------------------------- */
+.sunny-alpine-theme {
+  background: linear-gradient(180deg, #60a5fa 0%, #93c5fd 25%, #bae6fd 50%, #86efac 75%, #4ade80 100%) !important;
+}
+
+.sunny-sky-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 60%);
+  pointer-events: none;
+}
+
