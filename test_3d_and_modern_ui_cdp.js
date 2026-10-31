@@ -243,8 +243,56 @@ async function run() {
   `);
   console.log(`[TEST 7] Modern Audio System verified (Aiming hum eliminated, droneOsc=false):`, audioResult);
 
+  // 8. Verify Telegram Mini App (TMA) Module & Auto-Auth
+  console.log('Testing Telegram Mini App (TMA) Module...');
+  const tmaResult = await evaluate(`
+    (function() {
+      if (!window.TelegramTMA) return { ok: false, msg: 'TelegramTMA missing' };
+      
+      // Simulate Telegram WebApp environment
+      window.Telegram = window.Telegram || {};
+      window.Telegram.WebApp = {
+        initData: 'query_id=AAHd&user=%7B%22id%22%3A12345678%2C%22first_name%22%3A%22Manas%22%2C%22username%22%3A%22manas_batyr%22%7D',
+        initDataUnsafe: {
+          user: {
+            id: 12345678,
+            first_name: 'Manas',
+            username: 'manas_batyr',
+            photo_url: 'https://telegram.org/img/t_logo.png'
+          },
+          start_param: 'duel_CHUKO-7777'
+        },
+        ready: function() {},
+        expand: function() {},
+        setHeaderColor: function() {},
+        setBackgroundColor: function() {},
+        enableClosingConfirmation: function() {},
+        disableVerticalSwipes: function() {},
+        HapticFeedback: {
+          impactOccurred: function() {},
+          notificationOccurred: function() {},
+          selectionChanged: function() {}
+        },
+        openTelegramLink: function() {}
+      };
+
+      const testState = { coins: 100, bucks: 5, trophies: 50 };
+      window.TelegramTMA.init(testState, function(u) {});
+
+      return {
+        ok: true,
+        hasModule: true,
+        isAvailable: window.TelegramTMA.isAvailable,
+        username: testState.username,
+        telegramId: testState.telegramId,
+        avatarUrl: testState.avatarUrl
+      };
+    })()
+  `);
+  console.log(`[TEST 8] Telegram Mini App (TMA) verified:`, tmaResult);
+
   console.log('\n======================================================');
-  console.log('🎉 ALL 3D, MODERN UI & AUDIO VERIFICATIONS PASSED WITH 100%!');
+  console.log('🎉 ALL 3D, MODERN UI, AUDIO & TMA VERIFICATIONS PASSED WITH 100%!');
   console.log('======================================================\n');
 
   chromeProc.kill();

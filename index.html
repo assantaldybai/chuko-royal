@@ -9,6 +9,9 @@
   <title>Chuko Royal — Full Pro MVP</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Telegram Mini App (TMA) SDK & Integration -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="js/telegram_tma.js"></script>
   <script src="js/three.min.js"></script>
   <script src="js/game_icons.js"></script>
   <script src="js/alchik_real_model.js?v=20261030_realscan"></script>
@@ -679,6 +682,18 @@
           <div class="flex justify-between items-center">
             <h3 class="text-base font-black text-white uppercase">Ханская Лавка</h3>
             <span class="text-xs text-stone-400">Обновление через 14ч</span>
+          </div>
+
+          <!-- Баннер интеграции Telegram Stars & Mini App -->
+          <div class="p-3 rounded-2xl bg-gradient-to-r from-sky-950/70 via-blue-950/50 to-stone-900 border border-sky-400/40 flex items-center justify-between shadow">
+            <div class="flex items-center gap-2.5">
+              <span class="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-400/50 flex items-center justify-center text-amber-300 font-black text-sm">⭐</span>
+              <div>
+                <h4 class="text-xs font-black text-sky-300 uppercase">Telegram Mini App</h4>
+                <p class="text-[10px] text-stone-300">Оплата через Telegram Stars и TON Кошелек</p>
+              </div>
+            </div>
+            <span class="text-[9px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-400/30 font-bold uppercase">Активно</span>
           </div>
 
           <!-- Бесплатный ежедневный подарок с защитой от накрутки -->
@@ -1572,6 +1587,16 @@
       if (loaderDone) return;
       loaderDone = true;
       try {
+        if (window.TelegramTMA && typeof window.TelegramTMA.init === 'function') {
+          window.TelegramTMA.init(state, (tgUser) => {
+            console.log('[TMA] Player logged in via Telegram:', tgUser);
+            updateHUD();
+          });
+        }
+      } catch (e) {
+        console.warn('Init TelegramTMA failed:', e);
+      }
+      try {
         initSupabase();
       } catch (e) {
         console.warn('Init supabase failed:', e);
@@ -1636,7 +1661,7 @@
 
       const av = document.getElementById('hud-avatar');
       if (av) {
-        const photo = currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture;
+        const photo = state.avatarUrl || currentUser?.user_metadata?.avatar_url || currentUser?.user_metadata?.picture;
         if (photo) {
           av.innerHTML = `<img src="${photo}" class="w-full h-full object-cover rounded-lg" />`;
         } else if (window.GameIcons) {
@@ -1920,11 +1945,25 @@
     }
 
     function openProfileModal() {
+      const isTg = state.isTelegram || (window.TelegramTMA && window.TelegramTMA.isAvailable);
       const isLinked = currentUser && !currentUser.is_anonymous && (currentUser.app_metadata?.provider === 'google' || currentUser.app_metadata?.providers?.includes('google'));
       const email = currentUser?.email || 'Не привязан';
-      const googleBtn = isLinked
-        ? `<button onclick="signOutGoogle()" class="btn-tap flex-1 py-2 rounded-xl bg-stone-800 text-rose-300 font-bold text-xs border border-rose-500/40">Выйти из аккаунта</button>`
-        : `<button onclick="signInWithGoogle()" class="btn-tap flex-1 py-2 rounded-xl bg-white text-stone-900 font-bold text-xs flex items-center justify-center gap-1.5 shadow">Войти через Google</button>`;
+      
+      let authBtn = '';
+      let authInfo = '';
+
+      if (isTg) {
+        authInfo = `<div class="p-2 rounded-lg bg-sky-500/10 border border-sky-400/40 text-[10px] text-sky-300 text-center font-bold">
+          ✓ Авторизован через Telegram (${state.username})
+        </div>`;
+      } else {
+        authBtn = isLinked
+          ? `<button onclick="signOutGoogle()" class="btn-tap flex-1 py-2 rounded-xl bg-stone-800 text-rose-300 font-bold text-xs border border-rose-500/40">Выйти из аккаунта</button>`
+          : `<button onclick="signInWithGoogle()" class="btn-tap flex-1 py-2 rounded-xl bg-white text-stone-900 font-bold text-xs flex items-center justify-center gap-1.5 shadow">Войти через Google</button>`;
+        authInfo = `<div class="text-[10px] text-stone-400 text-center">
+          ${isLinked ? `Google аккаунт: <b class="text-white">${email}</b>` : 'Войдите через Google для сохранения прогресса:'}
+        </div>`;
+      }
 
       const coinIcon = window.GameIcons ? window.GameIcons.coin(12) : '';
       const trophyIcon = window.GameIcons ? window.GameIcons.trophy(12) : '';
@@ -1938,14 +1977,12 @@
             <div class="flex items-center gap-1 mt-0.5">Копилка: <b class="text-lime-300">${state.piggyCoins.toLocaleString('ru-RU')}</b> ${coinIcon}</div>
             <div class="flex items-center gap-1 mt-0.5">Выбито чуко: <b class="text-white">${state.knockedTotal}</b> ${sakaIcon}</div>
             <div class="mt-1 pt-1 border-t border-white/10 text-[10px]">
-              Облачное сохранение: <span class="text-emerald-400 font-bold">Активно</span>
+              Платформа: <span class="${isTg ? 'text-sky-400' : 'text-emerald-400'} font-bold">${isTg ? 'Telegram Mini App' : 'Web / Cloud'}</span>
             </div>
           </div>
-          <div class="text-[10px] text-stone-400 text-center">
-            ${isLinked ? `Google аккаунт: <b class="text-white">${email}</b>` : 'Войдите через Google для сохранения прогресса:'}
-          </div>
+          ${authInfo}
         </div>
-      `, `${googleBtn}<button onclick="closeGenericModal()" class="btn-tap py-2 px-3 rounded-xl bg-amber-400 text-stone-950 font-black text-xs">OK</button>`);
+      `, `${authBtn}<button onclick="closeGenericModal()" class="btn-tap py-2 px-3 rounded-xl bg-amber-400 text-stone-950 font-black text-xs">OK</button>`);
     }
 
     async function openRankingsModal() {
@@ -3955,11 +3992,18 @@
     }
 
     function shareFriendInvite(code) {
+      if (window.TelegramTMA && window.TelegramTMA.isAvailable) {
+        window.TelegramTMA.shareInvite(code);
+        return;
+      }
       const url = `https://chuko.uyoom.app/?room=${code}`;
-      if (navigator.share) {
+      const text = `Сыграй со мной в кыргызское Ордо в комнате #${code}! Заходи:`;
+      if (window.Telegram && window.Telegram.WebApp && typeof window.Telegram.WebApp.openTelegramLink === 'function') {
+        window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`);
+      } else if (navigator.share) {
         navigator.share({
           title: 'Chuko Royal — Дуэль в Ордо',
-          text: `Сыграй со мной в кыргызское Ордо в комнате #${code}!`,
+          text: text,
           url: url
         }).catch(() => copyFriendInvite(code));
       } else {
