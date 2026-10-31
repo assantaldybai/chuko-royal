@@ -12,7 +12,7 @@
     isAvailable: false,
     tg: null,
     user: null,
-    botUsername: 'ChukoRoyalBot', // Default bot username, configurable
+    botUsername: 'chukobattle_bot', // Telegram bot username
 
     /**
      * Initializes Telegram WebApp environment
