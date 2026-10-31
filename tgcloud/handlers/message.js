@@ -6,7 +6,7 @@ export default async function (message, ctx) {
   const userId = message.from ? message.from.id : chatId;
   const firstName = message.from ? message.from.first_name : 'Батыр';
 
-  const GAME_URL = 'https://chuko.uyoom.app';
+  const GAME_URL = 'https://app9207991607.tgcloud.ai';
   const BOT_USERNAME = 'chukobattle_bot';
 
   if (text.startsWith('/start')) {

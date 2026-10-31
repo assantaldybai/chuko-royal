@@ -3,8 +3,10 @@
     "@tgcloud/cli": "^0.2.0"
   },
   "scripts": {
-    "deploy": "tgcloud push",
+    "build": "mkdir -p dist && cp index.html dist/ && cp -r css js audio dist/",
+    "deploy": "npm run build && tgcloud push",
     "status": "tgcloud status",
+    "migrate": "tgcloud migrate",
     "run": "tgcloud run"
   }
 }
