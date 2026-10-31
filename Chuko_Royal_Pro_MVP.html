@@ -295,40 +295,20 @@
             </div>
           </div>
           
-          <!-- Сезонная плашка и скин -->
-          <div class="flex items-center justify-between gap-1">
-            <div id="season-banner-btn" onclick="openBattlePassModal()" class="btn-tap flex items-center gap-1.5 bg-amber-500/15 border border-amber-400/30 px-2.5 py-1 rounded-xl text-[10px] text-amber-200 font-extrabold cursor-pointer active:scale-95 shadow">
-              <span data-game-icon="flame:14"></span> <span id="season-title-banner">Сезон 1: Всемирные Игры Кочевников</span>
-              <span class="text-[8px] bg-amber-500 text-stone-950 px-1 py-0.2 rounded font-black ml-1 uppercase">Pass</span>
-            </div>
-            <div class="flex gap-1">
-              <button onclick="setSeasonTheme('nomad')" id="season-btn-nomad" class="btn-tap text-[9px] font-black px-1.5 py-0.5 rounded-lg bg-amber-500 text-stone-950 border border-white">Кочевники</button>
-              <button onclick="setSeasonTheme('cyberpunk')" id="season-btn-cyberpunk" class="btn-tap text-[9px] font-black px-1.5 py-0.5 rounded-lg bg-stone-800 text-cyan-300 border border-cyan-500/40">Кибер</button>
-            </div>
-          </div>
+          <!-- Скрытые элементы для сохранения API совместимости JS -->
+          <span id="season-title-banner" class="hidden">Сезон 1: Всемирные Игры Кочевников</span>
 
-          <!-- Центральный интерактивный 3D Альчик (Чүкө) с PBR освещением и свободным вращением -->
-          <div class="relative flex flex-col items-center justify-center py-1 group">
+          <!-- Центральный интерактивный 3D Альчик (Чүкө) в атмосфере солнечного джайлоо -->
+          <div class="relative flex flex-col items-center justify-center my-auto py-1 z-10">
             <div class="hero-chuko-3d-wrapper">
               <canvas id="hero-chuko-3d-canvas"></canvas>
             </div>
-            <!-- Информационная плашка смены Сака -->
-            <div onclick="switchLobbyTab('saka')" class="game-btn game-btn-stone mt-1 px-3 py-1 rounded-full text-[11px] font-black text-stone-200 flex items-center gap-1.5 shadow cursor-pointer">
+            <!-- Минималистичная плашка экипированного Сака -->
+            <div onclick="switchLobbyTab('saka')" class="hero-saka-pill mt-2" title="Нажмите, чтобы настроить боевой Сака">
               <span data-game-icon="saka:16:lead"></span>
-              <span>Биток:</span>
-              <span id="lobby-equipped-saka" class="text-amber-300">Ханский Свинец</span>
-              <span class="text-[9px] text-lime-400 font-bold ml-0.5 inline-flex items-center gap-0.5"><span data-game-icon="gear:12"></span> Сменить</span>
+              <span>Биток: <b id="lobby-equipped-saka" class="text-amber-300">Ханский Свинец</b></span>
+              <span class="text-lime-400 font-black text-[10px]">▾</span>
             </div>
-
-            <!-- Быстрый выбор 4 канонических граней альчика (по фото скана) -->
-            <div class="flex items-center justify-center gap-1.5 mt-1.5">
-              <button onclick="if(window.Chuko3DEngine) Chuko3DEngine.rotateHeroTo('alchy')" title="Алчы — ровная выпуклая грань" class="btn-tap px-2.5 py-1 rounded-xl bg-stone-900/90 hover:bg-amber-500/20 border border-stone-700 hover:border-amber-400 text-[10px] font-black text-stone-300 hover:text-amber-300 transition-colors shadow">Алчы</button>
-              <button onclick="if(window.Chuko3DEngine) Chuko3DEngine.rotateHeroTo('taa')" title="Таа — вогнутая грань с седлом" class="btn-tap px-2.5 py-1 rounded-xl bg-stone-900/90 hover:bg-amber-500/20 border border-stone-700 hover:border-amber-400 text-[10px] font-black text-stone-300 hover:text-amber-300 transition-colors shadow">Таа</button>
-              <button onclick="if(window.Chuko3DEngine) Chuko3DEngine.rotateHeroTo('bok')" title="Бөк — спинная округлая сторона" class="btn-tap px-2.5 py-1 rounded-xl bg-stone-900/90 hover:bg-amber-500/20 border border-stone-700 hover:border-amber-400 text-[10px] font-black text-stone-300 hover:text-amber-300 transition-colors shadow">Бөк</button>
-              <button onclick="if(window.Chuko3DEngine) Chuko3DEngine.rotateHeroTo('chik')" title="Чик — брюшная сторона с ямкой" class="btn-tap px-2.5 py-1 rounded-xl bg-stone-900/90 hover:bg-amber-500/20 border border-stone-700 hover:border-amber-400 text-[10px] font-black text-stone-300 hover:text-amber-300 transition-colors shadow">Чик</button>
-              <button onclick="if(window.Chuko3DEngine) Chuko3DEngine.rotateHeroTo('onbashy')" title="Оңбашы — положение стоя на торце" class="btn-tap px-2.5 py-1 rounded-xl bg-stone-900/90 hover:bg-amber-500/20 border border-stone-700 hover:border-amber-400 text-[10px] font-black text-stone-300 hover:text-amber-300 transition-colors shadow">Оңбашы</button>
-            </div>
-            <span class="text-[9px] text-stone-400 mt-1 font-bold tracking-wide">3D сканирование Ovis aries • Вращайте свайпом</span>
           </div>
 
           <!-- КОМПАКТНЫЙ СЕЛЕКТОР АРЕНЫ ОРДО (COIN MASTER / CASUAL STANDARD) -->
@@ -787,27 +767,29 @@
 
       <!-- ФИРМЕННЫЙ ИЗОГНУТЫЙ СИНИЙ НИЖНИЙ ДОК С ПРИПОДНЯТЫМ 3D-ТАБОМ ЮРТЫ -->
       <nav class="casual-dock z-30 select-none">
-        <button onclick="switchLobbyTab('play')" id="nav-btn-play" class="casual-dock-tab is-active" title="Арена Ордо">
-          <span class="dock-tab-icon" data-game-icon="news:22"></span>
-          <span class="dock-tab-label">События</span>
+        <button onclick="openBattlePassModal()" id="nav-btn-news" class="casual-dock-tab" title="Новости и Сезон">
+          <span class="dock-tab-icon" data-game-icon="news:24"></span>
+          <span class="dock-tab-label">Новости</span>
         </button>
-        <button onclick="switchLobbyTab('village')" id="nav-btn-village" class="casual-dock-tab relative" title="Мой Айыл">
+        <button onclick="switchLobbyTab('village')" id="nav-btn-village" class="casual-dock-tab relative" title="Задания и Поселение">
           <span class="dock-badge-green">29</span>
-          <span class="dock-tab-icon" data-game-icon="tasks:22"></span>
+          <span class="dock-tab-icon" data-game-icon="tasks:24"></span>
           <span class="dock-tab-label">Задания</span>
         </button>
         <!-- Приподнятый центральный 3D-таб Юрты/Арены -->
-        <button onclick="switchLobbyTab('village')" id="nav-btn-center" class="dock-center-elevated cursor-pointer" title="Мой Айыл / Джайлоо">
-          <div class="center-elevated-yurt" data-game-icon="yurtHero:36"></div>
+        <button onclick="switchLobbyTab('play')" id="nav-btn-center" class="dock-center-elevated is-active cursor-pointer" title="Главная Арена Ордо">
+          <div class="center-elevated-yurt" data-game-icon="yurtHero:38"></div>
         </button>
         <button onclick="switchLobbyTab('leagues')" id="nav-btn-leagues" class="casual-dock-tab" title="Лига и Кланы">
-          <span class="dock-tab-icon" data-game-icon="guildShield:22"></span>
+          <span class="dock-tab-icon" data-game-icon="guildShield:24"></span>
           <span class="dock-tab-label">Клан</span>
         </button>
         <button onclick="switchLobbyTab('shop')" id="nav-btn-shop" class="casual-dock-tab" title="Лавка и Кошелек">
-          <span class="dock-tab-icon" data-game-icon="walletSaka:22"></span>
+          <span class="dock-tab-icon" data-game-icon="walletSaka:24"></span>
           <span class="dock-tab-label">Кошелек</span>
         </button>
+        <!-- Hidden alias for backward compatibility -->
+        <button id="nav-btn-play" class="hidden" onclick="switchLobbyTab('play')"></button>
       </nav>
 
     </div>
@@ -2045,6 +2027,10 @@
           }
         }
       });
+      const centerBtn = document.getElementById('nav-btn-center');
+      if (centerBtn) {
+        centerBtn.classList.toggle('is-active', tabName === 'play');
+      }
 
       if (tabName === 'saka') {
         initSakaCustomization();

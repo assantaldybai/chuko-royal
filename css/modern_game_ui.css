@@ -763,16 +763,43 @@
 
 .hero-chuko-3d-wrapper {
   position: relative;
-  width: 180px;
-  height: 140px;
+  width: 100%;
+  max-width: 330px;
+  height: 270px;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: grab;
+  z-index: 10;
 }
 .hero-chuko-3d-wrapper:active {
   cursor: grabbing;
+}
+
+.hero-saka-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(250, 204, 21, 0.5);
+  border-radius: 9999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  font-family: 'Rubik', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  color: #f1f5f9;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s ease, background 0.15s ease;
+  z-index: 15;
+}
+.hero-saka-pill:active {
+  transform: scale(0.95);
+  background: rgba(15, 23, 42, 0.95);
 }
 
 #hero-chuko-3d-canvas {
@@ -1497,13 +1524,14 @@
    F. SUNNY KYRGYZ ALPINE LANDSCAPE THEME (DAYLIGHT / GRASS)
    ------------------------------------------------------------- */
 .sunny-alpine-theme {
-  background: linear-gradient(180deg, #60a5fa 0%, #93c5fd 25%, #bae6fd 50%, #86efac 75%, #4ade80 100%) !important;
+  background: linear-gradient(180deg, #38bdf8 0%, #7dd3fc 28%, #bae6fd 55%, #a7f3d0 78%, #4ade80 100%) !important;
 }
 
 .sunny-sky-overlay {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 60%);
+  background: radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 55%),
+              linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, transparent 45%);
   pointer-events: none;
 }
 

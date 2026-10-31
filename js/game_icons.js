@@ -705,75 +705,134 @@
       </svg>`;
     },
 
-    // 43. 3D Новости / Свиток (News Tab)
-    news(size = 22, className = '') {
-      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="3" y="4" width="18" height="16" rx="2" fill="#f8fafc" stroke="#64748b" stroke-width="1.2"/>
-        <rect x="5" y="7" width="5" height="4" fill="#cbd5e1"/>
-        <line x1="12" y1="8" x2="18" y2="8" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="12" y1="11" x2="18" y2="11" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="5" y1="14" x2="18" y2="14" stroke="#94a3b8" stroke-width="1.2" stroke-linecap="round"/>
-        <line x1="5" y1="17" x2="14" y2="17" stroke="#94a3b8" stroke-width="1.2" stroke-linecap="round"/>
-      </svg>`;
-    },
-
-    // 44. 3D Задания / Чеклист (Tasks Tab)
-    tasks(size = 22, className = '') {
-      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="5" width="16" height="16" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="1.2"/>
-        <rect x="9" y="3" width="6" height="3" rx="1.5" fill="#f59e0b" stroke="#b45309" stroke-width="0.8"/>
-        <path d="M7 10L9 12L12 8" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        <line x1="14" y1="10" x2="18" y2="10" stroke="#78350f" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M7 15L9 17L12 13" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        <line x1="14" y1="15" x2="18" y2="15" stroke="#78350f" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>`;
-    },
-
-    // 45. 3D Центральная Юрта (Elevated Yurt Tab)
-    yurtHero(size = 36, className = '') {
-      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2C7 2 3 7 3 11V18C3 19.1 3.9 20 5 20H19C20.1 20 21 19.1 21 18V11C21 7 17 2 12 2Z" fill="url(#grad-yurt-hero-dome)" stroke="#ffffff" stroke-width="1.5"/>
-        <rect x="9" y="13" width="6" height="7" rx="1" fill="#78350f" stroke="#fbbf24" stroke-width="1"/>
-        <circle cx="12" cy="7" r="3" fill="#fbbf24" stroke="#d97706" stroke-width="1"/>
-        <line x1="12" y1="4" x2="12" y2="10" stroke="#78350f" stroke-width="1"/>
-        <line x1="9" y1="7" x2="15" y2="7" stroke="#78350f" stroke-width="1"/>
+    // 43. 3D Новости / Свиток (News Tab) - Casual Gazette Style
+    news(size = 24, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="3" width="22" height="22" rx="4" fill="url(#grad-news-bg)" stroke="#b45309" stroke-width="1.5"/>
+        <path d="M19 3H25V9L19 3Z" fill="#e2c17c" stroke="#b45309" stroke-width="1.2"/>
+        <rect x="6" y="7" width="16" height="3" rx="1.5" fill="#d97706"/>
+        <rect x="6" y="12" width="7" height="6" rx="1.5" fill="#e2c17c" stroke="#b45309" stroke-width="0.8"/>
+        <line x1="15" y1="13" x2="22" y2="13" stroke="#92400e" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="15" y1="16" x2="22" y2="16" stroke="#92400e" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="6" y1="20" x2="22" y2="20" stroke="#b45309" stroke-width="1.5" stroke-linecap="round"/>
         <defs>
-          <linearGradient id="grad-yurt-hero-dome" x1="3" y1="2" x2="21" y2="20">
-            <stop stop-color="#ef4444"/>
-            <stop offset="0.6" stop-color="#dc2626"/>
+          <linearGradient id="grad-news-bg" x1="3" y1="3" x2="25" y2="25">
+            <stop stop-color="#fffdf5"/>
+            <stop offset="0.6" stop-color="#fef3c7"/>
+            <stop offset="1" stop-color="#fde68a"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 44. 3D Задания / Чеклист (Tasks Tab) - Golden Planner with Green Check
+    tasks(size = 24, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="20" height="21" rx="4" fill="url(#grad-tasks-sheet)" stroke="#d97706" stroke-width="1.5"/>
+        <!-- Spiral rings -->
+        <circle cx="8" cy="4" r="1.5" fill="#f59e0b" stroke="#78350f" stroke-width="0.8"/>
+        <circle cx="14" cy="4" r="1.5" fill="#f59e0b" stroke="#78350f" stroke-width="0.8"/>
+        <circle cx="20" cy="4" r="1.5" fill="#f59e0b" stroke="#78350f" stroke-width="0.8"/>
+        <!-- Green checkmark badge -->
+        <circle cx="9" cy="11" r="3.2" fill="#22c55e" stroke="#ffffff" stroke-width="1"/>
+        <path d="M7.5 11L8.5 12.2L10.8 9.8" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="14" y1="11" x2="21" y2="11" stroke="#92400e" stroke-width="1.8" stroke-linecap="round"/>
+        <!-- Task 2 -->
+        <circle cx="9" cy="18" r="3.2" fill="#22c55e" stroke="#ffffff" stroke-width="1"/>
+        <path d="M7.5 18L8.5 19.2L10.8 16.8" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="14" y1="18" x2="21" y2="18" stroke="#92400e" stroke-width="1.8" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="grad-tasks-sheet" x1="4" y1="4" x2="24" y2="25">
+            <stop stop-color="#fffdf0"/>
+            <stop offset="0.6" stop-color="#fef3c7"/>
+            <stop offset="1" stop-color="#fde68a"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 45. 3D Центральная Юрта / Дом (Elevated Home Tab) - Casual 3D Red Hut
+    yurtHero(size = 38, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Roof Dome -->
+        <path d="M16 3C9 3 4 9 4 15V22C4 24.2 5.8 26 8 26H24C26.2 26 28 24.2 28 22V15C28 9 23 3 16 3Z" fill="url(#grad-yurt-hero-dome)" stroke="#ffffff" stroke-width="2"/>
+        <!-- Wooden Door Frame & Glowing Entrance -->
+        <rect x="12" y="16" width="8" height="10" rx="3" fill="#451a03" stroke="#facc15" stroke-width="1.2"/>
+        <circle cx="18" cy="21" r="1" fill="#fde047"/>
+        <!-- Golden Tunduk Skylight Ring -->
+        <circle cx="16" cy="9" r="4" fill="url(#grad-yurt-tunduk)" stroke="#ffffff" stroke-width="1.2"/>
+        <line x1="16" y1="5.5" x2="16" y2="12.5" stroke="#78350f" stroke-width="1.2"/>
+        <line x1="12.5" y1="9" x2="19.5" y2="9" stroke="#78350f" stroke-width="1.2"/>
+        <defs>
+          <linearGradient id="grad-yurt-hero-dome" x1="4" y1="3" x2="28" y2="26">
+            <stop stop-color="#f87171"/>
+            <stop offset="0.4" stop-color="#ef4444"/>
+            <stop offset="0.8" stop-color="#dc2626"/>
             <stop offset="1" stop-color="#991b1b"/>
           </linearGradient>
-        </defs>
-      </svg>`;
-    },
-
-    // 46. 3D Клан / Батыры (Guild Shield Tab)
-    guildShield(size = 22, className = '') {
-      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2L4 5V11C4 16.5 7.4 21.6 12 23C16.6 21.6 20 16.5 20 11V5L12 2Z" fill="url(#grad-guild-shield)" stroke="#f59e0b" stroke-width="1.2"/>
-        <circle cx="12" cy="10" r="3" fill="#ffffff"/>
-        <circle cx="8" cy="12" r="2" fill="#e2e8f0" opacity="0.8"/>
-        <circle cx="16" cy="12" r="2" fill="#e2e8f0" opacity="0.8"/>
-        <defs>
-          <linearGradient id="grad-guild-shield" x1="4" y1="2" x2="20" y2="23">
-            <stop stop-color="#f59e0b"/>
-            <stop offset="0.5" stop-color="#b45309"/>
-            <stop offset="1" stop-color="#78350f"/>
+          <linearGradient id="grad-yurt-tunduk" x1="12" y1="5" x2="20" y2="13">
+            <stop stop-color="#fef08a"/>
+            <stop offset="0.7" stop-color="#f59e0b"/>
+            <stop offset="1" stop-color="#b45309"/>
           </linearGradient>
         </defs>
       </svg>`;
     },
 
-    // 47. 3D Кошелек / Сака (Wallet Tab)
-    walletSaka(size = 22, className = '') {
-      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="5" width="20" height="15" rx="3" fill="url(#grad-wallet-body)" stroke="#4c1d95" stroke-width="1.2"/>
-        <path d="M16 11H22V15H16C14.9 15 14 14.1 14 13C14 11.9 14.9 11 16 11Z" fill="#a855f7" stroke="#e9d5ff" stroke-width="1"/>
-        <circle cx="17.5" cy="13" r="1.2" fill="#22c55e"/>
+    // 46. 3D Клан / Батыры (Guild Shield Tab) - Golden Shield with Team Silhouettes
+    guildShield(size = 24, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 2L4 5.5V13C4 19.5 8.2 24.5 14 26C19.8 24.5 24 19.5 24 13V5.5L14 2Z" fill="url(#grad-guild-shield-gold)" stroke="#ffffff" stroke-width="1.8"/>
+        <!-- Central Tall Batyr Leader -->
+        <circle cx="14" cy="11" r="3.2" fill="#fff7ed" stroke="#9a3412" stroke-width="1"/>
+        <path d="M10 20C10 16.5 11.8 15 14 15C16.2 15 18 16.5 18 20" fill="#fff7ed" stroke="#9a3412" stroke-width="1"/>
+        <!-- Left Wing Batyr -->
+        <circle cx="9" cy="13" r="2.2" fill="#fed7aa"/>
+        <path d="M6 20C6 17.5 7.5 16.5 9 16.5" stroke="#9a3412" stroke-width="0.9"/>
+        <!-- Right Wing Batyr -->
+        <circle cx="19" cy="13" r="2.2" fill="#fed7aa"/>
+        <path d="M22 20C22 17.5 20.5 16.5 19 16.5" stroke="#9a3412" stroke-width="0.9"/>
         <defs>
-          <linearGradient id="grad-wallet-body" x1="2" y1="5" x2="22" y2="20">
-            <stop stop-color="#7c3aed"/>
+          <linearGradient id="grad-guild-shield-gold" x1="4" y1="2" x2="24" y2="26">
+            <stop stop-color="#fde047"/>
+            <stop offset="0.3" stop-color="#f59e0b"/>
+            <stop offset="0.7" stop-color="#ea580c"/>
+            <stop offset="1" stop-color="#c2410c"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 47. 3D Кошелек / USDT Tether (Wallet Tab) - Exact Purple Wallet with Green Tether "₮" Badge
+    walletSaka(size = 24, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Green Cash Bills sticking out of wallet top -->
+        <rect x="8" y="2" width="12" height="6" rx="1.5" fill="#4ade80" stroke="#16a34a" stroke-width="1"/>
+        <rect x="10" y="4" width="10" height="4" rx="1" fill="#86efac"/>
+        <!-- Purple Leather Wallet Body -->
+        <rect x="3" y="6" width="22" height="18" rx="4.5" fill="url(#grad-wallet-purple)" stroke="#3b0764" stroke-width="1.6"/>
+        <!-- Gold Flap Clasp -->
+        <path d="M19 13H25V19H19C17.3 19 16 17.7 16 16C16 14.3 17.3 13 19 13Z" fill="url(#grad-wallet-clasp)" stroke="#854d0e" stroke-width="1.2"/>
+        <circle cx="21" cy="16" r="1.5" fill="#ffffff" stroke="#78350f" stroke-width="0.8"/>
+        <!-- Green Overlapping Circular Tether "₮" / USDT Badge -->
+        <circle cx="8" cy="20" r="5.5" fill="url(#grad-usdt-badge)" stroke="#ffffff" stroke-width="1.5"/>
+        <text x="8" y="23" font-family="'Rubik', sans-serif" font-size="7.5" font-weight="900" text-anchor="middle" fill="#ffffff">₮</text>
+        <defs>
+          <linearGradient id="grad-wallet-purple" x1="3" y1="6" x2="25" y2="24">
+            <stop stop-color="#a855f7"/>
+            <stop offset="0.4" stop-color="#7e22ce"/>
+            <stop offset="0.8" stop-color="#6b21a8"/>
             <stop offset="1" stop-color="#4c1d95"/>
+          </linearGradient>
+          <linearGradient id="grad-wallet-clasp" x1="16" y1="13" x2="25" y2="19">
+            <stop stop-color="#fef08a"/>
+            <stop offset="0.7" stop-color="#f59e0b"/>
+            <stop offset="1" stop-color="#b45309"/>
+          </linearGradient>
+          <linearGradient id="grad-usdt-badge" x1="3" y1="15" x2="13" y2="25">
+            <stop stop-color="#34d399"/>
+            <stop offset="0.5" stop-color="#10b981"/>
+            <stop offset="1" stop-color="#059669"/>
           </linearGradient>
         </defs>
       </svg>`;
