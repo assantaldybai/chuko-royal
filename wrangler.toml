@@ -1,0 +1,8 @@
+name = "chuko-bot"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+TELEGRAM_BOT_TOKEN = "9207991607:AAEakmdKTLUMIu0yveZ7fIn3UqS-81NE770"
+GAME_URL = "https://chuko.uyoom.app"
+BOT_USERNAME = "chukobattle_bot"
