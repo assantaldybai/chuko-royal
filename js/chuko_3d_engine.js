@@ -24,11 +24,37 @@
       prevPointer: { x: 0, y: 0 },
       rotVelocity: { x: 0, y: 0.012 },
       targetRotation: { x: 0.35, y: 0.45 },
-      currentSkin: 'lead'
+      currentSkin: 'lead',
+      leadPlugGroup: null
     },
 
     // -----------------------------------------------------------------
-    // 2. 3D ISOMETRIC VILLAGE (АЙЫЛ) STATE & RENDERER
+    // 2. PROCEDURAL HIGH-RESOLUTION PBR TEXTURE ASSETS
+    // -----------------------------------------------------------------
+    textures: {
+      boneMap: null,
+      bumpMap: null,
+      tamgaMap: null
+    },
+
+    // -----------------------------------------------------------------
+    // 3. 3D CUSTOMIZER SHOWROOM (ТАБ 3: МАСТЕРСКАЯ САКА)
+    // -----------------------------------------------------------------
+    showroom: {
+      renderer: null,
+      scene: null,
+      camera: null,
+      mesh: null,
+      boneGroup: null,
+      leadPlugGroup: null,
+      animId: null,
+      isDragging: false,
+      prevPointer: { x: 0, y: 0 },
+      rotVelocity: { x: 0, y: 0.008 }
+    },
+
+    // -----------------------------------------------------------------
+    // 4. 3D ISOMETRIC VILLAGE (АЙЫЛ) STATE & RENDERER
     // -----------------------------------------------------------------
     village: {
       renderer: null,
@@ -57,6 +83,7 @@
 
       this.initHeroChuko();
       this.initAyylVillage();
+      this.initShowroom3D();
     },
 
     // =================================================================
@@ -231,18 +258,13 @@
       boneGroup.add(mesh);
       this.hero.mesh = mesh;
 
-      // Authentic Lead Core Inlay (Коргошун куюлган Сака) in lateral fossa
-      const plugGeom = new THREE.CylinderGeometry(0.32, 0.32, 0.25, 20);
-      const plugMat = new THREE.MeshStandardMaterial({
-        color: 0x334155, // Gunmetal Lead
-        metalness: 0.88,
-        roughness: 0.32
-      });
-      const plugMesh = new THREE.Mesh(plugGeom, plugMat);
-      plugMesh.rotation.z = Math.PI / 2;
-      plugMesh.position.set(-0.95, 0.1, 0.05);
-      boneGroup.add(plugMesh);
-      this.hero.leadPlug = plugMesh;
+      // Authentic Flush Lead Inlay (Коргошун куюлган Сака) with Bronze Bezel & Stamped Tamga
+      const plugGroup = this.createLeadPlugMesh('lead', 'core_lead');
+      plugGroup.rotation.z = Math.PI / 2;
+      plugGroup.position.set(-0.95, 0.1, 0.05);
+      boneGroup.add(plugGroup);
+      this.hero.leadPlugGroup = plugGroup;
+      this.hero.leadPlug = plugGroup.userData.coreMesh;
 
       boneGroup.rotation.x = 0.35;
       boneGroup.rotation.y = 0.45;
@@ -355,77 +377,439 @@
       if (window.playBoneSound) window.playBoneSound('hit', 0.4);
     },
 
+    // -----------------------------------------------------------------
+    // PROCEDURAL BONE & PBR TEXTURE GENERATOR
+    // Authentic sheep astragalus (Ovis aries) ivory bone surface,
+    // micro-porosity, warm amber crevice patina, and stamped nomadic tamga.
+    // -----------------------------------------------------------------
+    getOrganicBoneTextures() {
+      if (this.textures.boneMap) return this.textures;
+      if (typeof document === 'undefined') return this.textures;
+
+      try {
+        // 1. Organic Ivory Bone Surface Texture (1024x1024)
+        const boneCanvas = document.createElement('canvas');
+        boneCanvas.width = 1024;
+        boneCanvas.height = 1024;
+        const bctx = boneCanvas.getContext('2d');
+        if (bctx) {
+          const grad = bctx.createLinearGradient(0, 0, 1024, 1024);
+          grad.addColorStop(0.0, '#fffdf9'); // Polished bright ivory
+          grad.addColorStop(0.35, '#faf2e6'); // Natural warm bone
+          grad.addColorStop(0.70, '#f2e5d5'); // Creamy bone marrow
+          grad.addColorStop(1.0, '#e5d3bf'); // Amber-sepia crevice patina
+          bctx.fillStyle = grad;
+          bctx.fillRect(0, 0, 1024, 1024);
+
+          // Micro-cellular bone osteon grain
+          const imgData = bctx.getImageData(0, 0, 1024, 1024);
+          const d = imgData.data;
+          for (let y = 0; y < 1024; y++) {
+            for (let x = 0; x < 1024; x++) {
+              const i = (y * 1024 + x) * 4;
+              const n = (Math.sin(x * 0.12) * Math.cos(y * 0.12) + (Math.random() - 0.5) * 0.35) * 7;
+              d[i]     = Math.max(0, Math.min(255, d[i] + n));
+              d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n * 0.85));
+              d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + n * 0.65));
+            }
+          }
+          bctx.putImageData(imgData, 0, 0);
+
+          // Organic patina washes in natural hollows
+          bctx.fillStyle = 'rgba(180, 140, 95, 0.08)';
+          bctx.beginPath();
+          bctx.arc(360, 420, 240, 0, Math.PI * 2);
+          bctx.fill();
+
+          bctx.fillStyle = 'rgba(215, 175, 130, 0.10)';
+          bctx.beginPath();
+          bctx.arc(700, 640, 300, 0, Math.PI * 2);
+          bctx.fill();
+
+          const boneTex = new THREE.CanvasTexture(boneCanvas);
+          boneTex.wrapS = THREE.RepeatWrapping;
+          boneTex.wrapT = THREE.RepeatWrapping;
+          if (THREE.sRGBEncoding) boneTex.encoding = THREE.sRGBEncoding;
+          this.textures.boneMap = boneTex;
+        }
+
+        // 2. Micro-Bump Grain Texture (512x512)
+        const bumpCanvas = document.createElement('canvas');
+        bumpCanvas.width = 512;
+        bumpCanvas.height = 512;
+        const bumpCtx = bumpCanvas.getContext('2d');
+        if (bumpCtx) {
+          bumpCtx.fillStyle = '#808080';
+          bumpCtx.fillRect(0, 0, 512, 512);
+          const bImg = bumpCtx.getImageData(0, 0, 512, 512);
+          const bd = bImg.data;
+          for (let j = 0; j < bd.length; j += 4) {
+            const v = 128 + Math.round((Math.random() - 0.5) * 20);
+            bd[j] = v;
+            bd[j + 1] = v;
+            bd[j + 2] = v;
+          }
+          bumpCtx.putImageData(bImg, 0, 0);
+          const bumpTex = new THREE.CanvasTexture(bumpCanvas);
+          bumpTex.wrapS = THREE.RepeatWrapping;
+          bumpTex.wrapT = THREE.RepeatWrapping;
+          this.textures.bumpMap = bumpTex;
+        }
+
+        // 3. Stamped Nomadic Tamga Texture (256x256)
+        const tamgaCanvas = document.createElement('canvas');
+        tamgaCanvas.width = 256;
+        tamgaCanvas.height = 256;
+        const tctx = tamgaCanvas.getContext('2d');
+        if (tctx) {
+          tctx.fillStyle = '#475569';
+          tctx.fillRect(0, 0, 256, 256);
+          tctx.strokeStyle = '#cbd5e1';
+          tctx.lineWidth = 5;
+          tctx.beginPath();
+          tctx.arc(128, 128, 96, 0, Math.PI * 2);
+          tctx.stroke();
+
+          tctx.beginPath();
+          tctx.arc(128, 128, 54, 0, Math.PI * 2);
+          tctx.stroke();
+
+          for (let a = 0; a < 8; a++) {
+            const angle = (a * Math.PI) / 4;
+            tctx.beginPath();
+            tctx.moveTo(128 + Math.cos(angle) * 54, 128 + Math.sin(angle) * 54);
+            tctx.lineTo(128 + Math.cos(angle) * 92, 128 + Math.sin(angle) * 92);
+            tctx.stroke();
+          }
+
+          const tamgaTex = new THREE.CanvasTexture(tamgaCanvas);
+          this.textures.tamgaMap = tamgaTex;
+        }
+      } catch (e) {
+        console.warn('[Chuko3DEngine] Canvas texture generation note:', e);
+      }
+      return this.textures;
+    },
+
     // Material generator for Saka skins
     getSakaMaterial(skinId) {
+      const tex = this.getOrganicBoneTextures();
       switch (skinId) {
         case 'gold':
         case 'golden_saka':
+        case 'bone_gold':
           return new THREE.MeshStandardMaterial({
             color: 0xfbbf24, // Royal Imperial Gold
-            roughness: 0.26,
-            metalness: 0.88
+            roughness: 0.22,
+            metalness: 0.92,
+            bumpMap: tex.bumpMap,
+            bumpScale: 0.008
+          });
+        case 'turquoise':
+        case 'bone_turquoise':
+        case 'kok_tash':
+          return new THREE.MeshStandardMaterial({
+            color: 0x0ea5e9, // Celestial Tien Shan Turquoise
+            roughness: 0.20,
+            metalness: 0.12,
+            bumpMap: tex.bumpMap,
+            bumpScale: 0.012
           });
         case 'cyberpunk':
         case 'cyber_saka':
         case 'cyber':
         case 'nomad':
+        case 'bone_cyber':
           return new THREE.MeshStandardMaterial({
             color: 0x090d16,
-            roughness: 0.24,
+            roughness: 0.22,
             metalness: 0.65,
             emissive: 0x06b6d4,
             emissiveIntensity: 0.45
           });
         case 'obsidian':
         case 'obsidian_manas':
+        case 'bone_obsidian':
           return new THREE.MeshStandardMaterial({
-            color: 0x0a0f1d,
-            roughness: 0.16,
-            metalness: 0.48,
-            emissive: 0x7c3aed,
-            emissiveIntensity: 0.28
+            color: 0x080b14,
+            roughness: 0.12,
+            metalness: 0.52,
+            emissive: 0x581c87,
+            emissiveIntensity: 0.32
           });
         case 'batyr':
         case 'argali_horn':
         case 'horn':
           return new THREE.MeshStandardMaterial({
             color: 0xe5dac9, // Heavy weathered steppe fossil bone
-            roughness: 0.58,
+            map: tex.boneMap,
+            bumpMap: tex.bumpMap,
+            bumpScale: 0.025,
+            roughness: 0.55,
             metalness: 0.02
           });
         case 'lead':
+        case 'bone_ivory':
         default:
           return new THREE.MeshStandardMaterial({
-            color: 0xf4ece1, // Authentic Natural Sheep Astragalus Ivory Bone
-            roughness: 0.52,
-            metalness: 0.0
+            color: 0xfffcf7, // Authentic Natural Sheep Astragalus Ivory Bone
+            map: tex.boneMap,
+            bumpMap: tex.bumpMap,
+            bumpScale: 0.016,
+            roughness: 0.36,
+            metalness: 0.02
           });
       }
     },
 
-    setHeroSkin(skinId) {
-      if (!this.hero.mesh) return;
-      this.hero.currentSkin = skinId;
-      const newMat = this.getSakaMaterial(skinId);
-      this.hero.mesh.material = newMat;
-      this.hero.material = newMat;
+    // Composite Lead Inlay Mesh (Bezel + Tamga Core)
+    createLeadPlugMesh(skinId, coreType) {
+      const tex = this.getOrganicBoneTextures();
+      const group = new THREE.Group();
 
-      // Update lead plug styling
-      if (this.hero.leadPlug) {
-        if (skinId === 'gold') {
-          this.hero.leadPlug.material.color.setHex(0xd97706);
-          this.hero.leadPlug.material.metalness = 0.95;
-        } else if (skinId === 'cyber' || skinId === 'nomad') {
-          this.hero.leadPlug.material.color.setHex(0x22d3ee);
-          this.hero.leadPlug.material.emissive = new THREE.Color(0x06b6d4);
-        } else if (skinId === 'obsidian') {
-          this.hero.leadPlug.material.color.setHex(0xa855f7);
-          this.hero.leadPlug.material.emissive = new THREE.Color(0x6b21a8);
-        } else {
-          this.hero.leadPlug.material.color.setHex(0x334155);
-          this.hero.leadPlug.material.emissive = new THREE.Color(0x000000);
-        }
+      const bezelGeom = new THREE.CylinderGeometry(0.36, 0.39, 0.06, 28);
+      const bezelMat = new THREE.MeshStandardMaterial({
+        color: skinId === 'gold' ? 0xd97706 : 0x78350f,
+        metalness: 0.88,
+        roughness: 0.28
+      });
+      const bezel = new THREE.Mesh(bezelGeom, bezelMat);
+      bezel.castShadow = true;
+      group.add(bezel);
+
+      const coreGeom = new THREE.CylinderGeometry(0.33, 0.33, 0.08, 28);
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: 0x475569,
+        metalness: 0.90,
+        roughness: 0.35,
+        map: tex.tamgaMap
+      });
+      const core = new THREE.Mesh(coreGeom, coreMat);
+      core.position.y = 0.01;
+      core.castShadow = true;
+      group.add(core);
+
+      group.userData = { bezelMesh: bezel, coreMesh: core };
+      this.updateLeadPlugGroup(group, skinId, coreType);
+      return group;
+    },
+
+    updateLeadPlugGroup(group, skinId, coreType) {
+      if (!group || !group.userData) return;
+      const { bezelMesh, coreMesh } = group.userData;
+      if (!bezelMesh || !coreMesh) return;
+
+      if (skinId === 'gold' || coreType === 'core_gold') {
+        bezelMesh.material.color.setHex(0xb45309);
+        coreMesh.material.color.setHex(0xf59e0b);
+        coreMesh.material.metalness = 0.95;
+        coreMesh.material.roughness = 0.18;
+        coreMesh.material.emissive.setHex(0x000000);
+      } else if (skinId === 'cyber' || skinId === 'nomad') {
+        bezelMesh.material.color.setHex(0x0891b2);
+        coreMesh.material.color.setHex(0x06b6d4);
+        coreMesh.material.metalness = 0.70;
+        coreMesh.material.roughness = 0.20;
+        coreMesh.material.emissive.setHex(0x0891b2);
+        coreMesh.material.emissiveIntensity = 0.5;
+      } else if (skinId === 'obsidian' || coreType === 'core_ruby') {
+        bezelMesh.material.color.setHex(0x581c87);
+        coreMesh.material.color.setHex(0xbe123c);
+        coreMesh.material.metalness = 0.25;
+        coreMesh.material.roughness = 0.12;
+        coreMesh.material.emissive.setHex(0x881337);
+        coreMesh.material.emissiveIntensity = 0.4;
+      } else if (coreType === 'core_bronze') {
+        bezelMesh.material.color.setHex(0x78350f);
+        coreMesh.material.color.setHex(0xb45309);
+        coreMesh.material.metalness = 0.85;
+        coreMesh.material.roughness = 0.28;
+        coreMesh.material.emissive.setHex(0x000000);
+      } else {
+        bezelMesh.material.color.setHex(0x78350f);
+        coreMesh.material.color.setHex(0x475569);
+        coreMesh.material.metalness = 0.90;
+        coreMesh.material.roughness = 0.35;
+        coreMesh.material.emissive.setHex(0x000000);
       }
+    },
+
+    setHeroSkin(skinId, coreType, tamgaType) {
+      this.hero.currentSkin = skinId || 'lead';
+      const newMat = this.getSakaMaterial(this.hero.currentSkin);
+      if (this.hero.mesh) {
+        this.hero.mesh.material = newMat;
+        this.hero.material = newMat;
+      }
+      if (this.hero.leadPlugGroup) {
+        this.updateLeadPlugGroup(this.hero.leadPlugGroup, this.hero.currentSkin, coreType);
+      }
+
+      if (this.showroom.mesh) {
+        this.showroom.mesh.material = newMat;
+      }
+      if (this.showroom.leadPlugGroup) {
+        this.updateLeadPlugGroup(this.showroom.leadPlugGroup, this.hero.currentSkin, coreType);
+      }
+    },
+
+    // -----------------------------------------------------------------
+    // SHOWROOM 3D CUSTOMIZER INITIALIZATION (TAB 3)
+    // -----------------------------------------------------------------
+    initShowroom3D() {
+      const canvas = document.getElementById('saka-showroom-3d-canvas');
+      if (!canvas) return;
+
+      const container = canvas.parentElement;
+      const width = container.clientWidth || 220;
+      const height = container.clientHeight || 160;
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        alpha: true,
+        antialias: true,
+        powerPreference: 'high-performance'
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(width, height);
+      renderer.shadowMap.enabled = true;
+      if (THREE.ACESFilmicToneMapping) {
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.05;
+      }
+      if (THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
+      this.showroom.renderer = renderer;
+
+      const scene = new THREE.Scene();
+      this.showroom.scene = scene;
+
+      const camera = new THREE.PerspectiveCamera(32, width / height, 0.1, 50);
+      camera.position.set(0, 0.2, 6.0);
+      this.showroom.camera = camera;
+
+      const ambientLight = new THREE.AmbientLight(0xfff8f0, 0.5);
+      scene.add(ambientLight);
+
+      const keyLight = new THREE.DirectionalLight(0xfff8ee, 1.1);
+      keyLight.position.set(3.5, 4.5, 4.0);
+      keyLight.castShadow = true;
+      scene.add(keyLight);
+
+      const fillLight = new THREE.DirectionalLight(0x94a3b8, 0.4);
+      fillLight.position.set(-3.5, -1, 2.5);
+      scene.add(fillLight);
+
+      const backLight = new THREE.DirectionalLight(0xffedd5, 0.5);
+      backLight.position.set(0, 3.2, -3.5);
+      scene.add(backLight);
+
+      // Pedestal
+      const pedestalGeom = new THREE.CylinderGeometry(2.1, 2.3, 0.35, 48);
+      const pedestalMat = new THREE.MeshStandardMaterial({
+        color: 0x151210,
+        roughness: 0.65,
+        metalness: 0.1
+      });
+      const pedestal = new THREE.Mesh(pedestalGeom, pedestalMat);
+      pedestal.position.y = -2.25;
+      pedestal.receiveShadow = true;
+      scene.add(pedestal);
+
+      const ringGeom = new THREE.RingGeometry(1.92, 2.15, 48);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: 0xfbbf24,
+        transparent: true,
+        opacity: 0.75,
+        side: THREE.DoubleSide
+      });
+      const ringMesh = new THREE.Mesh(ringGeom, ringMat);
+      ringMesh.rotation.x = -Math.PI / 2;
+      ringMesh.position.y = -2.07;
+      scene.add(ringMesh);
+
+      const boneGeom = this.createAstragalusGeometry();
+      const boneMat = this.getSakaMaterial(this.hero.currentSkin || 'lead');
+
+      const boneGroup = new THREE.Group();
+      const mesh = new THREE.Mesh(boneGeom, boneMat);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      boneGroup.add(mesh);
+      this.showroom.mesh = mesh;
+
+      const plugGroup = this.createLeadPlugMesh(this.hero.currentSkin || 'lead', 'core_lead');
+      plugGroup.rotation.z = Math.PI / 2;
+      plugGroup.position.set(-0.95, 0.1, 0.05);
+      boneGroup.add(plugGroup);
+      this.showroom.leadPlugGroup = plugGroup;
+
+      boneGroup.rotation.x = 0.35;
+      boneGroup.rotation.y = 0.45;
+      scene.add(boneGroup);
+      this.showroom.boneGroup = boneGroup;
+
+      // Pointer drag interaction for Showroom
+      let isDragging = false;
+      let prevPointer = { x: 0, y: 0 };
+      const onDown = (e) => {
+        isDragging = true;
+        this.showroom.isDragging = true;
+        const pt = e.touches ? e.touches[0] : e;
+        prevPointer = { x: pt.clientX, y: pt.clientY };
+      };
+      const onMove = (e) => {
+        if (!isDragging) return;
+        const pt = e.touches ? e.touches[0] : e;
+        const dx = pt.clientX - prevPointer.x;
+        const dy = pt.clientY - prevPointer.y;
+        boneGroup.rotation.y += dx * 0.015;
+        boneGroup.rotation.x += dy * 0.015;
+        boneGroup.rotation.x = Math.max(-1.2, Math.min(1.2, boneGroup.rotation.x));
+        this.showroom.rotVelocity = { x: dy * 0.002, y: dx * 0.002 };
+        prevPointer = { x: pt.clientX, y: pt.clientY };
+      };
+      const onUp = () => {
+        isDragging = false;
+        this.showroom.isDragging = false;
+      };
+
+      canvas.addEventListener('mousedown', onDown);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+      canvas.addEventListener('touchstart', onDown, { passive: true });
+      window.addEventListener('touchmove', onMove, { passive: true });
+      window.addEventListener('touchend', onUp);
+
+      const animate = () => {
+        this.showroom.animId = requestAnimationFrame(animate);
+        if (!isDragging) {
+          boneGroup.rotation.y += this.showroom.rotVelocity.y;
+          this.showroom.rotVelocity.y *= 0.985;
+          if (Math.abs(this.showroom.rotVelocity.y) < 0.003) {
+            this.showroom.rotVelocity.y = 0.006;
+          }
+        }
+        renderer.render(scene, camera);
+      };
+      animate();
+    },
+
+    rotateCustomizerTo(viewName) {
+      if (!this.showroom.boneGroup) return;
+      this.showroom.isDragging = true;
+      const targets = {
+        alchy: { x: 0.1, y: 0.0 },
+        taa: { x: 0.1, y: Math.PI },
+        bok: { x: 0.0, y: Math.PI * 0.5 },
+        chik: { x: 0.0, y: -Math.PI * 0.5 },
+        onbashy: { x: Math.PI * 0.5, y: 0.0 }
+      };
+      const t = targets[viewName] || targets.alchy;
+      this.showroom.boneGroup.rotation.x = t.x;
+      this.showroom.boneGroup.rotation.y = t.y;
+      this.showroom.rotVelocity = { x: 0, y: 0.005 };
+      setTimeout(() => { this.showroom.isDragging = false; }, 300);
+      if (window.playBoneSound) window.playBoneSound('hit', 0.4);
     },
 
     // =================================================================
@@ -456,10 +840,10 @@
       }
       this.village.renderer = renderer;
 
-      // Scene with lush mountain atmosphere
+      // Scene with lush, sunny alpine atmosphere
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0c1d2e); // Mountain Twilight Sky
-      scene.fog = new THREE.FogExp2(0x0c1d2e, 0.022);
+      scene.background = new THREE.Color(0x7dd3fc); // Sunny Mountain Azure Sky
+      scene.fog = new THREE.FogExp2(0xbbf7d0, 0.012); // Fresh sunny morning air
       this.village.scene = scene;
 
       // Camera: Crisp Orthographic View focused tightly on village
@@ -471,14 +855,14 @@
       this.village.camera = camera;
 
       // Lighting: Warm golden sunlight on Tien Shan mountain valley
-      const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.25);
-      sunLight.position.set(12, 20, 10);
+      const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.8);
+      sunLight.position.set(12, 22, 10);
       sunLight.castShadow = true;
       sunLight.shadow.mapSize.width = 1024;
       sunLight.shadow.mapSize.height = 1024;
       scene.add(sunLight);
 
-      const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x166534, 0.6);
+      const hemiLight = new THREE.HemisphereLight(0x7dd3fc, 0x22c55e, 0.85);
       scene.add(hemiLight);
 
       // Cozy Forge Fire light
@@ -553,11 +937,11 @@
     // C1. TERRAIN & ENVIRONMENT
     // -----------------------------------------------------------------
     buildVillageTerrain(scene) {
-      // Main emerald pasture island
+      // Main emerald pasture island (Lush Suusamyr Valley Grass)
       const islandGeom = new THREE.CylinderGeometry(12.5, 11, 1.8, 40);
       const islandMat = new THREE.MeshStandardMaterial({
-        color: 0x166534, // Lush Tien Shan Mountain Grass
-        roughness: 0.78,
+        color: 0x22c55e, // Vibrant Sunny Alpine Spring Meadow
+        roughness: 0.65,
         metalness: 0.05
       });
       const island = new THREE.Mesh(islandGeom, islandMat);
@@ -574,11 +958,11 @@
       }
       riverGeom.computeVertexNormals();
       const riverMat = new THREE.MeshStandardMaterial({
-        color: 0x0284c7,
-        roughness: 0.12,
-        metalness: 0.65,
+        color: 0x38bdf8, // Sparkling crystal mountain turquoise water
+        roughness: 0.08,
+        metalness: 0.8,
         transparent: true,
-        opacity: 0.9
+        opacity: 0.92
       });
       const river = new THREE.Mesh(riverGeom, riverMat);
       river.rotation.x = -Math.PI / 2;

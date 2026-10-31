@@ -511,6 +511,273 @@
     },
 
     // 30. Кардинальные стрелки Ордо (Compass Direction Arrows) — south, west, north, east
+        // 31. Медальон Манаса / Турнирный жетон (Manas Token / 'M' Badge)
+    nomadToken(size = 20, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="11" fill="url(#grad-token-rim)" stroke="#d97706" stroke-width="1"/>
+        <circle cx="12" cy="12" r="8.5" fill="url(#grad-token-bg)" stroke="#0284c7" stroke-width="0.8"/>
+        <path d="M7 16V8L12 12.5L17 8V16" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7 16V8L12 12.5L17 8V16" stroke="#fef08a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <defs>
+          <linearGradient id="grad-token-rim" x1="2" y1="2" x2="22" y2="22">
+            <stop stop-color="#fef08a"/>
+            <stop offset="0.5" stop-color="#f59e0b"/>
+            <stop offset="1" stop-color="#b45309"/>
+          </linearGradient>
+          <linearGradient id="grad-token-bg" x1="4" y1="4" x2="20" y2="20">
+            <stop stop-color="#0284c7"/>
+            <stop offset="1" stop-color="#0f172a"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 32. Энергия / Кымыз (Kumys Energy Heart)
+    kumysRoll(size = 20, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="url(#grad-heart-body)" stroke="#881337" stroke-width="1.2"/>
+        <ellipse cx="8" cy="7" rx="3" ry="1.5" fill="#fecdd3" opacity="0.6"/>
+        <defs>
+          <linearGradient id="grad-heart-body" x1="2" y1="3" x2="22" y2="21">
+            <stop stop-color="#fb7185"/>
+            <stop offset="0.4" stop-color="#e11d48"/>
+            <stop offset="1" stop-color="#9f1239"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 33. 3D Шестеренка Настроек (Gear 3D)
+    gear3d(size = 20, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" fill="#14532d"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM12 16.5a4.5 4.5 0 100-9 4.5 4.5 0 000 9z" fill="url(#grad-gear3d)" stroke="#ffffff" stroke-width="1.2"/>
+        <defs>
+          <linearGradient id="grad-gear3d" x1="2" y1="2" x2="22" y2="22">
+            <stop stop-color="#bef264"/>
+            <stop offset="0.5" stop-color="#84cc16"/>
+            <stop offset="1" stop-color="#4d7c0f"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 34. 3D Сейф Кочевника (Safe Vault)
+    safe(size = 26, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="3" width="20" height="18" rx="4" fill="url(#grad-safe-body)" stroke="#1e293b" stroke-width="1.2"/>
+        <rect x="4" y="5" width="16" height="14" rx="2" fill="url(#grad-safe-door)" stroke="#38bdf8" stroke-width="0.8"/>
+        <circle cx="12" cy="12" r="4.5" fill="#0f172a" stroke="#38bdf8" stroke-width="1.2"/>
+        <circle cx="12" cy="12" r="2.5" fill="#f59e0b"/>
+        <line x1="12" y1="8" x2="12" y2="10" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="grad-safe-body" x1="2" y1="3" x2="22" y2="21">
+            <stop stop-color="#38bdf8"/>
+            <stop offset="0.6" stop-color="#0284c7"/>
+            <stop offset="1" stop-color="#0369a1"/>
+          </linearGradient>
+          <linearGradient id="grad-safe-door" x1="4" y1="5" x2="20" y2="19">
+            <stop stop-color="#0f172a"/>
+            <stop offset="1" stop-color="#1e293b"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 35. 3D Алтын Чарх / Рулетка (Slot Machine)
+    slot(size = 26, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="2" width="18" height="20" rx="3" fill="url(#grad-slot-body)" stroke="#78350f" stroke-width="1.2"/>
+        <rect x="5" y="6" width="14" height="7" rx="1.5" fill="#ffffff" stroke="#b45309" stroke-width="0.8"/>
+        <text x="6" y="12" font-size="6" font-weight="900" fill="#dc2626">7</text>
+        <text x="10.5" y="12" font-size="6" font-weight="900" fill="#f59e0b">7</text>
+        <text x="15" y="12" font-size="6" font-weight="900" fill="#16a34a">7</text>
+        <circle cx="12" cy="17" r="2" fill="#ef4444" stroke="#ffffff" stroke-width="0.8"/>
+        <defs>
+          <linearGradient id="grad-slot-body" x1="3" y1="2" x2="21" y2="22">
+            <stop stop-color="#fef08a"/>
+            <stop offset="0.5" stop-color="#f59e0b"/>
+            <stop offset="1" stop-color="#b45309"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 36. 3D Бомба / Набег (Raid Bomb)
+    bomb(size = 26, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="11" cy="14" r="8" fill="url(#grad-bomb-sphere)" stroke="#09090b" stroke-width="1.2"/>
+        <ellipse cx="8" cy="10" rx="2.5" ry="1.5" fill="#94a3b8" opacity="0.6"/>
+        <rect x="9" y="4" width="4" height="3" rx="1" fill="#71717a" stroke="#27272a" stroke-width="0.8"/>
+        <path d="M13 5C15 3 18 3 19 2" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="19" cy="2" r="1.5" fill="#ef4444"/>
+        <defs>
+          <radialGradient id="grad-bomb-sphere" cx="9" cy="11" r="9" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#3f3f46"/>
+            <stop offset="0.7" stop-color="#18181b"/>
+            <stop offset="1" stop-color="#09090b"/>
+          </radialGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 37. 3D Байге / Гонка (Race / Cash & Shades)
+    race(size = 26, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="6" width="18" height="12" rx="2" fill="#22c55e" stroke="#14532d" stroke-width="1.2"/>
+        <circle cx="12" cy="12" r="3.5" fill="#15803d"/>
+        <rect x="4" y="9" width="7" height="4" rx="1.5" fill="#0f172a" stroke="#e2e8f0" stroke-width="0.8"/>
+        <rect x="13" y="9" width="7" height="4" rx="1.5" fill="#0f172a" stroke="#e2e8f0" stroke-width="0.8"/>
+        <line x1="11" y1="10.5" x2="13" y2="10.5" stroke="#e2e8f0" stroke-width="1"/>
+      </svg>`;
+    },
+
+    // 38. 3D Изумрудный Гексагон (Gem Hexagon)
+    gemHex(size = 26, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="12,2 21,7 21,17 12,22 3,17 3,7" fill="url(#grad-gem-hex)" stroke="#064e3b" stroke-width="1.2"/>
+        <polygon points="12,5 18,9 18,15 12,19 6,15 6,9" fill="#34d399" opacity="0.4"/>
+        <line x1="12" y1="2" x2="12" y2="22" stroke="#a7f3d0" stroke-width="0.8" opacity="0.7"/>
+        <defs>
+          <linearGradient id="grad-gem-hex" x1="3" y1="2" x2="21" y2="22">
+            <stop stop-color="#6ee7b7"/>
+            <stop offset="0.5" stop-color="#10b981"/>
+            <stop offset="1" stop-color="#047857"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 39. 3D Шахта Подарков / Кристаллы (Crystal Mine)
+    crystalMine(size = 26, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 18L9 7L15 6L20 18L13 21L4 18Z" fill="#475569" stroke="#1e293b" stroke-width="1.2"/>
+        <polygon points="11,3 14,7 12,12 9,8" fill="#ec4899" stroke="#be185d" stroke-width="0.8"/>
+        <polygon points="15,6 18,10 16,14 13,11" fill="#f472b6" stroke="#db2777" stroke-width="0.8"/>
+        <polygon points="6,9 10,12 8,16 5,13" fill="#f472b6" stroke="#db2777" stroke-width="0.8"/>
+      </svg>`;
+    },
+
+    // 40. 3D Полоса Сокровищ / Корона (Streak Crown)
+    streakCrown(size = 26, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 18L5 9L9.5 13L12 6L14.5 13L19 9L21 18H3Z" fill="url(#grad-crown-gold)" stroke="#78350f" stroke-width="1.2"/>
+        <rect x="2" y="18" width="20" height="3" rx="1.5" fill="#f59e0b" stroke="#78350f" stroke-width="1"/>
+        <circle cx="5" cy="9" r="1.5" fill="#ef4444"/>
+        <circle cx="12" cy="6" r="1.8" fill="#3b82f6"/>
+        <circle cx="19" cy="9" r="1.5" fill="#ef4444"/>
+        <defs>
+          <linearGradient id="grad-crown-gold" x1="3" y1="6" x2="21" y2="18">
+            <stop stop-color="#fef08a"/>
+            <stop offset="0.5" stop-color="#fbbf24"/>
+            <stop offset="1" stop-color="#d97706"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 41. 3D Ханская Копилка (Piggy Bank)
+    piggy3d(size = 26, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="12" cy="13" rx="9" ry="7" fill="url(#grad-pig-body)" stroke="#b45309" stroke-width="1.2"/>
+        <ellipse cx="6" cy="14" rx="2.5" ry="3.5" fill="#fbbf24" stroke="#b45309" stroke-width="1"/>
+        <circle cx="5" cy="13" r="0.8" fill="#78350f"/>
+        <circle cx="5" cy="15" r="0.8" fill="#78350f"/>
+        <polygon points="15,6 18,3 19,8" fill="#f59e0b" stroke="#b45309" stroke-width="0.8"/>
+        <circle cx="10" cy="10" r="1.2" fill="#0f172a"/>
+        <rect x="11" y="6" width="3" height="1" rx="0.5" fill="#78350f"/>
+        <defs>
+          <linearGradient id="grad-pig-body" x1="3" y1="6" x2="21" y2="20">
+            <stop stop-color="#fef08a"/>
+            <stop offset="0.4" stop-color="#fbbf24"/>
+            <stop offset="1" stop-color="#d97706"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 42. 3D Молот Прокачки (Builder Hammer)
+    hammer(size = 18, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 6L18 10L16 12L12 8L14 6Z" fill="#38bdf8" stroke="#0369a1" stroke-width="1"/>
+        <rect x="7" y="11" width="3" height="11" rx="1.5" transform="rotate(-45 7 11)" fill="#b45309" stroke="#78350f" stroke-width="1"/>
+        <path d="M13 5L15 3L19 7L17 9L13 5Z" fill="#0284c7"/>
+      </svg>`;
+    },
+
+    // 43. 3D Новости / Свиток (News Tab)
+    news(size = 22, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="4" width="18" height="16" rx="2" fill="#f8fafc" stroke="#64748b" stroke-width="1.2"/>
+        <rect x="5" y="7" width="5" height="4" fill="#cbd5e1"/>
+        <line x1="12" y1="8" x2="18" y2="8" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="12" y1="11" x2="18" y2="11" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="5" y1="14" x2="18" y2="14" stroke="#94a3b8" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="5" y1="17" x2="14" y2="17" stroke="#94a3b8" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>`;
+    },
+
+    // 44. 3D Задания / Чеклист (Tasks Tab)
+    tasks(size = 22, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="5" width="16" height="16" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="1.2"/>
+        <rect x="9" y="3" width="6" height="3" rx="1.5" fill="#f59e0b" stroke="#b45309" stroke-width="0.8"/>
+        <path d="M7 10L9 12L12 8" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="14" y1="10" x2="18" y2="10" stroke="#78350f" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M7 15L9 17L12 13" stroke="#16a34a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="14" y1="15" x2="18" y2="15" stroke="#78350f" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>`;
+    },
+
+    // 45. 3D Центральная Юрта (Elevated Yurt Tab)
+    yurtHero(size = 36, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C7 2 3 7 3 11V18C3 19.1 3.9 20 5 20H19C20.1 20 21 19.1 21 18V11C21 7 17 2 12 2Z" fill="url(#grad-yurt-hero-dome)" stroke="#ffffff" stroke-width="1.5"/>
+        <rect x="9" y="13" width="6" height="7" rx="1" fill="#78350f" stroke="#fbbf24" stroke-width="1"/>
+        <circle cx="12" cy="7" r="3" fill="#fbbf24" stroke="#d97706" stroke-width="1"/>
+        <line x1="12" y1="4" x2="12" y2="10" stroke="#78350f" stroke-width="1"/>
+        <line x1="9" y1="7" x2="15" y2="7" stroke="#78350f" stroke-width="1"/>
+        <defs>
+          <linearGradient id="grad-yurt-hero-dome" x1="3" y1="2" x2="21" y2="20">
+            <stop stop-color="#ef4444"/>
+            <stop offset="0.6" stop-color="#dc2626"/>
+            <stop offset="1" stop-color="#991b1b"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 46. 3D Клан / Батыры (Guild Shield Tab)
+    guildShield(size = 22, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L4 5V11C4 16.5 7.4 21.6 12 23C16.6 21.6 20 16.5 20 11V5L12 2Z" fill="url(#grad-guild-shield)" stroke="#f59e0b" stroke-width="1.2"/>
+        <circle cx="12" cy="10" r="3" fill="#ffffff"/>
+        <circle cx="8" cy="12" r="2" fill="#e2e8f0" opacity="0.8"/>
+        <circle cx="16" cy="12" r="2" fill="#e2e8f0" opacity="0.8"/>
+        <defs>
+          <linearGradient id="grad-guild-shield" x1="4" y1="2" x2="20" y2="23">
+            <stop stop-color="#f59e0b"/>
+            <stop offset="0.5" stop-color="#b45309"/>
+            <stop offset="1" stop-color="#78350f"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    // 47. 3D Кошелек / Сака (Wallet Tab)
+    walletSaka(size = 22, className = '') {
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="5" width="20" height="15" rx="3" fill="url(#grad-wallet-body)" stroke="#4c1d95" stroke-width="1.2"/>
+        <path d="M16 11H22V15H16C14.9 15 14 14.1 14 13C14 11.9 14.9 11 16 11Z" fill="#a855f7" stroke="#e9d5ff" stroke-width="1"/>
+        <circle cx="17.5" cy="13" r="1.2" fill="#22c55e"/>
+        <defs>
+          <linearGradient id="grad-wallet-body" x1="2" y1="5" x2="22" y2="20">
+            <stop stop-color="#7c3aed"/>
+            <stop offset="1" stop-color="#4c1d95"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
     cardinal(arg1 = 'south', arg2 = 14, arg3 = '') {
       const { size, className, variant: dir } = parseArgs(arg1, arg2, arg3, 'south', 14);
       let angle = 180;
@@ -522,7 +789,71 @@
       </svg>`;
     },
 
-    // 31. Автоматическая гидратация DOM для всех элементов [data-game-icon]
+    sun(arg1 = 24, arg2 = '', arg3 = '') {
+      const { size, className } = parseArgs(arg1, arg2, arg3, 24);
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="5" fill="url(#sun-grad)" stroke="#b45309" stroke-width="1.2"/>
+        <path d="M12 2V5M12 19V22M2 12H5M19 12H22M4.93 4.93L7.05 7.05M16.95 16.95L19.07 19.07M4.93 19.07L7.05 16.95M16.95 7.05L19.07 4.93" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="12" cy="12" r="2.2" fill="#fef3c7"/>
+        <defs>
+          <linearGradient id="sun-grad" x1="7" y1="7" x2="17" y2="17" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#fef08a"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    sparkles(arg1 = 24, arg2 = '', arg3 = '') {
+      const { size, className } = parseArgs(arg1, arg2, arg3, 24);
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L13.8 8.2L20 10L13.8 11.8L12 18L10.2 11.8L4 10L10.2 8.2L12 2Z" fill="url(#sparkle-grad)" stroke="#d97706" stroke-width="0.8"/>
+        <path d="M19 16L19.9 19.1L23 20L19.9 20.9L19 24L18.1 20.9L15 20L18.1 19.1L19 16Z" fill="#fef08a"/>
+        <path d="M5 2L5.6 4.4L8 5L5.6 5.6L5 8L4.4 5.6L2 5L4.4 4.4L5 2Z" fill="#fde047"/>
+        <defs>
+          <linearGradient id="sparkle-grad" x1="4" y1="2" x2="20" y2="18" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#fef08a"/>
+            <stop offset="1" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    },
+
+    wind(arg1 = 24, arg2 = '', arg3 = '') {
+      const { size, className } = parseArgs(arg1, arg2, arg3, 24);
+      return `<svg class="inline-block shrink-0 align-middle ${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 8H15C16.6569 8 18 6.65685 18 5C18 3.34315 16.6569 2 15 2C13.3431 2 12 3.34315 12 5" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+        <path d="M2 13H19C20.6569 13 22 14.3431 22 16C22 17.6569 20.6569 19 19 19C17.3431 19 16 17.6569 16 16" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round"/>
+        <path d="M5 18H11C12.1046 18 13 18.8954 13 20C13 21.1046 12.1046 22 11 22C9.89543 22 9 21.1046 9 20" stroke="#7dd3fc" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>`;
+    },
+
+    fire(arg1 = 24, arg2 = '', arg3 = '') {
+      return this.flame(arg1, arg2, arg3);
+    },
+
+    chukoBone(arg1 = 24, arg2 = '', arg3 = '') {
+      return this.saka(arg1, arg2, arg3);
+    },
+
+    // 31. Получить SVG разметку по выражению типа "iconName:size:variant"
+    getIconMarkup(expr, customClass = '') {
+      if (!expr) return '';
+      const parts = String(expr).split(':');
+      const name = parts[0];
+      const size = parseInt(parts[1], 10) || 18;
+      const extra = parts[2] || undefined;
+      if (typeof this[name] === 'function') {
+        return this[name](size, customClass, extra);
+      }
+      return '';
+    },
+
+    render(expr, customClass = '') {
+      return this.getIconMarkup(expr, customClass);
+    },
+
+    // 32. Автоматическая гидратация DOM для всех элементов [data-game-icon]
     renderAll(root = (typeof document !== 'undefined' ? document : null)) {
       if (!root || typeof root.querySelectorAll !== 'function') return;
       root.querySelectorAll('[data-game-icon]').forEach(el => {
